@@ -1,0 +1,38 @@
+## REQUIRED NOTICE: Copyright (c) 2020-2023, Regents of the University of California
+## All rights reserved. https://polyformproject.org/licenses/noncommercial/1.0.0
+## 
+## This software was developed by the Daniel Kim lab at the University of California, Santa Cruz.
+## Authors: Roman E. Reggiardo, Vikas Peddu, Alex D. Hill
+## 
+## The licensor grants you a copyright license for the software to do everything you might do with
+## the software that would otherwise infringe the licensor’s copyright in it for any permitted
+## purpose.
+## 
+## As far as the law allows, the software comes as is, without any warranty or condition, and the
+## licensor will not be liable to you for any damages arising out of these terms or the use or
+## nature of the software, under any kind of legal claim.
+
+#!/bin/bash
+## host: genome-mysql.cse.ucsc.edu
+## -N = --skip-column-names
+## -A = --no-auto-rehash
+## -D = --database
+## --batch = print as TSV, escape special characters
+
+mysql --batch --user=genome --host=genome-mysql.cse.ucsc.edu -N -A -D hg38 -e \
+    'select 
+		genoName,
+        "hg38_rmsk",
+        "exon",
+        genoStart,
+        genoEnd,
+        swScore,
+        strand,
+        ".",
+        concat("gene_id", " ", "\"", repName, "\"", ";", " ", 
+            "transcript_id", " ", "\"", repName, 
+            "_range=", genoName, ":", genoStart, "-", genoEnd, 
+            "_strand=", strand, "\"", ";")
+        from rmsk' \
+    | awk -F '\t' -v OFS='\t' '{split($1, a, /_/); print (a[2] == "") ? a[1] : a[2], $2, $3, $4, $5, $6, $7, $8, $9, $10}' \
+    | sed 's/v1/.1/; s/v2/.2/1'

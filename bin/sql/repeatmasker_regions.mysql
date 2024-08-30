@@ -1,0 +1,40 @@
+## REQUIRED NOTICE: Copyright (c) 2020-2023, Regents of the University of California
+## All rights reserved. https://polyformproject.org/licenses/noncommercial/1.0.0
+## 
+## This software was developed by the Daniel Kim lab at the University of California, Santa Cruz.
+## Authors: Roman E. Reggiardo, Vikas Peddu, Alex D. Hill
+## 
+## The licensor grants you a copyright license for the software to do everything you might do with
+## the software that would otherwise infringe the licensor’s copyright in it for any permitted
+## purpose.
+## 
+## As far as the law allows, the software comes as is, without any warranty or condition, and the
+## licensor will not be liable to you for any damages arising out of these terms or the use or
+## nature of the software, under any kind of legal claim.
+
+#!/bin/bash
+## host: genome-mysql.cse.ucsc.edu
+## -N = --skip-column-names
+## -A = --no-auto-rehash
+## -D = --database
+## --batch = print as TSV, escape special characters
+
+# awk:
+## split the genoName column by '_' and store in object `a`
+## print genoName column = if [ a[2] is empty ]; then print a[1]; else print a[2] .. print rest of columns as is
+### this finds lines with chrX_IDv1_type naming and extracts the middle string
+# needed to name the alt/patch/fix chromosomes according to gencode style
+
+mysql --batch --user=genome --host=genome-mysql.cse.ucsc.edu -N -A -D hg38 -e \
+    'select
+        genoName,
+        genoStart,
+        genoEnd,
+        concat(
+            repName, "_range=", genoName, ":",
+            genoStart, "-", genoEnd, "_strand=", strand
+        ),
+        swScore,
+        strand
+        from rmsk' \
+    | awk -F '\t' -v OFS='\t' '{split($1, a, /_/); print (a[2] == "") ? a[1] : a[2], $2, $3, $4, $5, $6}' | sed 's/v1/.1/; s/v2/.2/1'

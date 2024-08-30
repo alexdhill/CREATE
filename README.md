@@ -56,12 +56,12 @@ nextflow run alexdhill/create --analyze \
 ```
 
 #usage:options
+<!--    discover          Discover novel isoforms [BETA] -->
 ```
  $ nextflow run alexdhill/create --help
 Usage: nextflow run alexdhill/create [--quant/--reference/--analyze] [options]
     reference         Build a reference for CREATE
     quant             Quantify RNA-seq reads with CREATE
-    analyze           Analyze CREATE-seq data
 
 options:
     Globals:
@@ -87,10 +87,7 @@ options:
         --library     Library type [paired_end,nanopore,single_cell] [REQUIRED]
                       NOTE: the reference provided must contain a compatible index
         --pattern     File pattern for input samples
-
-    --analyze
-        --counts      Directory containing quantification results [REQUIRED]
-        --metadata    An unnamed, two-column CSV file of samples,condition [REQUIRED]
+        --metadata    An unnamed, two-column CSV file of samples,condition
 
     Subworkflow-specific options:
         [--exec local]
