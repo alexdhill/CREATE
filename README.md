@@ -19,14 +19,13 @@
 ## #subtitle: Comprehensive REptitive And Transposable Element Sequencing
 ### #author: Alex D. Hill
 
-#description: CREATE is a pipeline for the quantification of repetitive elements alongside canonical genes. It is designed to be very high throughput, and can be run very quickly on a large number of samples. The core of CREATE's functions are based on Trim-Galore, Salmon, and Tximeta for thefast read processing and storage. 
+#description: CREATE is a pipeline for the quantification of repetitive elements alongside canonical genes. It is designed to be very high throughput, and can be run very quickly on a large number of samples. The core of CREATE's functions are based on Trim-Galore, Salmon, and Tximeta for fast read processing and storage. 
 
-#modes: There are three modes to CREATE:
+#modes: There are two modes to CREATE:
   - REFERENCE: This mode creates a rich 'complete' set of reference files that contain a formatted compilation of both GENCODE annotations and transcripts, as well as repetitive element annotations and transcripts pulled from the RepeatMasker track on the UCSC genome browser. Reference directories can also be downloaded for ease of use.
   - QUANT: This mode takes a set of raw reads and outputs a highly efficient H5+RDS file that efficiently store a SummarizedExperimet (or SingleCellExperiment) object that can be used for downstream analysis.
-  - ANALYSIS [WORK IN PROGRESS]: The analysis mode runs a series of basic data visualizations and computes DESeq2 normalized counts for the data.
 
-#installation: As a nextflow pipeline, CREATE can be run with only an installation of conda. Make an environment with Nextflow installed and force create to utilize conda and the container format. *NOTE*: a docker isnstallation is highly recommended to guarantee compatibility with most systems.
+#installation: As a nextflow pipeline, CREATE can be run with only an installation of conda. Make an environment with Nextflow installed and force create to utilize conda and the container format. *NOTE*: a docker installation is highly recommended to guarantee compatibility with most systems.
 
 #examples:REFERENCE
 ```
@@ -47,13 +46,6 @@ nextflow run alexdhill/create --quant \
   --outdir create_results
 ```
 
-#examples:ANALYZE
-```
-nextflow run alexdhill/create --analyze \
-  --quants <path/to/quants> \
-  --metadata <path/to/metadata.txt> \
-  --outdir create_results
-```
 
 #usage:options
 <!--    discover          Discover novel isoforms [BETA] -->
@@ -116,9 +108,9 @@ options:
   - [X] Finish Nanopore quant
     - [X] Add DCS/RCS removal
 - [ ] Add novel isoform discovery (FLAIR)
-- [ ] Add Analysis workflow
-  - [ ] Finish biotype plots
+- [X] Add Analysis ~~workflow~~ step to quant
+  - [X] Finish biotype plots
   - [ ] Finish PCA plots
-  - [ ] Finish Volcano plots
+  - [X] Finish Volcano plots
 - [X] Flesh README
 - [ ] ~~Add profile selection to nextflow config~~ Add read-based resource requirements to processes
