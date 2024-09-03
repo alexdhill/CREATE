@@ -92,7 +92,7 @@ options:
             --account     The user account to submit jobs
         [--quant --library single_cell]
             --barcodes    A list (txt) of all barcodes used in the experiment [REQUIRED]
-            --chemistry   The single-cell chemsitry used [dropseq,chromium,chromiumV3] [default=chromiumV3]
+            --chemistry   The single-cell chemistry used [dropseq,chromium,chromiumV3(default)]
         [--quant --library nanopore]
             --dcs         File with the DCS/RCS sequence used (for removal) [REQUIRED]
 ```
