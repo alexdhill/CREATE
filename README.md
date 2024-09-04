@@ -30,7 +30,7 @@ As a nextflow pipeline, CREATE can be run with only an installation of conda. Ma
 
 #### examples: REFERENCE
 ```
-nextflow run alexdhill/create --reference \
+nextflow run alexdhill/CREATE --reference \
   --genome HG38 \
   --version 39 \
   --index short \
@@ -39,7 +39,7 @@ nextflow run alexdhill/create --reference \
 
 #### examples: QUANT
 ```
-nextflow run alexdhill/create --quant \
+nextflow run alexdhill/CREATE --quant \
   -resume \
   --samples <path/to/samples> \
   --ref <path/to/reference> \
@@ -51,8 +51,8 @@ nextflow run alexdhill/create --quant \
 #### usage:
 <!--    discover          Discover novel isoforms [BETA] -->
 ```
- $ nextflow run alexdhill/create --help
-Usage: nextflow run alexdhill/create [--quant/--reference/--analyze] [options]
+ $ nextflow run alexdhill/CREATE --help
+Usage: nextflow run alexdhill/CREATE [--quant/--reference/--analyze] [options]
     reference         Build a reference for CREATE
     quant             Quantify RNA-seq reads with CREATE
 
