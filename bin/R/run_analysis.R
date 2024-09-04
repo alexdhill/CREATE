@@ -2,6 +2,8 @@ main = function()
 {
     suppressMessages({
         library(argparse)
+        library(ggplot2)
+        library(patchwork)
     })
 
     parser = ArgumentParser()
@@ -120,6 +122,34 @@ main = function()
             )
     ggsave(
         plot=composition, file="plots/biotype_composition.pdf",
+        width=12, height=6, units="in", dpi=300
+    )
+
+    message("Plotting PCA...")
+    pca_res = deseq %>%
+        counts(normalized=T) %>%
+        as.data.frame() %>%
+        prcomp()
+    pca_vars = summary(pca_res)$importance[2,]
+    pca_plot = pca_res$rotation %>%
+        as.data.frame() %>%
+        mutate(sample=rownames(.)) %>%
+        left_join(metadata, by="sample") %>%
+        ggplot(aes(x=PC1, y=PC2, color=condition))+
+            geom_point()+
+            labs(
+                x=paste0("PC1 (", round(pca_vars[1]*100, digits=2), "%)"),
+                y=paste0("PC2 (", round(pca_vars[2]*100, digits=2), "%)"),
+                color="Condition"
+            )
+    var_plot = data.frame(importance=unname(pca_vars), comps=factor(names(pca_vars))) %>%
+        slice_head(n=5) %>%
+        ggplot(aes(x=comps, y=importance*100))+
+            geom_bar(stat="identity")+
+            labs(x="Principal Components", y="Variance Explained (%)")
+    ggsave(
+        plot=pca_plot+var_plot+plot_layout(guides="collect"),
+        file="tmp_pc_analysis.pdf",
         width=12, height=6, units="in", dpi=300
     )
 
