@@ -26,13 +26,7 @@ import groovy.util.logging.Slf4j
  * Handle parameters
  */
 
-/*
- * Create parameter set
- */
-params
-{
-    help = false
-}
+params.help = false
 if (params.help)
 {
     println '''Usage: nextflow run alexdhill/CREATE [--quant/--reference/--analyze] [options]
@@ -82,42 +76,33 @@ options:
 '''
     System.exit 0
 }
-params
-{
-    container = 'docker'
-    outdir = ''
-    log = 'OFF'
-    exec = 'local'
-    clean = false
-    keep = false
-    limits = false
-    force = false
-    quant = true
-    reference = false
-}
+params.container = 'docker'
+params.outdir = ''
+params.log = 'OFF'
+params.exec = 'local'
+params.clean = false
+params.keep = false
+params.limits = false
+params.threads = 0
+params.memory = 0
+params.force = false
+params.quant = false
+params.reference = false
 if (params.reference)
 {
-    params
-    {
-        genome = ''
-        isoquant = false
-        index = ''
-        quant = false
-        params.version = ''
-    }
+    params.genome = ''
+    params.isoquant = false
+    params.index = ''
     if (params.genome=='HG38')
     {
-        params
-        {
-            version = '39'
-        }
+        params.version = '39'
     }
     else if (params.genome!="T2T")
     {
         println("--genome: ${params.genome}");
         throw new IllegalArgumentException('Genome must be either "HG38" or "T2T"')
     }
-    if (params.genome=="T2T" && params.version!='')
+    if (params.genome=="T2T" && params.get("version"))
     {
         println("--version: ${params.version}");
         throw new IllegalArgumentException('Gencode version cannot be specified for T2T genome')
@@ -132,23 +117,17 @@ if (params.reference)
 }
 else if (params.quant)
 {
-    params
-    {
-        samples = ''
-        ref = ''
-        library = 'paired_end'
-        metadata = ''
-    }
+    params.samples = ''
+    params.ref = ''
+    params.library = 'paired_end'
+    params.metadata = ''
     if (['paired_end','single_cell'].contains(params.library))
     {
         params.pattern = '*_R{1,2}_*.fastq.gz'
         if (params.library=="single_cell")
         {
-            params
-            {
-                barcodes = ''
-                chemistry = "chromiumV3"
-            }
+            params.barcodes = ''
+            params.chemistry = "chromiumV3"
             if (params.barcodes=='')
             {
                 println("--barcodes: ${params.barcodes}");
@@ -164,11 +143,8 @@ else if (params.quant)
     else if (params.library=='nanopore')
     {
         params.pattern = '*.fastq.gz'
-        params
-        {
-            dcs = ""
-            discovery = false
-        }
+        params.dcs = ""
+        params.discovery = false
         if (params.dcs=='')
         {
             println("--dcs: ${params.dcs}");
@@ -222,7 +198,17 @@ if (params.outdir=='')
 }
 if (params.exec=="local")
 {
-    if (params..get('scratch'))
+    if (params.get('threads')==null || params.threads<0)
+    {
+        println("--threads: ${params.threads}");
+        throw new IllegalArgumentException('Maximum number of threads must be at least 0')
+    }
+    if (params.get('memory')==null || params.memory<0)
+    {
+        println("--memory: ${params.memory}");
+        throw new IllegalArgumentException('Memory must be at least 0 GB')
+    }
+    if (params.get('scratch'))
     {
         throw new IllegalArgumentException('Cannot assign scratch directory in local mode')
     }
@@ -237,74 +223,16 @@ if (params.exec=="local")
 }
 else if (params.exec=="slurm")
 {
-    if (params.get('threads'))
+    params.njobs = 15
+    params.scratch = false
+    params.account = ''
+    if (params.threads!=0)
     {
-        throw new IllegalArgumentException('Cannot assign threads in slurm mode')
+        throw new IllegalArgumentException('Cannot assign thread limits in slurm mode')
     }
-    if (params.get('memory'))
+    if (params.memory!=0)
     {
-        throw new IllegalArgumentException('Cannot assign memory in slurm mode')
-    }
-}
-
-
-/*
- * Apply parameters
- */
-process {
-    cache = true
-    errorStrategy = 'finish'
-    beforeScript = 'chmod 755 .'
-}
-
-cleanup = params.clean
-if (params.container=='conda')
-{
-    conda.enabled = true
-    process.conda = '${projectDir}/bin/conda/create_env.yaml'
-    params.docker = false
-}
-else if (params.container=='docker')
-{
-    docker.enabled = true
-    docker.runOptions = '-u \$(id -u):\$(id -g)'
-    process.container = 'alexdhill/create:test'
-}
-else
-{
-    throw new IllegalArgumentException('Container must be either "docker" or "conda"')
-}
-if (params.exec=='slurm')
-{
-    params {
-        njobs = 15
-        scratch = false
-        account = ''
-    }
-    process.executor = 'slurm'
-    process.scratch = params.scratch
-    executor.queueSize = params.njobs
-    if (params.account!='') executor.account = params.account
-}
-else if (params.exec=="local")
-{
-    if (params.get('threads')==null || params.threads<0)
-    {
-        println("--threads: ${params.threads}");
-        throw new IllegalArgumentException('Maximum number of threads must be at least 0')
-    }
-    else if (params.threads>0)
-    {
-        executor.cpus = params.threads
-    }
-    if (params.get('memory')==null || params.memory<0)
-    {
-        println("--memory: ${params.memory}");
-        throw new IllegalArgumentException('Memory must be at least 0 GB')
-    }
-    else if (params.memory>0)
-    {
-        executor.memory = params.memory
+        throw new IllegalArgumentException('Cannot assign memory limits in slurm mode')
     }
 }
 else
@@ -312,6 +240,11 @@ else
     println("--exec: ${params.exec}");
     throw new IllegalArgumentException('Execution mode must be either "local" or "slurm"')
 }
+if (!['docker','conda'].contains(params.container))
+{
+    throw new IllegalArgumentException('Container must be either "docker" or "conda"')
+}
+
 
 /*
  * Print final parameters
