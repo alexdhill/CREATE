@@ -28,6 +28,8 @@ There are two modes to CREATE:
 #### Installation:
 As a nextflow pipeline, CREATE can be run with only an installation of conda. Make an environment with Nextflow installed and force create to utilize conda and the container format. *NOTE*: a docker installation is highly recommended to guarantee compatibility with most systems.
 
+#### WARNING: Due to an issue with the parameter parsing when running from github, please use `nextflow run alexdhill/CREATE -r discover` for the time being
+
 #### examples: REFERENCE
 ```
 nextflow run alexdhill/create --reference \
