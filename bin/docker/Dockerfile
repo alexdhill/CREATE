@@ -274,6 +274,20 @@ RUN apt-get update -y \
     && cp seqtk /usr/local/bin
 
 
+## BUILD FLAIR
+FROM ubuntu:22.04 as FLAIR
+ENV DEBIAN_FRONTEND noninteractive
+ENV FLAIR_VER 2.0.0
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        wget \
+        unzip \
+    && wget --no-check-certificate \
+        https://github.com/BrooksLabUCSC/flair/archive/refs/tags/${FLAIR_VER}.zip \
+    && unzip ${FLAIR_VER}.zip \
+    && chmod +x flair-${FLAIR_VER}/flair.py
+
+
 ## Build Final
 FROM ubuntu:22.04 as app
 COPY --from=SAMTOOLS /usr/local/bin/samtools /usr/local/bin/samtools
@@ -291,6 +305,7 @@ COPY --from=SALMON /salmon*/bin/salmon /usr/local/bin/salmon
 COPY --from=ALEVIN /alevin-fry-*/target/release/alevin-fry /usr/local/bin/alevin-fry
 COPY --from=STAR /STAR*/bin/*static/* /usr/local/bin/
 COPY --from=SEQTK /usr/local/bin/seqtk /usr/local/bin/seqtk
+COPY --from=FLAIR /flair-* /usr/local/bin/flair
 ENV DEBIAN_FRONTEND noninteractive
 ENV SAMTOOLS_VER 1.19
 ENV BEDTOOLS_VER 2.31.0
@@ -305,7 +320,7 @@ ENV ALEVIN_VER 0.8.2
 ENV STAR_VER 2.7.11a
 ENV SEQTK_VER 1.4
 ENV LC_ALL="C.UTF-8" LANG="C.UTF-8"
-ENV PATH="$PATH:/usr/local/bin/FastQC/:/usr/local/bin/TrimGalore/"
+ENV PATH="$PATH:/usr/local/bin/FastQC/:/usr/local/bin/TrimGalore/:/usr/local/bin/flair/bin/:/usr/local/bin/flair/src/flair/"
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
         wget \
@@ -315,6 +330,7 @@ RUN apt-get update -y \
         | tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc \
     && add-apt-repository ppa:openjdk-r/ppa \
     && add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu jammy-cran40/" \
+    && add-apt-repository universe \
     && apt-get update -y \
     && apt-get install -y --no-install-recommends \
         time \
@@ -333,6 +349,7 @@ RUN apt-get update -y \
         texlive-science \
         python3-setuptools \
         libz-dev \
+        libmkl-dev \
         libpng-dev \
         libbz2-dev \
         libtbb-dev \
@@ -341,12 +358,14 @@ RUN apt-get update -y \
         libxml2-dev \
         libblas-dev \
         libjpeg-dev \
+        libblis-dev \
         libtiff5-dev \
         liblapack-dev \
         libfribidi-dev \
         libharfbuzz-dev \
         libfreetype6-dev \
         libboost-all-dev \
+        libatlas-base-dev \
         libpoppler-cpp-dev \
         libgfortran-10-dev \
         libfontconfig1-dev \
@@ -358,7 +377,20 @@ RUN apt-get update -y \
     && python3 -m pip install --no-cache-dir patchelf \
     && python3 -m pip install --no-binary :all --no-cache-dir \
         "multiqc==$MULTIQC_VER" \
-    && python3 -m pip install cutadapt biopython fasta_digest \
+    && python3 -m pip install \
+        tqdm \
+        ncls \
+        rpy2 \
+        mappy \
+        numpy \
+        pysam \
+        pandas \
+        seaborn \
+        cutadapt \
+        biopython \
+        matplotlib \
+        pybedtools \
+        fasta_digest \
     && Rscript -e \
        "install.packages(c( \
             'devtools', \
@@ -367,6 +399,7 @@ RUN apt-get update -y \
             'readr', \
             'stringr', \
             'remotes', \
+            'qqman', \
             'ggplot2', \
             'ggforce', \
             'ggupset', \
@@ -427,7 +460,9 @@ RUN apt-get update -y \
            'fishpond', \
            'velociraptor', \
            'BSgenome', \
-           'DECIPHER' \
+           'DECIPHER', \
+           'DRIMSeq', \
+            'stageR' \
        )); \
        remotes::install_github('satijalab/seurat'); \
        remotes::install_github('satijalab/seurat-wrappers'); \
