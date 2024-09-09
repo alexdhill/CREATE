@@ -100,15 +100,13 @@ if (params.reference)
             println("--version: ${params.version}");
             throw new IllegalArgumentException('Gencode version must be at least 1')
         }
-    }
-    else if (params.genome=="T2T")
+    } else if (params.genome=="T2T")
     {
         if (params.version!=-1)
         {
             println("--version: ${params.version}");
             throw new IllegalArgumentException('Gencode version cannot be specified for T2T genome')
         }
-        params.version = 2
     }
     else if (params.genome!="T2T")
     {
@@ -204,46 +202,42 @@ if (params.outdir=='')
     println("--outdir: ${params.outdir}");
     throw new IllegalArgumentException('Output directory must be specified')
 }
+
+
 if (params.exec=="local")
 {
-    if (params.threads==null || params.threads<0)
+    if (params.threads<0)
     {
         println("--threads: ${params.threads}");
         throw new IllegalArgumentException('Maximum number of threads must be at least 0')
     }
-    if (params.memory==null || params.memory<0)
+    if (params.memory<0)
     {
         println("--memory: ${params.memory}");
         throw new IllegalArgumentException('Memory must be at least 0 GB')
     }
-    params.scratch = false
-    if (params.scratch)
+    if (params.scratch!=false)
     {
         throw new IllegalArgumentException('Cannot assign scratch directory in local mode')
     }
     params.account = false
-    if (params.account)
+    if (params.account!='')
     {
         throw new IllegalArgumentException('Cannot assign account in local mode')
     }
     params.njobs = false
-    if (params.njobs)
+    if (params.njobs!=-1)
     {
         throw new IllegalArgumentException('Cannot assign number of jobs in local mode')
     }
 }
 else if (params.exec=="slurm")
 {
-    params.njobs = 15
-    params.scratch = false
-    params.account = ''
-    params.threads = 0
-    if (params.threads!=0)
+    if (params.threads!=-1)
     {
         throw new IllegalArgumentException('Cannot assign thread limits in slurm mode')
     }
-    params.memory = 0
-    if (params.memory!=0)
+    if (params.memory!=-1)
     {
         throw new IllegalArgumentException('Cannot assign memory limits in slurm mode')
     }
@@ -290,7 +284,7 @@ def print_val(k,v)
     }
 }
 log.info("Run parameters:")
-params.each{k, v -> ['',false,0].contains(v)?:print_val(k,v)}
+params.each{k, v -> ['',false,-1].contains(v)?:print_val(k,v)}
 log.info(" ")
 params.manage_resources = (params.limits || params.exec!='local')
 
