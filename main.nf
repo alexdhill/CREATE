@@ -76,11 +76,9 @@ options:
 '''
     System.exit 0
 }
-params.container = 'docker'
+
 params.outdir = ''
 params.log = 'OFF'
-params.exec = 'local'
-params.clean = false
 params.keep = false
 params.limits = false
 params.threads = 0
@@ -93,22 +91,32 @@ if (params.reference)
     params.genome = ''
     params.isoquant = false
     params.index = ''
+    params.version = -1
     if (params.genome=='HG38')
     {
-        params.version = '39'
+        params.version = 39
+        if (params.version < 1)
+        {
+            println("--version: ${params.version}");
+            throw new IllegalArgumentException('Gencode version must be at least 1')
+        }
+    }
+    else if (params.genome=="T2T")
+    {
+        if (params.version!=-1)
+        {
+            println("--version: ${params.version}");
+            throw new IllegalArgumentException('Gencode version cannot be specified for T2T genome')
+        }
+        params.version = 2
     }
     else if (params.genome!="T2T")
     {
         println("--genome: ${params.genome}");
         throw new IllegalArgumentException('Genome must be either "HG38" or "T2T"')
     }
-    if (params.genome=="T2T" && params.get("version"))
-    {
-        println("--version: ${params.version}");
-        throw new IllegalArgumentException('Gencode version cannot be specified for T2T genome')
-    }
     index = new ArrayList(Arrays.asList(params.index.split(',')))
-    index.retainAll(['short','long','single_cell'])
+    index.retainAll(['short','long','single_cell','discover'])
     if (index.size()!=params.index.split(',').size())
     {
         println("--index: ${params.index}");
@@ -198,25 +206,28 @@ if (params.outdir=='')
 }
 if (params.exec=="local")
 {
-    if (params.get('threads')==null || params.threads<0)
+    if (params.threads==null || params.threads<0)
     {
         println("--threads: ${params.threads}");
         throw new IllegalArgumentException('Maximum number of threads must be at least 0')
     }
-    if (params.get('memory')==null || params.memory<0)
+    if (params.memory==null || params.memory<0)
     {
         println("--memory: ${params.memory}");
         throw new IllegalArgumentException('Memory must be at least 0 GB')
     }
-    if (params.get('scratch'))
+    params.scratch = false
+    if (params.scratch)
     {
         throw new IllegalArgumentException('Cannot assign scratch directory in local mode')
     }
-    if (params.get('account'))
+    params.account = false
+    if (params.account)
     {
         throw new IllegalArgumentException('Cannot assign account in local mode')
     }
-    if (params.get('njobs'))
+    params.njobs = false
+    if (params.njobs)
     {
         throw new IllegalArgumentException('Cannot assign number of jobs in local mode')
     }
@@ -226,10 +237,12 @@ else if (params.exec=="slurm")
     params.njobs = 15
     params.scratch = false
     params.account = ''
+    params.threads = 0
     if (params.threads!=0)
     {
         throw new IllegalArgumentException('Cannot assign thread limits in slurm mode')
     }
+    params.memory = 0
     if (params.memory!=0)
     {
         throw new IllegalArgumentException('Cannot assign memory limits in slurm mode')
@@ -280,15 +293,6 @@ log.info("Run parameters:")
 params.each{k, v -> ['',false,0].contains(v)?:print_val(k,v)}
 log.info(" ")
 params.manage_resources = (params.limits || params.exec!='local')
-
-/*
- * Handle post-print params
- */
-if (params.get('reference'))
-{
-    if (![null,false].contains(params.get('isoquant'))) params.version = '00'
-    else if (params.get('genome')=='T2T') params.version = '2'
-}
 
 
 /*
