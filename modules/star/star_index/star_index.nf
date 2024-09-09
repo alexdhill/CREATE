@@ -18,9 +18,11 @@
 process star_index
 {
     publishDir "${params.outdir}/", mode: 'copy', overwrite: params.force
-    beforeScript 'chmod 755 .'
-    errorStrategy 'ignore'
-    cache true
+    if (params.manage_resources)
+    {
+        cpus 8
+        memory '64.GB' // TODO
+    }
     input:
         tuple(
             path(annotation),

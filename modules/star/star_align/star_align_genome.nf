@@ -18,6 +18,11 @@
 process star_align_genome
 {
     publishDir "${params.outdir}/align", mode: 'copy', enable: params.keep, overwrite: params.force
+    if (params.manage_resources)
+    {
+        cpus 8
+        memory '64.GB' // TODO
+    }
     input:
         tuple(
             val(sample),

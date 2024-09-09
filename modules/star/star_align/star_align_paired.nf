@@ -18,9 +18,11 @@
 process star_align_paired
 {
     publishDir "${params.outdir}/align", mode: 'copy', enable: params.keep, overwrite: params.force
-    beforeScript 'chmod 755 .'
-    errorStrategy 'ignore'
-    cache true
+    if (params.manage_resources)
+    {
+        cpus 8
+        memory '64.GB' // TODO
+    }
     input:
         tuple(
             val(sample),
@@ -54,7 +56,7 @@ process star_align_paired
                 --outFileNamePrefix !{sample}. \
                 --outSAMtype BAM SortedByCoordinate \
                 --outSAMunmapped Within \
-                --runThreadN !{task.cpus}
+                --runThreadN 8
 
             if [[ ! -e !{sample}.Aligned.sortedByCoord.out.bam ]]; then
                 echo "\033[[1;31mERR: STAR alignment failed\033[0m" 1>&2

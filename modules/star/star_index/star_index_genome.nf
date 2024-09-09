@@ -18,6 +18,11 @@
 process star_index_genome
 {
     publishDir "${params.outdir}/", mode: 'copy', overwrite: params.force
+    if (params.manage_resources)
+    {
+        cpus 8
+        memory '64.GB' // TODO
+    }
     input:
         path(genome)
     output:
@@ -37,6 +42,6 @@ process star_index_genome
             & STAR --runMode genomeGenerate \
                 --genomeDir !{params.genome}v!{params.version}_discover_index_v$(STAR --version).star \
                 --genomeFastaFiles genome \
-                --runThreadN !{task.cpus}
+                --runThreadN 8
         '''
 }
