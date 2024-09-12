@@ -32,8 +32,8 @@ process link_transcriptome
     output:
         tuple(
             path(".bfccache/"),
-            path("${params.genome}v*_complete_digest/"),
-            path("${params.genome}v*_complete_txome.json"),
+            path("*_complete_txome.json"),
+            path("${params.genome}v${params.genome=='T2T'?'2':params.version}_complete_digest/", type: 'dir')
         )
     shell:
         '''
@@ -46,6 +46,10 @@ process link_transcriptome
             version="!{params.version}"
             if [[ "!{params.genome}"=="T2T" ]]; then
                 version="2"
+            fi
+            splici="false"
+            if [[ -n "$(grep 'single_cell' <<< '!{params.index}')" ]]; then
+                splici="splici"
             fi
             verbose=""
             if [[ "!{params.log}" == "DEBUG" ]]; then
@@ -65,6 +69,6 @@ process link_transcriptome
                 echo "Generating linked transcriptome and txdb for tximeta"
             fi
             Rscript ${verbose} !{projectDir}/bin/R/link_transcriptome.R \
-                -a !{annotation} -t !{transcripts} -i !{params.genome}v${version}_complete_digest -p !{params.index}
+                -a !{annotation} -t !{transcripts} -i !{params.genome}v${version}_complete_digest
         '''
 }

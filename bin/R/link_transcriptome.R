@@ -22,10 +22,10 @@ suppressPackageStartupMessages({
     library(BiocFileCache)
 })
 
-link_transcriptome <- function(annotation, transcripts, index, prefix)
+link_transcriptome <- function(annotation, transcripts, index)
 {
     build = strsplit(annotation, '_')[[1]][1]
-    out_json = paste0(build, "_complete", ifelse(prefix=="splici", "_splici", ""), "_txome.json")
+    out_json = paste0(build, "_complete_txome.json")
     message("Making linked txome...")
     makeLinkedTxome(
         indexDir = index,
@@ -65,10 +65,10 @@ main <- function()
         "-i", "--index", action="store",
         help="The salmon index/digest"
     )
-    parser$add_argument(
-        "-p", "--prefix", action="store",
-        help="The type of txome being linked"
-    )
+    # parser$add_argument(
+    #     "-p", "--prefix", action="store",
+    #     help="The type of txome being linked"
+    # )
     args = parser$parse_args()
     
     message("Making file cache...")
@@ -76,7 +76,7 @@ main <- function()
     bfc = BiocFileCache(".bfccache")
     setTximetaBFC(".bfccache")
 
-    link_transcriptome(args$annotation, args$transcripts, args$index, args$prefix)
+    link_transcriptome(args$annotation, args$transcripts, args$index)
 
     message("Creating transcript database...")
     build_txdb(bfc, args$annotation)

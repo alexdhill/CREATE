@@ -28,7 +28,7 @@ make_splintr_transcripts <- function(genome, genes, version)
         gtf=file.path(genes),
         featureType=c("intron", "spliced"),
         intronType="separate",
-        verbose=FALSE
+        verbose=TRUE
     ))
     
     make_exons = function(x) {
