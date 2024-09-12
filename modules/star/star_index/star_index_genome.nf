@@ -21,17 +21,21 @@ process star_index_genome
     if (params.manage_resources)
     {
         cpus 8
-        memory '64.GB' // TODO
+        memory '256.GB' // TODO
     }
     input:
         path(genome)
     output:
-        path("*.star")
+        path("*.star/")
     shell:
         '''
             if [[ !{params.log}=="INFO" || !{params.log}=="DEBUG" ]]; then
                 echo "Creating complete STAR index"
                 echo "Genome: !{genome}"
+            fi
+            version="!{params.version}"
+            if [[ "!{params.genome}"=="T2T" ]]; then
+                version="2"
             fi
             if [[ !{params.log}=="DEBUG" ]]; then
                 set -x
@@ -40,7 +44,7 @@ process star_index_genome
             mkfifo genome
             zcat !{genome} > genome \
             & STAR --runMode genomeGenerate \
-                --genomeDir !{params.genome}v!{params.version}_discover_index_v$(STAR --version).star \
+                --genomeDir !{params.genome}v${version}_discover_index_v$(STAR --version).star \
                 --genomeFastaFiles genome \
                 --runThreadN 8
         '''

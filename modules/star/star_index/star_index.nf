@@ -37,6 +37,10 @@ process star_index
                 echo "Genome: !{genome}"
                 echo "Annotation: !{annotation}"
             fi
+            version="!{params.version}"
+            if [[ "!{params.genome}"=="T2T" ]]; then
+                version="2"
+            fi
             if [[ !{params.log}=="DEBUG" ]]; then
                 set -x
             fi
@@ -45,7 +49,7 @@ process star_index
             zcat !{genome} > genome.fa
 
             STAR --runMode genomeGenerate \
-                --genomeDir !{params.genome}v!{params.version}_index_v$(STAR --version).star \
+                --genomeDir !{params.genome}v${version}_index_v$(STAR --version).star \
                 --genomeFastaFiles genome.fa \
                 --sjdbGTFfile annotation.gtf \
                 --sjdbOverhang 149 \

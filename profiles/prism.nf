@@ -42,8 +42,14 @@ process
 
     withName: "link_transcriptome"
     {
-        queue = "short"
-        time = '30m'
+        queue = "medium"
+        time = '90m'
+    }
+
+    withName: "star_index_genome"
+    {
+        queue = "long"
+        time = '24h'
     }
 
     withName: "make_splintr_transcripts"
@@ -54,8 +60,8 @@ process
 
     withName: "salmon_index"
     {
-        queue = "medium"
-        time = '5h'
+        queue = "short"
+        time = '1h'
     }
 
     withName: "minimap2_index"
@@ -113,27 +119,10 @@ process
         queue = "medium"
         time = '6h'
     }
-}
 
-if (params.library=="single_cell")
-{
-    process
-    {
-        withName: "compile_quantifications"
+    withName: "compile_quantifications"
         {
             queue = "medium"
             time = '3h'
         }
-    }
-}
-else
-{
-    process
-    {
-        withName: "compile_quantifications"
-        {
-            queue = "short"
-            time = '1h'
-        }
-    }
 }
