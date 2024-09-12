@@ -284,7 +284,7 @@ def print_val(k,v)
     }
 }
 log.info("Run parameters:")
-params.each{k, v -> ['',false,-1].contains(v)?:print_val(k,v)}
+params.each{k, v -> ['',false,-1,0].contains(v)?:print_val(k,v)}
 log.info(" ")
 params.manage_resources = (params.limits || params.exec!='local')
 
