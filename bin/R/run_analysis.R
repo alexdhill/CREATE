@@ -36,6 +36,7 @@ main = function()
         select(-c(tx_ids)) %>%
         left_join(metadata, by="sample")
 
+    dir.create("data")
     message("Saving raw counts...")
     quants %>%
         assay() %>%
@@ -52,30 +53,32 @@ main = function()
     if (is.na(deseq))
     {
         message("Insufficient replicates for normalized counts...")
-        return()
+        message("Plotting with raw counts...")
+        norm_master = raw_master
+    }
+    else
+    {
+        message("Saving normalized counts...")
+        counts(deseq, normalized=T) %>%
+            as.data.frame() %>%
+            mutate(gene_id=rownames(.)) %>%
+            write_csv("data/normalized_counts.csv", col_names=T, progress=F)
+        
+        norm_master = deseq %>%
+            counts(normalized=T) %>%
+            as.data.frame() %>%
+            mutate(gene_id=rownames(.)) %>%
+            left_join(as.data.frame(rowData(quants)), by="gene_id") %>%
+            pivot_longer(
+                cols=-c("gene_id", "gene_name", "gene_biotype", "tx_ids"),
+                names_to="sample",
+                values_to="count"
+            ) %>%
+            select(-c(tx_ids)) %>%
+            left_join(metadata, by="sample")
     }
 
     dir.create("plots")
-    dir.create("data")
-
-    message("Saving normalized counts...")
-    counts(deseq, normalized=T) %>%
-        as.data.frame() %>%
-        mutate(gene_id=rownames(.)) %>%
-        write_csv("data/normalized_counts.csv", col_names=T, progress=F)
-    
-    norm_master = deseq %>%
-        counts(normalized=T) %>%
-        as.data.frame() %>%
-        mutate(gene_id=rownames(.)) %>%
-        left_join(as.data.frame(rowData(quants)), by="gene_id") %>%
-        pivot_longer(
-            cols=-c("gene_id", "gene_name", "gene_biotype", "tx_ids"),
-            names_to="sample",
-            values_to="count"
-        ) %>%
-        select(-c(tx_ids)) %>%
-        left_join(metadata, by="sample")
 
     message("Plotting gene detection by biotype...")
     detection = norm_master %>%
