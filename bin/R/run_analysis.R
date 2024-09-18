@@ -224,8 +224,8 @@ main = function()
             ggplot(aes(x=PC1, y=PC2, color=condition))+
                 geom_point()+
                 labs(
-                    x=paste0("PC1 (", round(pca_vars[1]*100, digits=2), "%)"),
-                    y=paste0("PC2 (", round(pca_vars[2]*100, digits=2), "%)"),
+                    x=paste0("PC1 (", round(norm_pca_vars[1]*100, digits=2), "%)"),
+                    y=paste0("PC2 (", round(norm_pca_vars[2]*100, digits=2), "%)"),
                     color="Condition"
                 )
         norm_var_plot = data.frame(importance=unname(norm_pca_vars), comps=factor(names(norm_pca_vars))) %>%
@@ -251,8 +251,8 @@ main = function()
         ggplot(aes(x=PC1, y=PC2, color=condition))+
             geom_point()+
             labs(
-                x=paste0("PC1 (", round(pca_vars[1]*100, digits=2), "%)"),
-                y=paste0("PC2 (", round(pca_vars[2]*100, digits=2), "%)"),
+                x=paste0("PC1 (", round(raw_pca_vars[1]*100, digits=2), "%)"),
+                y=paste0("PC2 (", round(raw_pca_vars[2]*100, digits=2), "%)"),
                 color="Condition"
             )
     raw_var_plot = data.frame(importance=unname(raw_pca_vars), comps=factor(names(raw_pca_vars))) %>%
