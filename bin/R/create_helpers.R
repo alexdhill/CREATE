@@ -50,18 +50,28 @@ runDESeq2 <- function(quants, metadata)
         library(DESeq2)
     })
 
+    valid_conditions = metadata$condition %>%
+        unique() %>%
+        lapply(function(c){if (sum(metadata$condition==c)>2) return(c)}) %>%
+        unlist()
+
     colData = colData(quants) %>%
         as.data.frame() %>%
         mutate(sample=names, names=NULL) %>%
-        left_join(metadata, by="sample")
+        left_join(metadata, by="sample") %>%
+        filter(condition %in% valid_conditions)
 
-    deseq = quants %>%
+    deseq_data = quants %>%
         assay() %>%
         as.data.frame() %>%
         add(0.5) %>%
         floor() %>%
-        DESeq2::DESeqDataSetFromMatrix(
-            countData=.,
+        select(all_of(sample))
+    
+    if (ncol(deseq_data) == 0) return(NA)
+
+    deseq = DESeq2::DESeqDataSetFromMatrix(
+            countData=deseq_data,
             colData=colData,
             design=~condition
         ) %>%

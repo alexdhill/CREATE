@@ -37,25 +37,25 @@ main = function()
         left_join(metadata, by="sample")
 
     createTheme()
-    dir.create("plots")
-    dir.create("data")
-    message("Plotting gene detection by biotype...")
-    detection = raw_master %>%
-        filter(count >= 1) %>%
-        group_by(gene_biotype, sample, condition) %>%
-        summarise(ndetected=n()) %>%
-        ggplot(aes(x=gene_biotype, y=ndetected, fill=factor(gene_biotype, levels=names(biotype_colors)), linetype=condition))+
-            geom_boxplot(alpha=0.5)+
-            labs(x="Gene Biotype", y="# Detected Genes", linetype="Sample Condition")+
-            scale_y_continuous(trans="log10")+
-            scale_fill_manual(values=biotype_colors, guide="none")
-    ggsave(
-        plot=detection, file="plots/gene_detection.pdf",
-        width=8, height=4, units="in", dpi=300
-    )
 
     message("Running DESeq2...")
     deseq = runDESeq2(quants, metadata)
+    if (is.na(deseq))
+    {
+        message("Insufficient replicates for normalized counts...")
+        message("Saving raw counts...")
+        quants %>%
+            assay() %>%
+            as.data.frame() %>%
+            t() %>%
+            as.data.frame() %>%
+            mutate(gene_id=rownames(.)) %>%
+            write_csv("data/raw_counts.csv", col_names=T, progress=F)
+        return()
+    }
+
+    dir.create("plots")
+    dir.create("data")
 
     message("Saving normalized counts...")
     counts(deseq, normalized=T) %>%
@@ -75,6 +75,21 @@ main = function()
         ) %>%
         select(-c(tx_ids)) %>%
         left_join(metadata, by="sample")
+
+    message("Plotting gene detection by biotype...")
+    detection = norm_master %>%
+        filter(count >= 1) %>%
+        group_by(gene_biotype, sample, condition) %>%
+        summarise(ndetected=n()) %>%
+        ggplot(aes(x=gene_biotype, y=ndetected, fill=factor(gene_biotype, levels=names(biotype_colors)), linetype=condition))+
+            geom_boxplot(alpha=0.5)+
+            labs(x="Gene Biotype", y="# Detected Genes", linetype="Sample Condition")+
+            scale_y_continuous(trans="log10")+
+            scale_fill_manual(values=biotype_colors, guide="none")
+    ggsave(
+        plot=detection, file="plots/gene_detection.pdf",
+        width=8, height=4, units="in", dpi=300
+    )
 
     message("Plotting biotype expression and composition by sample...")
     expression = norm_master %>%
