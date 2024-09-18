@@ -66,7 +66,7 @@ runDESeq2 <- function(quants, metadata)
         as.data.frame() %>%
         add(0.5) %>%
         floor() %>%
-        select(all_of(sample))
+        select(all_of(colData$sample))
     
     if (ncol(deseq_data) == 0) return(NA)
 
