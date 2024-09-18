@@ -36,6 +36,15 @@ main = function()
         select(-c(tx_ids)) %>%
         left_join(metadata, by="sample")
 
+    message("Saving raw counts...")
+    quants %>%
+        assay() %>%
+        as.data.frame() %>%
+        t() %>%
+        as.data.frame() %>%
+        mutate(gene_id=rownames(.)) %>%
+        write_csv("data/raw_counts.csv", col_names=T, progress=F)
+
     createTheme()
 
     message("Running DESeq2...")
@@ -43,14 +52,6 @@ main = function()
     if (is.na(deseq))
     {
         message("Insufficient replicates for normalized counts...")
-        message("Saving raw counts...")
-        quants %>%
-            assay() %>%
-            as.data.frame() %>%
-            t() %>%
-            as.data.frame() %>%
-            mutate(gene_id=rownames(.)) %>%
-            write_csv("data/raw_counts.csv", col_names=T, progress=F)
         return()
     }
 
