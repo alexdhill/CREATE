@@ -145,10 +145,20 @@ main = function()
     )
 
     message("Plotting PCA...")
-    pca_res = deseq %>%
-        counts(normalized=T) %>%
-        as.data.frame() %>%
-        prcomp()
+    if (is.na(deseq))
+    {
+        pca_res = quants %>%
+            assay() %>%
+            as.data.frame() %>%
+            prcomp()
+    }
+    else
+    {
+        pca_res = deseq %>%
+            counts(normalized=T) %>%
+            as.data.frame() %>%
+            prcomp()
+    }
     pca_vars = summary(pca_res)$importance[2,]
     pca_plot = pca_res$rotation %>%
         as.data.frame() %>%
