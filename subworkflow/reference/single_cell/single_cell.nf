@@ -33,10 +33,5 @@ workflow SINGLE_CELL
             | map{dat -> dat[0]}
             | combine(["splintr"])
             | salmon_index
-            
-            // complete
-            // | map{dat -> [dat[1], dat[2]]}
-            // | combine(salmon_index.out)
-            // | link_transcriptome & make_database
         }
 }

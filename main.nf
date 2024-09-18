@@ -182,6 +182,41 @@ else if (params.quant)
         throw new IllegalArgumentException('CREATE reference directory must be specified')
     }
 }
+else if (params.discover)
+{
+    params.ref = ''
+    if (params.ref=='')
+    {
+        println("--ref: ${params.ref}");
+        throw new IllegalArgumentException('CREATE reference directory must be specified')
+    }
+    params.dcs = ''
+    if (params.dcs=='')
+    {
+        println("--dcs: ${params.dcs}");
+        throw new IllegalArgumentException('DCS/RCS sequence file must be specified')
+    }
+    params.long_reads = ''
+    params.lr_pattern = '*.fastq.gz'
+    if (params.long_reads=='')
+    {
+        println("--long_reads: ${params.long_reads}");
+        throw new IllegalArgumentException('Long reads must be specified')
+    }
+    params.paired_reads = ''
+    params.pr_pattern = '*_R{1,2}_*.fastq.gz'
+    if (params.paired_reads=='')
+    {
+        println("--paired_reads: ${params.paired_reads}");
+        throw new IllegalArgumentException('Paired reads must be specified')
+    }
+    params.prefix = ''
+    if (params.prefix=='')
+    {
+        println("--prefix: ${params.prefix}");
+        throw new IllegalArgumentException('Output prefix must be specified')
+    }
+}
 else
 {
     throw new IllegalArgumentException('CREATE-seq mode must be specified either "--quant" or "--reference"')

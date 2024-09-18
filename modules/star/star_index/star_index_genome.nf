@@ -20,13 +20,13 @@ process star_index_genome
     publishDir "${params.outdir}/", mode: 'copy', overwrite: params.force
     if (params.manage_resources)
     {
-        cpus 8
+        cpus 32
         memory '256.GB' // TODO
     }
     input:
         path(genome)
     output:
-        path("*.star/")
+        path("${params.genome}v${params.genome=='T2T'?'2':params.version}_discover_index_v*.star")
     shell:
         '''
             if [[ !{params.log}=="INFO" || !{params.log}=="DEBUG" ]]; then
@@ -41,11 +41,10 @@ process star_index_genome
                 set -x
             fi
 
-            mkfifo genome
-            zcat !{genome} > genome \
-            & STAR --runMode genomeGenerate \
+            zcat !{genome} > genome.fa
+            STAR --runMode genomeGenerate \
                 --genomeDir !{params.genome}v${version}_discover_index_v$(STAR --version).star \
-                --genomeFastaFiles genome \
-                --runThreadN 8
+                --genomeFastaFiles genome.fa \
+                --runThreadN 32
         '''
 }
