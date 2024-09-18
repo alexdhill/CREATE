@@ -212,7 +212,7 @@ main = function()
     message("Plotting PCA...")
     if (length(is.na(deseq))>1 || !is.na(deseq))
     {
-        pca_res = deseq %>%
+        norm_pca_res = deseq %>%
             counts(normalized=T) %>%
             as.data.frame() %>%
             prcomp()
