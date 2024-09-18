@@ -154,7 +154,7 @@ main = function()
     )
 
     message("Printing differential expression results...")
-    conditions = unique(metadata$condition) # (treatment, control)
+    conditions = unlist(lapply(unique(metadata$condition), function(c) if (sum(metadata$condition==c)>2) return(c))) # alpha
     if (length(conditions) > 2)
     {
         message("More than two conditions detected, running pairwise comparisons...")
@@ -211,7 +211,7 @@ main = function()
             )
         })
     }
-    else
+    else if (length(conditions) == 2)
     {
         deseq_res = results(deseq, contrast=c("condition", conditions[1], conditions[2])) %>%
             as.data.frame() %>%
