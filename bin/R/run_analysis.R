@@ -81,7 +81,8 @@ main = function()
             filter(count >= 1) %>%
             group_by(gene_biotype, sample, condition) %>%
             summarise(ndetected=n()) %>%
-            ggplot(aes(x=gene_biotype, y=ndetected, fill=factor(gene_biotype, levels=names(biotype_colors)), linetype=condition))+
+            ggplot(aes(x=condition, y=ndetected, fill=factor(gene_biotype, levels=names(biotype_colors))))+
+                facet_wrap(~condition, scales="free_y")+
                 geom_boxplot(alpha=0.5)+
                 labs(x="Gene Biotype", y="# Detected Genes", linetype="Sample Condition")+
                 scale_y_continuous(trans="log10")+
@@ -96,7 +97,8 @@ main = function()
         filter(count >= 1) %>%
         group_by(gene_biotype, sample, condition) %>%
         summarise(ndetected=n()) %>%
-        ggplot(aes(x=gene_biotype, y=ndetected, fill=factor(gene_biotype, levels=names(biotype_colors)), linetype=condition))+
+        ggplot(aes(x=condition, y=ndetected, fill=factor(gene_biotype, levels=names(biotype_colors))))+
+            facet_wrap(~condition, scales="free_y")+
             geom_boxplot(alpha=0.5)+
             labs(x="Gene Biotype", y="# Detected Genes", linetype="Sample Condition")+
             scale_y_continuous(trans="log10")+
