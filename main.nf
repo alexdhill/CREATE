@@ -210,12 +210,7 @@ else if (params.discover)
         println("--paired_reads: ${params.paired_reads}");
         throw new IllegalArgumentException('Paired reads must be specified')
     }
-    params.prefix = ''
-    if (params.prefix=='')
-    {
-        println("--prefix: ${params.prefix}");
-        throw new IllegalArgumentException('Output prefix must be specified')
-    }
+    params.prefixes = ''
 }
 else
 {
@@ -329,11 +324,13 @@ params.manage_resources = (params.limits || params.exec!='local')
  */
 include { REFERENCE } from './workflow/reference/reference.nf'
 include { QUANT } from './workflow/quant/quant.nf'
+include { DISCOVER } from './workflow/discover/discover.nf'
 
 workflow CREATE
 {
     if (params.get('quant')!=null && params.get('quant')==true) QUANT()
-    else REFERENCE()
+    else if (params.get('reference')!=null && params.get('reference')==true) REFERENCE()
+    else if (params.get('discover')!=null && params.get('discover')==true) DISCOVER()
 }
 
 
