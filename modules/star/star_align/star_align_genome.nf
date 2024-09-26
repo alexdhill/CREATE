@@ -26,9 +26,9 @@ process star_align_genome
     input:
         tuple(
             val(sample),
-            val(nreads),
             path(read_1),
             path(read_2),
+            val(nreads),
             path(reference)
         )
     output:
@@ -51,9 +51,13 @@ process star_align_genome
                 set -x
             fi
 
+            zcat !{read_1} > read1.fq
+            zcat !{read_2} > read2.fq
+            zcat !{reference}/*_genome.fa.gz > genome.fa
+
             STAR \
                 --genomeDir !{reference}/*discover_index*.star \
-                --readFilesIn !{read_1} !{read_2} \
+                --readFilesIn read1.fq read2.fq \
                 --outFileNamePrefix !{sample}. \
                 --outSAMtype BAM SortedByCoordinate \
                 --outSAMunmapped Within \
@@ -64,7 +68,7 @@ process star_align_genome
                 exit 1
             fi
 
-            samtools view -f 4 !{sample}.Aligned.sortedByCoord.out.bam > !{sample}_unmapped.bam &
-            samtools view -F 4 !{sample}.Aligned.sortedByCoord.out.bam > !{sample}.bam
+            samtools view -bf4 -T genome.fa !{sample}.Aligned.sortedByCoord.out.bam > !{sample}_unmapped.bam &
+            samtools view -bF4 -T genome.fa !{sample}.Aligned.sortedByCoord.out.bam > !{sample}.bam
         '''
 }
