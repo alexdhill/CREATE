@@ -162,6 +162,27 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm v${PORECHOP_VER}.tar.gz \
     && cd /Porechop-${PORECHOP_VER}
 
+## BUILD CHOPPER
+FROM ubuntu:22.04 as CHOPPER
+ENV CHOPPER_VER 0.9.0
+RUN apt-get update -y \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+        make \
+        curl \
+        unzip \
+        cmake \
+        pkg-config \
+        zlib1g-dev \
+        ca-certificates \
+    && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
+    && curl -kL \
+        https://github.com/wdecoster/chopper/archive/refs/tags/v${CHOPPER_VER}.zip \
+        -o v${CHOPPER_VER}.zip \
+    && unzip v${CHOPPER_VER}.zip \
+    && cd chopper-${CHOPPER_VER} \
+    && $HOME/.cargo/bin/cargo build --release
+
 ## BUILD MINIMAP2
 FROM ubuntu:22.04 as MINIMAP2
 ENV DEBIAN_FRONTEND noninteractive
@@ -300,6 +321,7 @@ COPY --from=FASTP /usr/local/lib/libdeflate.* /usr/lib/
 COPY --from=FASTP /usr/lib/libisal.* /usr/lib/
 COPY --from=TRIMGALORE /TrimGalore /usr/local/bin/TrimGalore
 COPY --from=PORECHOP /Porechop-* /Porechop
+COPY --from=CHOPPER /chopper-*/target/release/chopper /usr/local/bin/chopper
 COPY --from=MINIMAP2 /minimap2*/minimap2 /usr/local/bin/minimap2
 COPY --from=SALMON /salmon*/bin/salmon /usr/local/bin/salmon
 COPY --from=ALEVIN /alevin-fry-*/target/release/alevin-fry /usr/local/bin/alevin-fry
@@ -314,6 +336,7 @@ ENV MULTIQC_VER 1.8
 ENV FASTP_VER 0.20.1
 ENV TRIMGALORE_VER 0.6.10
 ENV PORECHOP_VER 0.2.4
+ENV CHOPPER_VER 0.9.0
 ENV MINIMAP2_VER 2.26
 ENV SALMON_VER 1.10.1
 ENV ALEVIN_VER 0.8.2
