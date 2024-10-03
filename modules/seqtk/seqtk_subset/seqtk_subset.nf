@@ -18,10 +18,9 @@
 process seqtk_subset
 {
     publishDir "${params.outdir}/filtered", mode: 'copy', overwrite: params.force, enable: params.keep
-    container "alexdhill/create:seqtk"
     if (params.manage_resources)
     {
-        cpus 8
+        cpus 1
         memory '16.GB'
     }
     input:

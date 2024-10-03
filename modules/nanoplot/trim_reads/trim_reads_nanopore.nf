@@ -23,7 +23,6 @@ process trim_reads_nanopore
     {
         cpus 8
         memory '16.GB'
-        time '30m'
     }
     input:
         tuple(
