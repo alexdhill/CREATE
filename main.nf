@@ -29,9 +29,10 @@ import groovy.util.logging.Slf4j
 params.help = false
 if (params.help)
 {
-    println '''Usage: nextflow run alexdhill/CREATE [--quant/--reference/--analyze] [options]
+    println '''Usage: nextflow run alexdhill/CREATE [--quant/--reference/--discover] [options]
     reference         Build a reference for CREATE
     quant             Quantify RNA-seq reads with CREATE
+    discover          Discover novel isoforms [BETA]
 
 options:
     Globals:
@@ -51,13 +52,23 @@ options:
         --index       Desired index [short,long,single_cell] [default=short]
         --isoquant    Novel isoform annotation [BETA]
 
-    --quant [default]
+    --quant
         --samples     Input samples directory [REQUIRED]
         --ref         CREATE reference directory [REQUIRED]
         --library     Library type [paired_end,nanopore,single_cell] [REQUIRED]
                       NOTE: the reference provided must contain a compatible index
         --pattern     File pattern for input samples
         --metadata    An unnamed, two-column CSV file of samples,condition
+
+    --discover
+        --ref          CREATE reference directory [REQUIRED]
+        --dcs          The DNA/RNA control sequence fasta file [REQUIRED]
+        --prefixes     A list of file prefixes for the paired long-short reads [REQUIRED]
+        --long_reads   The directory of the long-read sequences [REQUIRED]
+        --paired_reads The directory of the paired-end sequences [REQUIRED]
+        --lr_pattern   The pattern for the long-read files [default='*.fastq.gz']
+        --pe_pattern   The pattern for the paired-end files [default='*_R{1,2}_*.fastq.gz']
+        --dump         Save a 'novel' CREATE reference [default=false]
 
     Subworkflow-specific options:
         [--exec local]
@@ -69,10 +80,9 @@ options:
             --account     The user account to submit jobs
         [--quant --library single_cell]
             --barcodes    A list (txt) of all barcodes used in the experiment [REQUIRED]
-            --chemistry   The single-cell chemsitry used [dropseq,chromium,chromiumV3] [default=chromiumV3]
+            --chemistry   The single-cell chemistry used [dropseq,chromium,chromiumV3(default)]
         [--quant --library nanopore]
             --dcs         File with the DCS/RCS sequence used (for removal) [REQUIRED]
-            --discovery   Discover novel isoforms [default=false] [BETA]
 '''
     System.exit 0
 }
