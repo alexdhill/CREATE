@@ -15,42 +15,49 @@
  */
  
 
-process compile_quantifications
+process make_novel_reference
 {
-    publishDir "${params.outdir}/", mode: 'copy', overwrite: params.force
+    publishDir "${params.dump}/", mode: 'copy', enable: params.dump!='', overwrite: params.force
     if (params.manage_resources)
     {
         cpus 1
-        memory '24GB'
+        memory '1.GB'
     }
     input:
         tuple(
-            path(quants),
+            path(transcripts),
+            path(regions),
+            path(annotation),
+            path(read_map),
             path(reference)
         )
     output:
-        path("counts/")
+        tuple(
+            path("*_complete_transcripts.fa.gz"),
+            path("*_complete_annotation.gtf.gz"),
+            path("*_complete_regions.bed.gz"),
+            path("*_complete_readmap.txt"),
+            path("*_genome.fa.gz")
+        )
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Compiling quants to H5 SummarizedExperiment"
+                echo "Generating novel annotation..."
+                echo "Transcripts: !{transcripts}"
+                echo "Regions: !{regions}"
+                echo "Annotation: !{annotation}"
+                echo "Read map: !{read_map}"
                 echo "Reference: !{reference}"
-                echo "Quants:"
-                sed 's/ /\\n/g' <<< "!{quants}"
             fi
-            verbose=""
-            if [[ !{params.log}=="DEBUG" ]]; then
-                verbose="--verbose"
+            if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 
-            splintr=""
-            if [ -n "!{params.get('library')}" ] && [ "!{params.library}" -eq "single_cell" ]; then
-                splintr="-s"
-            fi
-
-            mkdir -p quants && mv !{quants} quants/
-            Rscript ${verbose} !{projectDir}/bin/R/compile_quantifications.R \
-                -q quants -r !{reference} ${splintr}
+            mkdir novel_!{reference}
+            gzip -c !{transcripts} > novel_complete_transcripts.fa.gz
+            gzip -c !{regions} > novel_complete_regions.bed.gz
+            gzip -c !{annotation} > novel_complete_annotation.gtf.gz
+            cp !{read_map} novel_complete_readmap.txt
+            cp !{reference}/*genome.fa.gz .
         '''
 }

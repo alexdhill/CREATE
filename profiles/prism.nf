@@ -104,6 +104,12 @@ process
         time = '1h'
     }
 
+    withName: "seqtk_subset"
+    {
+        queue = "short"
+        time = '1h'
+    }
+
     withName: "salmon_quant_paired"
     {
         queue = "medium"
@@ -121,8 +127,56 @@ process
     }
 
     withName: "compile_quantifications"
-        {
-            queue = "medium"
-            time = '3h'
-        }
+    {
+        queue = "medium"
+        time = '3h'
+    }
+
+    // Discover
+    withName: "star_align_genome"
+    {
+        queue = "medium"
+        time = '12h'
+    }
+
+    withName: "flair_junctions"
+    {
+        queue = "medium"
+        time = '6h'
+    }
+    withName: "flair_align"
+    {
+        queue = "short"
+        time = '1h'
+    }
+    withName: "flair_correct"
+    {
+        queue = "medium"
+        time = '6h'
+    }
+    withName: "flair_collapse"
+    {
+        queue = "medium"
+        time = '12h'
+    }
+    withName: "make_novel_reference"
+    {
+        queue = "short"
+        time = '1h'
+    }
+    withName: "salmon_index_novel"
+    {
+        queue = "medium"
+        time = '6h'
+    }
+    withName: "minimap2_index_novel"
+    {
+        queue = "medium"
+        time = '2h'
+    }
+    withName: "salmon_quant_novel"
+    {
+        queue = "medium"
+        time = '6h'
+    }
 }

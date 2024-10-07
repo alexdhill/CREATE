@@ -221,7 +221,7 @@ else if (params.discover)
         throw new IllegalArgumentException('Paired reads must be specified')
     }
     params.prefixes = ''
-    params.dump = false
+    params.dump = ''
 }
 else
 {

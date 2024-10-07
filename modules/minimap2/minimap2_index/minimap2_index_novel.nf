@@ -15,42 +15,33 @@
  */
  
 
-process compile_quantifications
+process minimap2_index_novel
 {
-    publishDir "${params.outdir}/", mode: 'copy', overwrite: params.force
+    publishDir "${params.dump}/", mode: 'copy', overwrite: params.force, enable: params.dump!=''
     if (params.manage_resources)
     {
-        cpus 1
-        memory '24GB'
+        cpus 3
+        memory '16.GB'
     }
     input:
         tuple(
-            path(quants),
+            path(transcripts),
             path(reference)
         )
     output:
-        path("counts/")
+        path("*.mmi")
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Compiling quants to H5 SummarizedExperiment"
-                echo "Reference: !{reference}"
-                echo "Quants:"
-                sed 's/ /\\n/g' <<< "!{quants}"
+                echo "Creating complete Minimap2 Index"
+                echo "Transcripts: !{transcripts}"
             fi
-            verbose=""
-            if [[ !{params.log}=="DEBUG" ]]; then
-                verbose="--verbose"
+            if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 
-            splintr=""
-            if [ -n "!{params.get('library')}" ] && [ "!{params.library}" -eq "single_cell" ]; then
-                splintr="-s"
-            fi
-
-            mkdir -p quants && mv !{quants} quants/
-            Rscript ${verbose} !{projectDir}/bin/R/compile_quantifications.R \
-                -q quants -r !{reference} ${splintr}
+            minimap2 !{transcripts} \
+                -t 3 \
+                -d novel_long_index_v$(minimap2 --version | awk -F'-' '{print $1}').mmi
         '''
 }

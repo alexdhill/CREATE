@@ -15,42 +15,43 @@
  */
  
 
-process compile_quantifications
+process flair_correct
 {
-    publishDir "${params.outdir}/", mode: 'copy', overwrite: params.force
+    publishDir "${params.outdir}/align", mode: 'copy', overwrite: params.force, enable: params.keep
     if (params.manage_resources)
     {
-        cpus 1
-        memory '24GB'
+        cpus 8
+        memory '64.GB' // TODO
     }
     input:
         tuple(
-            path(quants),
+            val(sample),
+            val(nreads),
+            path(regions),
+            path(junctions),
             path(reference)
         )
     output:
-        path("counts/")
+        tuple(
+            val("${sample}"),
+            path("${sample}_all_corrected.bed")
+        )
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Compiling quants to H5 SummarizedExperiment"
-                echo "Reference: !{reference}"
-                echo "Quants:"
-                sed 's/ /\\n/g' <<< "!{quants}"
+                echo "Running FLAIR correction"
+                echo "Alignment: !{regions}"
             fi
-            verbose=""
-            if [[ !{params.log}=="DEBUG" ]]; then
-                verbose="--verbose"
+            if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 
-            splintr=""
-            if [ -n "!{params.get('library')}" ] && [ "!{params.library}" -eq "single_cell" ]; then
-                splintr="-s"
-            fi
-
-            mkdir -p quants && mv !{quants} quants/
-            Rscript ${verbose} !{projectDir}/bin/R/compile_quantifications.R \
-                -q quants -r !{reference} ${splintr}
+            gzip -cd !{reference}/*_complete_annotation.gtf.gz > annotation.gtf
+            flair correct \
+                --genome !{reference}/*_genome.fa.gz \
+                --query !{regions} \
+                --gtf annotation.gtf \
+                --threads 8 \
+                --output !{sample}
         '''
 }

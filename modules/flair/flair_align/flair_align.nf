@@ -15,42 +15,43 @@
  */
  
 
-process compile_quantifications
+process flair_align
 {
-    publishDir "${params.outdir}/", mode: 'copy', overwrite: params.force
+    publishDir "${params.outdir}/align", mode: 'copy', overwrite: params.force, enable: params.keep
     if (params.manage_resources)
     {
-        cpus 1
-        memory '24GB'
+        cpus 8
+        memory '64.GB' // TODO
     }
     input:
         tuple(
-            path(quants),
+            val(sample),
+            val(nreads),
+            path(read),
             path(reference)
         )
     output:
-        path("counts/")
+        tuple(
+            val("${sample}"),
+            val("${nreads}"),
+            path("${sample}.bed")
+        )
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Compiling quants to H5 SummarizedExperiment"
+                echo "Running FLAIR alignment"
+                echo "Sample: !{sample} (!{nreads} reads)"
+                echo "Read: !{read}"
                 echo "Reference: !{reference}"
-                echo "Quants:"
-                sed 's/ /\\n/g' <<< "!{quants}"
             fi
-            verbose=""
-            if [[ !{params.log}=="DEBUG" ]]; then
-                verbose="--verbose"
+            if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 
-            splintr=""
-            if [ -n "!{params.get('library')}" ] && [ "!{params.library}" -eq "single_cell" ]; then
-                splintr="-s"
-            fi
-
-            mkdir -p quants && mv !{quants} quants/
-            Rscript ${verbose} !{projectDir}/bin/R/compile_quantifications.R \
-                -q quants -r !{reference} ${splintr}
+            flair align \
+                --genome !{reference}/*_genome.fa.gz \
+                --reads !{read} \
+                --threads 8 \
+                --output !{sample}
         '''
 }

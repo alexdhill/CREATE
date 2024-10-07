@@ -15,42 +15,33 @@
  */
  
 
-process compile_quantifications
+process salmon_index_novel
 {
-    publishDir "${params.outdir}/", mode: 'copy', overwrite: params.force
+    publishDir "${params.dump}/", mode: 'copy', overwrite: params.force, enable: params.dump!=''
     if (params.manage_resources)
     {
-        cpus 1
-        memory '24GB'
+        cpus 8
+        memory '24.GB'
     }
     input:
         tuple(
-            path(quants),
-            path(reference)
+            path(transcripts),
+            path(reference),
         )
     output:
-        path("counts/")
+        path("*.sidx")
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Compiling quants to H5 SummarizedExperiment"
-                echo "Reference: !{reference}"
-                echo "Quants:"
-                sed 's/ /\\n/g' <<< "!{quants}"
+                echo "Creating complete salmon index"
+                echo "Transcripts: !{transcripts}"
             fi
-            verbose=""
-            if [[ !{params.log}=="DEBUG" ]]; then
-                verbose="--verbose"
+            if [[ "!{params.log}"=="DEBUG" ]]; then
                 set -x
             fi
 
-            splintr=""
-            if [ -n "!{params.get('library')}" ] && [ "!{params.library}" -eq "single_cell" ]; then
-                splintr="-s"
-            fi
-
-            mkdir -p quants && mv !{quants} quants/
-            Rscript ${verbose} !{projectDir}/bin/R/compile_quantifications.R \
-                -q quants -r !{reference} ${splintr}
+            salmon index -t !{transcripts} \
+                -p 8 \
+                -i novel_short_index_v$(salmon --version | awk '{print $2}').sidx
         '''
 }
