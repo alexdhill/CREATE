@@ -24,10 +24,7 @@ process salmon_index_novel
         memory '24.GB'
     }
     input:
-        tuple(
-            path(transcripts),
-            path(reference),
-        )
+        path(transcripts)
     output:
         path("*.sidx")
     shell:
@@ -40,7 +37,10 @@ process salmon_index_novel
                 set -x
             fi
 
-            salmon index -t !{transcripts} \
+            gzip -cd !{transcripts} \
+            > transcripts.fa
+
+            salmon index -t transcripts.fa \
                 -p 8 \
                 -i novel_short_index_v$(salmon --version | awk '{print $2}').sidx
         '''

@@ -15,7 +15,7 @@
  */
  
 
-process make_novel_reference
+process correct_flair_annotation
 {
     publishDir "${params.dump}/", mode: 'copy', enable: params.dump!='', overwrite: params.force
     if (params.manage_resources)
@@ -24,36 +24,21 @@ process make_novel_reference
         memory '1.GB'
     }
     input:
-        tuple(
-            path(transcripts),
-            path(regions),
-            path(annotation),
-            path(read_map),
-            path(reference)
-        )
+        path(annotation)
     output:
-        tuple(
-            path("*_complete_regions.bed.gz"),
-            path("*_complete_readmap.txt"),
-            path("*_genome.fa.gz")
-        )
+        path("*_complete_annotation.gtf.gz")
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Generating novel annotation..."
-                echo "Transcripts: !{transcripts}"
-                echo "Regions: !{regions}"
+                echo "Fixing novel annotation..."
                 echo "Annotation: !{annotation}"
-                echo "Read map: !{read_map}"
-                echo "Reference: !{reference}"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 
-            mkdir novel_!{reference}
-            gzip -c !{regions} > novel_complete_regions.bed.gz
-            cp !{read_map} novel_complete_readmap.txt
-            cp !{reference}/*genome.fa.gz .
+            python3 !{projectDir}/bin/python/correct_flair_annotation.py !{annotation} \
+            | gzip -c \
+            > novel_complete_annotation.gtf.gz
         '''
 }

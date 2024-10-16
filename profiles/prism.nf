@@ -159,6 +159,16 @@ process
         queue = "medium"
         time = '12h'
     }
+    withName: "correct_flair_annotation"
+    {
+        queue = "short"
+        time = '30m'
+    }
+    withName: "correct_flair_transcripts"
+    {
+        queue = "short"
+        time = '30m'
+    }
     withName: "make_novel_reference"
     {
         queue = "short"

@@ -29,11 +29,17 @@ include { flair_junctions } from "../../modules/flair/flair_junctions/flair_junc
 include { flair_align } from "../../modules/flair/flair_align/flair_align.nf"
 include { flair_correct } from "../../modules/flair/flair_correct/flair_correct.nf"
 include { flair_collapse } from "../../modules/flair/flair_collapse/flair_collapse.nf"
+include { correct_flair_transcripts } from "../../modules/python/correct_flair_transcripts/correct_flair_transcripts.nf"
+include { salmon_index_novel } from "../../modules/salmon/salmon_index/salmon_index_novel.nf"
+include { minimap2_index_novel } from "../../modules/minimap2/minimap2_index/minimap2_index_novel.nf"
 include { make_novel_reference } from "../../modules/bash/make_novel_reference/make_novel_reference.nf"
-include { NOVEL_INDEX } from "../../subworkflow/discover/novel_index/novel_index.nf"
+// include { NOVEL_INDEX } from "../../subworkflow/discover/novel_index/novel_index.nf"
 include { minimap2_align } from "../../modules/minimap2/minimap2_align/minimap2_align.nf"
+include { link_transcriptome_novel } from "../../modules/R/link_transcriptome/link_transcriptome_novel.nf"
+include { correct_flair_annotation } from "../../modules/python/correct_flair_annotation/correct_flair_annotation.nf"
+include { make_novel_tx2g } from "../../modules/python/make_novel_tx2g/make_novel_tx2g.nf"
 include { salmon_quant_novel } from "../../modules/salmon/salmon_quant/salmon_quant_novel.nf"
-include { compile_quantifications } from "../../modules/R/compile_quantifications/compile_quantifications.nf"
+include { compile_quantifications_novel } from "../../modules/R/compile_quantifications/compile_quantifications_novel.nf"
 
 workflow DISCOVER
 {
@@ -97,14 +103,6 @@ workflow DISCOVER
         .merge(prefixes)
         .map{sample -> [sample[3], sample[1], sample[2]]}
 
-    count_reads_pe(paired_channel)
-    | trim_reads_paired
-    | combine(reference)
-    | star_align_genome
-    | map{sample -> [sample[0], sample[1], sample[2]]}
-    | combine(reference)
-    | flair_junctions
-
     long_channel = Channel.fromPath(long_dir+params.lr_pattern)
         .map{file -> [file.name, file]}
         .toSortedList{a,b -> a[0] <=> b[0]}
@@ -112,6 +110,7 @@ workflow DISCOVER
         .merge(prefixes)
         .map{sample -> [sample[2], sample[1]]}
 
+    // Run FLAIR
     count_reads_np(long_channel)
     | combine(dcs)
     | minimap2_align_dcs
@@ -120,7 +119,15 @@ workflow DISCOVER
     | trim_reads_nanopore
     | combine(reference)
     | flair_align
-    | join(flair_junctions.out)
+    | join(
+        count_reads_pe(paired_channel)
+        | trim_reads_paired
+        | combine(reference)
+        | star_align_genome
+        | map{sample -> [sample[0], sample[1], sample[2]]}
+        | combine(reference)
+        | flair_junctions
+    )
     | combine(reference)
     | flair_correct
     | map{res -> res[1]}
@@ -134,14 +141,38 @@ workflow DISCOVER
     )
     | combine(reference)
     | flair_collapse
-    | combine(reference)
-    | make_novel_reference & NOVEL_INDEX
+    | map{isoforms -> isoforms[0]}
+    | correct_flair_transcripts
+    | salmon_index_novel & minimap2_index_novel
 
+    // Save correct output
+    flair_collapse.out
+    | combine(reference)
+    | make_novel_reference
+
+    // Correct bad GTF and make TX2G map
+    flair_collapse.out
+    | map{res -> res[2]}
+    | correct_flair_annotation
+    | combine(reference)
+    | make_novel_tx2g
+
+    // Use corrected files to make LinkedTxome for TXIMETA
+    correct_flair_annotation.out
+    | combine(correct_flair_transcripts.out)
+    | combine(salmon_index_novel.out)
+    | link_transcriptome_novel
+
+    // Use final files to quantify
     trim_reads_paired.out
-    | combine(NOVEL_INDEX.out.short_index)
+    | combine(salmon_index_novel.out)
     | salmon_quant_novel
     | collect
     | map{quants -> [quants]}
-    | combine(reference)
-    | compile_quantifications
+    | combine(
+        link_transcriptome_novel.out
+        | map{res -> res[0]}
+    )
+    | combine(make_novel_tx2g.out)
+    | compile_quantifications_novel
 }

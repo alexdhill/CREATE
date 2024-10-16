@@ -13,47 +13,58 @@
  * licensor will not be liable to you for any damages arising out of these terms or the use or
  * nature of the software, under any kind of legal claim.
  */
- 
 
-process make_novel_reference
+
+process link_transcriptome_novel
 {
-    publishDir "${params.dump}/", mode: 'copy', enable: params.dump!='', overwrite: params.force
+    publishDir "${params.dump}", mode: 'copy', overwrite: params.force
     if (params.manage_resources)
     {
         cpus 1
-        memory '1.GB'
+        memory '16.GB'
     }
     input:
         tuple(
-            path(transcripts),
-            path(regions),
             path(annotation),
-            path(read_map),
-            path(reference)
+            path(transcripts),
+            path(index)
         )
     output:
         tuple(
-            path("*_complete_regions.bed.gz"),
-            path("*_complete_readmap.txt"),
-            path("*_genome.fa.gz")
+            path(".bfccache/"),
+            path("*_complete_txome.json"),
+            path("novel_complete_digest/", type: 'dir')
         )
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Generating novel annotation..."
-                echo "Transcripts: !{transcripts}"
-                echo "Regions: !{regions}"
+                echo "Writing transcriptome hash to digest"
                 echo "Annotation: !{annotation}"
-                echo "Read map: !{read_map}"
-                echo "Reference: !{reference}"
+                echo "Transcripts: !{transcripts}"
+                echo "Index: !{index}"
             fi
+            verbose=""
             if [[ "!{params.log}" == "DEBUG" ]]; then
+                verbose="--verbose"
                 set -x
             fi
 
-            mkdir novel_!{reference}
-            gzip -c !{regions} > novel_complete_regions.bed.gz
-            cp !{read_map} novel_complete_readmap.txt
-            cp !{reference}/*genome.fa.gz .
+            mkdir -p novel_complete_digest
+            
+            gzip -cd !{transcripts} \
+            > transcripts.fa
+
+            compute_fasta_digest --reference transcripts.fa \
+                --out digest.json
+            
+            sed -e's/seq_hash/SeqHash/' -e's/name_hash/NameHash/' \
+                < digest.json \
+                > novel_complete_digest/info.json
+
+            if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
+                echo "Generating linked transcriptome and txdb for tximeta"
+            fi
+            Rscript ${verbose} !{projectDir}/bin/R/link_transcriptome.R \
+                -a !{annotation} -t !{transcripts} -i novel_complete_digest
         '''
 }

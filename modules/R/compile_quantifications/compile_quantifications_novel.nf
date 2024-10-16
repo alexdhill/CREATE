@@ -15,45 +15,39 @@
  */
  
 
-process make_novel_reference
+process compile_quantifications_novel
 {
-    publishDir "${params.dump}/", mode: 'copy', enable: params.dump!='', overwrite: params.force
+    publishDir "${params.outdir}/", mode: 'copy', overwrite: params.force
     if (params.manage_resources)
     {
         cpus 1
-        memory '1.GB'
+        memory '24GB'
     }
     input:
         tuple(
-            path(transcripts),
-            path(regions),
-            path(annotation),
-            path(read_map),
-            path(reference)
+            path(quants),
+            path(cache),
+            path(tx2g)
         )
     output:
-        tuple(
-            path("*_complete_regions.bed.gz"),
-            path("*_complete_readmap.txt"),
-            path("*_genome.fa.gz")
-        )
+        path("counts/")
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Generating novel annotation..."
-                echo "Transcripts: !{transcripts}"
-                echo "Regions: !{regions}"
-                echo "Annotation: !{annotation}"
-                echo "Read map: !{read_map}"
-                echo "Reference: !{reference}"
+                echo "Compiling quants to H5 SummarizedExperiment"
+                echo "Cache: !{cache}"
+                echo "Tx2g: !{tx2g}"
+                echo "Quants:"
+                sed 's/ /\\n/g' <<< "!{quants}"
             fi
-            if [[ "!{params.log}" == "DEBUG" ]]; then
+            verbose=""
+            if [[ !{params.log}=="DEBUG" ]]; then
+                verbose="--verbose"
                 set -x
             fi
 
-            mkdir novel_!{reference}
-            gzip -c !{regions} > novel_complete_regions.bed.gz
-            cp !{read_map} novel_complete_readmap.txt
-            cp !{reference}/*genome.fa.gz .
+            mkdir -p quants && mv !{quants} quants/
+            Rscript ${verbose} !{projectDir}/bin/R/compile_quantifications.R \
+                -q quants -r .
         '''
 }

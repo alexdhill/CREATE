@@ -24,10 +24,7 @@ process minimap2_index_novel
         memory '16.GB'
     }
     input:
-        tuple(
-            path(transcripts),
-            path(reference)
-        )
+        path(transcripts)
     output:
         path("*.mmi")
     shell:
@@ -40,7 +37,10 @@ process minimap2_index_novel
                 set -x
             fi
 
-            minimap2 !{transcripts} \
+            gzip -cd !{transcripts} \
+            > transcripts.fa
+
+            minimap2 transcripts.fa \
                 -t 3 \
                 -d novel_long_index_v$(minimap2 --version | awk -F'-' '{print $1}').mmi
         '''
