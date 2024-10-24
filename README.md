@@ -32,7 +32,7 @@ As a nextflow pipeline, CREATE can be run with only an installation of conda. Ma
 
 #### examples: REFERENCE
 ```
-nextflow run alexdhill/create --reference \
+nextflow run alexdhill/CREATE --reference \
   --genome HG38 \
   --version 39 \
   --index short \
@@ -41,7 +41,7 @@ nextflow run alexdhill/create --reference \
 
 #### examples: QUANT
 ```
-nextflow run alexdhill/create --quant \
+nextflow run alexdhill/CREATE --quant \
   -resume \
   --samples <path/to/samples> \
   --ref <path/to/reference> \
@@ -53,10 +53,11 @@ nextflow run alexdhill/create --quant \
 #### usage:
 <!--    discover          Discover novel isoforms [BETA] -->
 ```
- $ nextflow run alexdhill/create --help
-Usage: nextflow run alexdhill/create [--quant/--reference/--analyze] [options]
+ $ nextflow run alexdhill/CREATE --help
+Usage: nextflow run alexdhill/CREATE [--quant/--reference/--discover] [options]
     reference         Build a reference for CREATE
     quant             Quantify RNA-seq reads with CREATE
+    discover          Discover novel isoforms [BETA]
 
 options:
     Globals:
@@ -76,13 +77,23 @@ options:
         --index       Desired index [short,long,single_cell] [default=short]
         --isoquant    Novel isoform annotation [BETA]
 
-    --quant [default]
+    --quant
         --samples     Input samples directory [REQUIRED]
         --ref         CREATE reference directory [REQUIRED]
         --library     Library type [paired_end,nanopore,single_cell] [REQUIRED]
                       NOTE: the reference provided must contain a compatible index
         --pattern     File pattern for input samples
         --metadata    An unnamed, two-column CSV file of samples,condition
+
+    --discover
+        --ref          CREATE reference directory [REQUIRED]
+        --dcs          The DNA/RNA control sequence fasta file [REQUIRED]
+        --prefixes     A list of file prefixes for the paired long-short reads [REQUIRED]
+        --long_reads   The directory of the long-read sequences [REQUIRED]
+        --paired_reads The directory of the paired-end sequences [REQUIRED]
+        --lr_pattern   The pattern for the long-read files [default='*.fastq.gz']
+        --pe_pattern   The pattern for the paired-end files [default='*_R{1,2}_*.fastq.gz']
+        --dump         Save a 'novel' CREATE reference [default=false]
 
     Subworkflow-specific options:
         [--exec local]
@@ -104,7 +115,7 @@ options:
   - [X] Finish salmon reference for short reads
   - [X] Finish minimap reference for long reads
   - [X] Finish splintr reference for single-cell
-- [ ] Finish Quant workflows
+- [X] Finish Quant workflows
   - [X] Finish Paired read quant
   - [X] Finish Single read quant
   - [X] Finish Single-Cell quant
@@ -113,7 +124,7 @@ options:
 - [ ] Add novel isoform discovery (FLAIR)
 - [X] Add Analysis ~~workflow~~ step to quant
   - [X] Finish biotype plots
-  - [ ] Finish PCA plots
+  - [X] Finish PCA plots
   - [X] Finish Volcano plots
-- [X] Flesh README
+- [X] Flesh out README
 - [ ] ~~Add profile selection to nextflow config~~ Add read-based resource requirements to processes

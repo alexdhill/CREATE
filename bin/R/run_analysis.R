@@ -2,6 +2,8 @@ main = function()
 {
     suppressMessages({
         library(argparse)
+        library(ggplot2)
+        library(patchwork)
     })
 
     parser = ArgumentParser()
@@ -34,62 +36,148 @@ main = function()
         select(-c(tx_ids)) %>%
         left_join(metadata, by="sample")
 
-    createTheme()
-    dir.create("plots")
     dir.create("data")
+    message("Saving raw counts...")
+    quants %>%
+        assay() %>%
+        as.data.frame() %>%
+        t() %>%
+        as.data.frame() %>%
+        mutate(gene_id=rownames(.)) %>%
+        write_csv("data/raw_counts.csv", col_names=T, progress=F)
+
+    createTheme()
+
+    message("Running DESeq2...")
+    deseq = runDESeq2(quants, metadata)
+    if (length(is.na(deseq))>1 || !is.na(deseq))
+    {
+        message("Saving normalized counts...")
+        counts(deseq, normalized=T) %>%
+            as.data.frame() %>%
+            mutate(gene_id=rownames(.)) %>%
+            write_csv("data/normalized_counts.csv", col_names=T, progress=F)
+        
+        norm_master = deseq %>%
+            counts(normalized=T) %>%
+            as.data.frame() %>%
+            mutate(gene_id=rownames(.)) %>%
+            left_join(as.data.frame(rowData(quants)), by="gene_id") %>%
+            pivot_longer(
+                cols=-c("gene_id", "gene_name", "gene_biotype", "tx_ids"),
+                names_to="sample",
+                values_to="count"
+            ) %>%
+            select(-c(tx_ids)) %>%
+            left_join(metadata, by="sample")
+    }
+
+    dir.create("plots")
+
     message("Plotting gene detection by biotype...")
-    detection = raw_master %>%
+    if (length(is.na(deseq))>1 || !is.na(deseq))
+    {
+        norm_detection = norm_master %>%
+            filter(count >= 1) %>%
+            group_by(gene_biotype, sample, condition) %>%
+            summarise(ndetected=n()) %>%
+            ggplot(aes(x=condition, y=ndetected, fill=factor(gene_biotype, levels=names(biotype_colors))))+
+                facet_wrap(~condition, scales="free_y")+
+                geom_boxplot(alpha=0.5)+
+                labs(x="Gene Biotype", y="# Detected Genes", linetype="Sample Condition")+
+                scale_y_continuous(trans="log10")+
+                scale_fill_manual(values=biotype_colors, guide="none")
+        ggsave(
+            plot=norm_detection, file="plots/norm_gene_detection.pdf",
+            width=8, height=4, units="in", dpi=300
+        )
+    }
+
+    raw_detection = raw_master %>%
         filter(count >= 1) %>%
         group_by(gene_biotype, sample, condition) %>%
         summarise(ndetected=n()) %>%
-        ggplot(aes(x=gene_biotype, y=ndetected, fill=factor(gene_biotype, levels=names(biotype_colors)), linetype=condition))+
+        ggplot(aes(x=condition, y=ndetected, fill=factor(gene_biotype, levels=names(biotype_colors))))+
+            facet_wrap(~condition, scales="free_y")+
             geom_boxplot(alpha=0.5)+
             labs(x="Gene Biotype", y="# Detected Genes", linetype="Sample Condition")+
             scale_y_continuous(trans="log10")+
             scale_fill_manual(values=biotype_colors, guide="none")
     ggsave(
-        plot=detection, file="plots/gene_detection.pdf",
+        plot=raw_detection, file="plots/raw_gene_detection.pdf",
         width=8, height=4, units="in", dpi=300
     )
 
-    message("Running DESeq2...")
-    deseq = runDESeq2(quants, metadata)
-
-    message("Saving normalized counts...")
-    counts(deseq, normalized=T) %>%
-        as.data.frame() %>%
-        mutate(gene_id=rownames(.)) %>%
-        write_csv("data/normalized_counts.csv", col_names=T, progress=F)
-    
-    norm_master = deseq %>%
-        counts(normalized=T) %>%
-        as.data.frame() %>%
-        mutate(gene_id=rownames(.)) %>%
-        left_join(as.data.frame(rowData(quants)), by="gene_id") %>%
-        pivot_longer(
-            cols=-c("gene_id", "gene_name", "gene_biotype", "tx_ids"),
-            names_to="sample",
-            values_to="count"
-        ) %>%
-        select(-c(tx_ids)) %>%
-        left_join(metadata, by="sample")
-
     message("Plotting biotype expression and composition by sample...")
-    expression = norm_master %>%
+    if (length(is.na(deseq))>1 || !is.na(deseq))
+    {
+        norm_expression = norm_master %>%
+            group_by(sample, condition, gene_biotype) %>%
+            summarise(count=sum(count)) %>%
+            ggplot(aes(x=sample, y=count, fill=factor(gene_biotype, levels=names(biotype_colors))))+
+                facet_grid(~condition, scales="free_x", space="free")+
+                geom_bar(stat="identity")+
+                scale_fill_manual(values=biotype_colors)+
+                labs(x="Sample ID", y="Normalized Counts", fill="Gene Biotype")+
+                theme(axis.text.x=element_text(angle=90, hjust=1))
+        ggsave(
+            plot=norm_expression, file="plots/norm_biotype_expression.pdf",
+            width=9, height=6, units="in", dpi=300
+        )
+    }
+
+    raw_expression = raw_master %>%
         group_by(sample, condition, gene_biotype) %>%
         summarise(count=sum(count)) %>%
         ggplot(aes(x=sample, y=count, fill=factor(gene_biotype, levels=names(biotype_colors))))+
             facet_grid(~condition, scales="free_x", space="free")+
             geom_bar(stat="identity")+
             scale_fill_manual(values=biotype_colors)+
-            labs(x="Sample ID", y="Normalized Counts", fill="Gene Biotype")+
+            labs(x="Sample ID", y="Raw Counts", fill="Gene Biotype")+
             theme(axis.text.x=element_text(angle=90, hjust=1))
     ggsave(
-        plot=expression, file="plots/biotype_expression.pdf",
+        plot=raw_expression, file="plots/raw_biotype_expression.pdf",
         width=9, height=6, units="in", dpi=300
     )
 
-    composition = norm_master %>%
+    if (length(is.na(deseq))>1 || !is.na(deseq))
+    {
+        norm_composition = norm_master %>%
+            group_by(sample, condition, gene_biotype) %>%
+            summarise(count=sum(count)) %>%
+            group_by(sample, condition) %>%
+            mutate(count=count/sum(count)) %>%
+            ggplot(aes(x=sample, y=count, fill=factor(gene_biotype, levels=names(biotype_colors))))+
+                geom_bar(stat="identity", position="stack")+
+                facet_grid(~condition, scales='free_x', space="free")+
+                scale_fill_manual(values=biotype_colors)+
+                scale_y_continuous(lim=c(0,1.1), breaks=c(0,0.25,0.5,0.75,1))+
+                geom_text(
+                    data = norm_master %>%
+                        group_by(sample, condition) %>%
+                        summarise(nreads=sum(count)) %>%
+                        mutate(
+                            label=paste0(round(nreads/1e6, 2), "M"),
+                            count=1.01,
+                            gene_biotype="Coding"
+                        ),
+                    aes(label=label), color="black",
+                    angle=90, hjust=0, vjust=0.5, size=3
+                )+
+                geom_segment(aes(x=-Inf, y=-Inf, xend=-Inf, yend=1), linewidth=0.75)+
+                labs(x="Sample", y="Fraction of Reads", fill="Gene Biotype")+
+                theme(
+                    axis.text.x=element_text(angle=90, hjust=1),
+                    axis.line.y=element_blank(),
+                    legend.justification=0.75,
+                )
+        ggsave(
+            plot=norm_composition, file="plots/norm_biotype_composition.pdf",
+            width=12, height=6, units="in", dpi=300
+        )
+    }
+
+    raw_composition = raw_master %>%
         group_by(sample, condition, gene_biotype) %>%
         summarise(count=sum(count)) %>%
         group_by(sample, condition) %>%
@@ -100,7 +188,7 @@ main = function()
             scale_fill_manual(values=biotype_colors)+
             scale_y_continuous(lim=c(0,1.1), breaks=c(0,0.25,0.5,0.75,1))+
             geom_text(
-                data = norm_master %>%
+                data = raw_master %>%
                     group_by(sample, condition) %>%
                     summarise(nreads=sum(count)) %>%
                     mutate(
@@ -119,12 +207,71 @@ main = function()
                 legend.justification=0.75,
             )
     ggsave(
-        plot=composition, file="plots/biotype_composition.pdf",
+        plot=raw_composition, file="plots/raw_biotype_composition.pdf",
         width=12, height=6, units="in", dpi=300
     )
 
+    message("Plotting PCA...")
+    if (length(is.na(deseq))>1 || !is.na(deseq))
+    {
+        norm_pca_res = deseq %>%
+            counts(normalized=T) %>%
+            as.data.frame() %>%
+            prcomp()
+        norm_pca_vars = summary(norm_pca_res)$importance[2,]
+        norm_pca_plot = norm_pca_res$rotation %>%
+            as.data.frame() %>%
+            mutate(sample=rownames(.)) %>%
+            left_join(metadata, by="sample") %>%
+            ggplot(aes(x=PC1, y=PC2, color=condition))+
+                geom_point()+
+                labs(
+                    x=paste0("PC1 (", round(norm_pca_vars[1]*100, digits=2), "%)"),
+                    y=paste0("PC2 (", round(norm_pca_vars[2]*100, digits=2), "%)"),
+                    color="Condition"
+                )
+        norm_var_plot = data.frame(importance=unname(norm_pca_vars), comps=factor(names(norm_pca_vars))) %>%
+            slice_head(n=5) %>%
+            ggplot(aes(x=comps, y=importance*100))+
+                geom_bar(stat="identity")+
+                labs(x="Principal Components", y="Variance Explained (%)")
+        ggsave(
+            plot=norm_pca_plot+norm_var_plot+plot_layout(guides="collect"),
+            file="plots/norm_pc_analysis.pdf",
+            width=12, height=6, units="in", dpi=300
+        )
+    }
+    raw_pca_res = quants %>%
+            assay() %>%
+            as.data.frame() %>%
+            prcomp()
+    raw_pca_vars = summary(raw_pca_res)$importance[2,]
+    raw_pca_plot = raw_pca_res$rotation %>%
+        as.data.frame() %>%
+        mutate(sample=rownames(.)) %>%
+        left_join(metadata, by="sample") %>%
+        ggplot(aes(x=PC1, y=PC2, color=condition))+
+            geom_point()+
+            labs(
+                x=paste0("PC1 (", round(raw_pca_vars[1]*100, digits=2), "%)"),
+                y=paste0("PC2 (", round(raw_pca_vars[2]*100, digits=2), "%)"),
+                color="Condition"
+            )
+    raw_var_plot = data.frame(importance=unname(raw_pca_vars), comps=factor(names(raw_pca_vars))) %>%
+        slice_head(n=5) %>%
+        ggplot(aes(x=comps, y=importance*100))+
+            geom_bar(stat="identity")+
+            labs(x="Principal Components", y="Variance Explained (%)")
+    ggsave(
+        plot=raw_pca_plot+raw_var_plot+plot_layout(guides="collect"),
+        file="plots/raw_pc_analysis.pdf",
+        width=12, height=6, units="in", dpi=300
+    )
+    
+    
+
     message("Printing differential expression results...")
-    conditions = unique(metadata$condition) # (treatment, control)
+    conditions = unlist(lapply(unique(metadata$condition), function(c) if (sum(metadata$condition==c)>2) return(c))) # alpha
     if (length(conditions) > 2)
     {
         message("More than two conditions detected, running pairwise comparisons...")
@@ -181,7 +328,7 @@ main = function()
             )
         })
     }
-    else
+    else if (length(conditions) == 2)
     {
         deseq_res = results(deseq, contrast=c("condition", conditions[1], conditions[2])) %>%
             as.data.frame() %>%

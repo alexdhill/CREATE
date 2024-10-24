@@ -12,54 +12,50 @@
  * As far as the law allows, the software comes as is, without any warranty or condition, and the
  * licensor will not be liable to you for any damages arising out of these terms or the use or
  * nature of the software, under any kind of legal claim.
- * connor was here 
  */
  
 
-process trim_reads_nanopore
+process salmon_quant_novel
 {
-    publishDir "${params.outdir}/trim/", mode: 'copy', enable: params.keep, overwrite: params.force
+    publishDir "${params.outdir}/quant/", mode: 'copy', enable: params.keep, overwrite: params.force
+    errorStrategy 'ignore'
     if (params.manage_resources)
     {
         cpus 8
-        memory '16.GB'
+        memory '32.GB'
+        time '6h'
     }
     input:
         tuple(
             val(sample),
+            path(read_1),
+            path(read_2),
             val(nreads),
-            path(read)
+            path(index)
         )
     output:
-        tuple(
-            val("${sample}"),
-            env(NREADS),
-            path("${sample}_filtered_trimmed.fq.gz")
-        )
+        path("${sample}/")
     shell:
         '''
             if [[ "!{params.log}"=="INFO" || "!{params.log}"=="DEBUG" ]]; then
-                echo "Trimming nanopore reads..."
-                echo "Sample: !{sample}"
-                echo "Read: !{read}"
-                echo "n Reads: !{nreads}"
+                echo "Quantifying paired reads"
+                echo "Sample: !{sample} (!{nreads} reads)"
+                echo "Read 1: !{read_1}"
+                echo "Read 2: !{read_2}"
+                echo "Index: !{index}"
             fi
             if [[ !{params.log}=="DEBUG" ]]; then
                 set -x
             fi
 
-            gzip -cd !{read} \
-            > filtered.fq
-            porechop \
-                --format auto \
-                -i filtered.fq \
-                -t 8 \
-                -o trimmed.fq
-            gzip -c trimmed.fq \
-            > !{sample}_filtered_trimmed.fq.gz
-
-            NREADS=`gzip -cd !{sample}_filtered_trimmed.fq.gz \
-            | wc -l \
-            | awk '{print $1/4}'`
+            salmon quant --libType A -1 !{read_1} -2 !{read_2} \
+                -i !{index} -p 8 --output !{sample} \
+                --seqBias --gcBias --writeUnmappedNames \
+                --validateMappings --recoverOrphans --rangeFactorizationBins 4
+            
+            if [[ ! -e !{sample}/quant.sf ]]; then
+                echo "\033[1;31mERR: Salmon quantification failed\033[0m" 1>&2
+                exit 1
+            fi
         '''
 }

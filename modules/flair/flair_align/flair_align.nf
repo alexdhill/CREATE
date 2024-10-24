@@ -12,54 +12,46 @@
  * As far as the law allows, the software comes as is, without any warranty or condition, and the
  * licensor will not be liable to you for any damages arising out of these terms or the use or
  * nature of the software, under any kind of legal claim.
- * connor was here 
  */
  
 
-process trim_reads_nanopore
+process flair_align
 {
-    publishDir "${params.outdir}/trim/", mode: 'copy', enable: params.keep, overwrite: params.force
+    publishDir "${params.outdir}/align/nanopore", mode: 'copy', overwrite: params.force, enable: params.keep
     if (params.manage_resources)
     {
         cpus 8
-        memory '16.GB'
+        memory '64.GB' // TODO
     }
     input:
         tuple(
             val(sample),
             val(nreads),
-            path(read)
+            path(read),
+            path(reference)
         )
     output:
         tuple(
             val("${sample}"),
-            env(NREADS),
-            path("${sample}_filtered_trimmed.fq.gz")
+            val("${nreads}"),
+            path("${sample}.bed")
         )
     shell:
         '''
-            if [[ "!{params.log}"=="INFO" || "!{params.log}"=="DEBUG" ]]; then
-                echo "Trimming nanopore reads..."
-                echo "Sample: !{sample}"
+            if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
+                echo "Running FLAIR alignment"
+                echo "Sample: !{sample} (!{nreads} reads)"
                 echo "Read: !{read}"
-                echo "n Reads: !{nreads}"
+                echo "Reference: !{reference}"
             fi
-            if [[ !{params.log}=="DEBUG" ]]; then
+            if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 
-            gzip -cd !{read} \
-            > filtered.fq
-            porechop \
-                --format auto \
-                -i filtered.fq \
-                -t 8 \
-                -o trimmed.fq
-            gzip -c trimmed.fq \
-            > !{sample}_filtered_trimmed.fq.gz
-
-            NREADS=`gzip -cd !{sample}_filtered_trimmed.fq.gz \
-            | wc -l \
-            | awk '{print $1/4}'`
+            flair align \
+                --genome !{reference}/*_genome.fa.gz \
+                --reads !{read} \
+                --threads 8 \
+                --output !{sample}
         '''
 }

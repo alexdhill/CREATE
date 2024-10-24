@@ -13,58 +13,47 @@
  * licensor will not be liable to you for any damages arising out of these terms or the use or
  * nature of the software, under any kind of legal claim.
  */
+ 
 
-
-process seqtk_subset
+process make_novel_reference
 {
-    publishDir "${params.outdir}/filtered", mode: 'copy', overwrite: params.force, enable: params.keep
+    publishDir "${params.dump}/", mode: 'copy', enable: params.dump!='', overwrite: params.force
     if (params.manage_resources)
     {
         cpus 1
-        memory '16.GB'
+        memory '1.GB'
     }
     input:
         tuple(
-            val(sample),
-            val(nreads),
-            path(controls),
-            path(read)
+            path(transcripts),
+            path(regions),
+            path(annotation),
+            path(read_map),
+            path(reference)
         )
     output:
         tuple(
-            val("${sample}"),
-            env(NREADS),
-            path("${sample}_filtered.fq.gz")
+            path("*_complete_regions.bed.gz"),
+            path("*_complete_readmap.txt"),
+            path("*_genome.fa.gz")
         )
     shell:
         '''
-            mkfifo reads read_names control_names
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Removing DCS Sequence(s)"
-                echo "Read: !{read}"
-                echo "Controls: !{controls}"
+                echo "Generating novel annotation..."
+                echo "Transcripts: !{transcripts}"
+                echo "Regions: !{regions}"
+                echo "Annotation: !{annotation}"
+                echo "Read map: !{read_map}"
+                echo "Reference: !{reference}"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 
-            cat !{controls} \
-            | sort \
-            > control_names \
-            & zcat !{read} \
-            | sed -n '1~4p' \
-            | cut -d' ' -f1 \
-            | sed 's/@//' \
-            | sort \
-            > read_names \
-            & comm -23 read_names control_names \
-            > non_control_reads.txt \
-
-            gzip -cd !{read} > reads &
-            seqtk subseq reads non_control_reads.txt \
-            | gzip \
-            > !{sample}_filtered.fq.gz
-
-            NREADS="$(cat non_control_reads.txt | wc -l)"
+            mkdir novel_!{reference}
+            gzip -c !{regions} > novel_complete_regions.bed.gz
+            cp !{read_map} novel_complete_readmap.txt
+            cp !{reference}/*genome.fa.gz .
         '''
 }

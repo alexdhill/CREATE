@@ -15,17 +15,30 @@
  */
  
 
-include { minimap2_index } from '../../../modules/minimap2/minimap2_index/minimap2_index.nf'
-
-workflow LONG
+process correct_flair_transcripts
 {
-    take:
-        complete // [complete.gtf, complete.fa, genome]
-    main:
-        if (params.index.split(',').contains('long') || params.index.split(',').contains('discover'))
-        {
-            complete
-            | map{dat -> dat[1]}
-            | minimap2_index
-        }
+    publishDir "${params.dump}/", mode: 'copy', enable: params.dump!='', overwrite: params.force
+    if (params.manage_resources)
+    {
+        cpus 1
+        memory '1.GB'
+    }
+    input:
+        path(transcripts)
+    output:
+        path("*_complete_transcripts.fa.gz")
+    shell:
+        '''
+            if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
+                echo "Fixing novel transcripts..."
+                echo "Transcripts: !{transcripts}"
+            fi
+            if [[ "!{params.log}" == "DEBUG" ]]; then
+                set -x
+            fi
+
+            python3 !{projectDir}/bin/python/correct_flair_transcripts.py !{transcripts} \
+            | gzip -c \
+            > novel_complete_transcripts.fa.gz
+        '''
 }

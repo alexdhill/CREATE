@@ -16,7 +16,7 @@
  */
  
 
-process trim_reads_nanopore
+process trim_reads_np
 {
     publishDir "${params.outdir}/trim/", mode: 'copy', enable: params.keep, overwrite: params.force
     if (params.manage_resources)
@@ -48,14 +48,13 @@ process trim_reads_nanopore
                 set -x
             fi
 
-            gzip -cd !{read} \
-            > filtered.fq
-            porechop \
-                --format auto \
-                -i filtered.fq \
-                -t 8 \
-                -o trimmed.fq
-            gzip -c trimmed.fq \
+            chopper \
+                -i !{read} \
+                -q 20 \
+                -l 75 \
+                --threads 8 \
+                -o trimmed.fq \
+            | gzip \
             > !{sample}_filtered_trimmed.fq.gz
 
             NREADS=`gzip -cd !{sample}_filtered_trimmed.fq.gz \

@@ -42,8 +42,14 @@ process
 
     withName: "link_transcriptome"
     {
-        queue = "short"
-        time = '30m'
+        queue = "medium"
+        time = '90m'
+    }
+
+    withName: "star_index_genome"
+    {
+        queue = "long"
+        time = '24h'
     }
 
     withName: "make_splintr_transcripts"
@@ -54,8 +60,8 @@ process
 
     withName: "salmon_index"
     {
-        queue = "medium"
-        time = '5h'
+        queue = "short"
+        time = '1h'
     }
 
     withName: "minimap2_index"
@@ -98,6 +104,12 @@ process
         time = '1h'
     }
 
+    withName: "seqtk_subset"
+    {
+        queue = "short"
+        time = '1h'
+    }
+
     withName: "salmon_quant_paired"
     {
         queue = "medium"
@@ -113,27 +125,68 @@ process
         queue = "medium"
         time = '6h'
     }
-}
 
-if (params.library=="single_cell")
-{
-    process
+    withName: "compile_quantifications"
     {
-        withName: "compile_quantifications"
-        {
-            queue = "medium"
-            time = '3h'
-        }
+        queue = "medium"
+        time = '3h'
     }
-}
-else
-{
-    process
+
+    // Discover
+    withName: "star_align_genome"
     {
-        withName: "compile_quantifications"
-        {
-            queue = "short"
-            time = '1h'
-        }
+        queue = "medium"
+        time = '12h'
+    }
+
+    withName: "flair_junctions"
+    {
+        queue = "medium"
+        time = '6h'
+    }
+    withName: "flair_align"
+    {
+        queue = "short"
+        time = '1h'
+    }
+    withName: "flair_correct"
+    {
+        queue = "medium"
+        time = '6h'
+    }
+    withName: "flair_collapse"
+    {
+        queue = "medium"
+        time = '12h'
+    }
+    withName: "correct_flair_annotation"
+    {
+        queue = "short"
+        time = '30m'
+    }
+    withName: "correct_flair_transcripts"
+    {
+        queue = "short"
+        time = '30m'
+    }
+    withName: "make_novel_reference"
+    {
+        queue = "short"
+        time = '1h'
+    }
+    withName: "salmon_index_novel"
+    {
+        queue = "medium"
+        time = '6h'
+    }
+    withName: "minimap2_index_novel"
+    {
+        queue = "medium"
+        time = '2h'
+    }
+    withName: "salmon_quant_novel"
+    {
+        queue = "medium"
+        time = '6h'
     }
 }

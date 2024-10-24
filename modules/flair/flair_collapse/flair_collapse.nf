@@ -13,58 +13,54 @@
  * licensor will not be liable to you for any damages arising out of these terms or the use or
  * nature of the software, under any kind of legal claim.
  */
+ 
 
-
-process seqtk_subset
+process flair_collapse
 {
-    publishDir "${params.outdir}/filtered", mode: 'copy', overwrite: params.force, enable: params.keep
+    publishDir "${params.outdir}/isoforms", mode: 'copy', overwrite: params.force, enable: params.keep
     if (params.manage_resources)
     {
-        cpus 1
-        memory '16.GB'
+        cpus 8
+        memory '64.GB' // TODO
     }
     input:
         tuple(
-            val(sample),
-            val(nreads),
-            path(controls),
-            path(read)
+            path(regions),
+            path(reads),
+            path(reference)
         )
     output:
         tuple(
-            val("${sample}"),
-            env(NREADS),
-            path("${sample}_filtered.fq.gz")
+            path("novel.isoforms.fa"),
+            path("novel.isoforms.bed"),
+            path("novel.isoforms.gtf"),
+            path("novel.isoform.read.map.txt")
         )
     shell:
         '''
-            mkfifo reads read_names control_names
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Removing DCS Sequence(s)"
-                echo "Read: !{read}"
-                echo "Controls: !{controls}"
+                echo "Running FLAIR discovery"
+                echo "BEDs:\n!{regions}"
+                echo "Reads:\n!{reads}"
             fi
+            cat !{regions} > master.bed
+
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 
-            cat !{controls} \
-            | sort \
-            > control_names \
-            & zcat !{read} \
-            | sed -n '1~4p' \
-            | cut -d' ' -f1 \
-            | sed 's/@//' \
-            | sort \
-            > read_names \
-            & comm -23 read_names control_names \
-            > non_control_reads.txt \
-
-            gzip -cd !{read} > reads &
-            seqtk subseq reads non_control_reads.txt \
-            | gzip \
-            > !{sample}_filtered.fq.gz
-
-            NREADS="$(cat non_control_reads.txt | wc -l)"
+            gzip -cd !{reference}/*genome.fa.gz > genome.fa
+            gzip -cd !{reference}/*_complete_annotation.gtf.gz > annotation.gtf
+            flair collapse \
+                --genome genome.fa \
+                --query master.bed \
+                --reads !{reads} \
+                --gtf annotation.gtf \
+                --annotation_reliant generate \
+                --stringent \
+                --check_splice \
+                --generate_map \
+                --threads 8 \
+                --output novel
         '''
 }

@@ -13,58 +13,35 @@
  * licensor will not be liable to you for any damages arising out of these terms or the use or
  * nature of the software, under any kind of legal claim.
  */
+ 
 
-
-process seqtk_subset
+process minimap2_index_novel
 {
-    publishDir "${params.outdir}/filtered", mode: 'copy', overwrite: params.force, enable: params.keep
+    publishDir "${params.dump}/", mode: 'copy', overwrite: params.force, enable: params.dump!=''
     if (params.manage_resources)
     {
-        cpus 1
+        cpus 3
         memory '16.GB'
     }
     input:
-        tuple(
-            val(sample),
-            val(nreads),
-            path(controls),
-            path(read)
-        )
+        path(transcripts)
     output:
-        tuple(
-            val("${sample}"),
-            env(NREADS),
-            path("${sample}_filtered.fq.gz")
-        )
+        path("*.mmi")
     shell:
         '''
-            mkfifo reads read_names control_names
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Removing DCS Sequence(s)"
-                echo "Read: !{read}"
-                echo "Controls: !{controls}"
+                echo "Creating complete Minimap2 Index"
+                echo "Transcripts: !{transcripts}"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 
-            cat !{controls} \
-            | sort \
-            > control_names \
-            & zcat !{read} \
-            | sed -n '1~4p' \
-            | cut -d' ' -f1 \
-            | sed 's/@//' \
-            | sort \
-            > read_names \
-            & comm -23 read_names control_names \
-            > non_control_reads.txt \
+            gzip -cd !{transcripts} \
+            > transcripts.fa
 
-            gzip -cd !{read} > reads &
-            seqtk subseq reads non_control_reads.txt \
-            | gzip \
-            > !{sample}_filtered.fq.gz
-
-            NREADS="$(cat non_control_reads.txt | wc -l)"
+            minimap2 transcripts.fa \
+                -t 3 \
+                -d novel_long_index_v$(minimap2 --version | awk -F'-' '{print $1}').mmi
         '''
 }

@@ -15,9 +15,9 @@
  */
  
 
-process star_align_paired
+process star_align_genome
 {
-    publishDir "${params.outdir}/align", mode: 'copy', enable: params.keep, overwrite: params.force
+    publishDir "${params.outdir}/align/paired", mode: 'copy', enable: params.keep, overwrite: params.force
     if (params.manage_resources)
     {
         cpus 8
@@ -33,6 +33,8 @@ process star_align_paired
         )
     output:
         tuple(
+            val("${sample}"),
+            val("${nreads}"),
             path("${sample}.bam"),
             path("${sample}_unmapped.bam")
         )
@@ -49,10 +51,13 @@ process star_align_paired
                 set -x
             fi
 
+            zcat !{read_1} > read1.fq
+            zcat !{read_2} > read2.fq
+            zcat !{reference}/*_genome.fa.gz > genome.fa
+
             STAR \
-                --genomeDir !{reference}/*.star \
-                --readFilesIn !{read_1} !{read_2} \
-                --quantMode TranscriptomeSAM \
+                --genomeDir !{reference}/*discover_index*.star \
+                --readFilesIn read1.fq read2.fq \
                 --outFileNamePrefix !{sample}. \
                 --outSAMtype BAM SortedByCoordinate \
                 --outSAMunmapped Within \
@@ -63,7 +68,7 @@ process star_align_paired
                 exit 1
             fi
 
-            samtools view -f 4 !{sample}.Aligned.sortedByCoord.out.bam > !{sample}_unmapped.bam &
-            samtools view -F 4 !{sample}.Aligned.sortedByCoord.out.bam > !{sample}.bam
+            samtools view -bf4 -T genome.fa !{sample}.Aligned.sortedByCoord.out.bam > !{sample}_unmapped.bam &
+            samtools view -bF4 -T genome.fa !{sample}.Aligned.sortedByCoord.out.bam > !{sample}.bam
         '''
 }

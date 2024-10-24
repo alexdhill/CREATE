@@ -15,9 +15,9 @@
  */
 
 
-process link_transcriptome
+process link_transcriptome_novel
 {
-    publishDir "${params.outdir}", mode: 'copy', overwrite: params.force
+    publishDir "${params.dump}", mode: 'copy', overwrite: params.force
     if (params.manage_resources)
     {
         cpus 1
@@ -33,7 +33,7 @@ process link_transcriptome
         tuple(
             path(".bfccache/"),
             path("*_complete_txome.json"),
-            path("${params.genome}v${params.genome=='T2T'?'2':params.version}_complete_digest/", type: 'dir')
+            path("novel_complete_digest/", type: 'dir')
         )
     shell:
         '''
@@ -43,32 +43,28 @@ process link_transcriptome
                 echo "Transcripts: !{transcripts}"
                 echo "Index: !{index}"
             fi
-            version="!{params.version}"
-            if [[ "!{params.genome}"=="T2T" ]]; then
-                version="2"
-            fi
-            splici="false"
-            if [[ -n "$(grep 'single_cell' <<< '!{params.index}')" ]]; then
-                splici="splici"
-            fi
             verbose=""
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 verbose="--verbose"
                 set -x
             fi
 
-            gzip -cd !{transcripts} > txome.fa
-            mkdir -p !{params.genome}v${version}_complete_digest
-            compute_fasta_digest --reference txome.fa \
+            mkdir -p novel_complete_digest
+            
+            gzip -cd !{transcripts} \
+            > transcripts.fa
+
+            compute_fasta_digest --reference transcripts.fa \
                 --out digest.json
+            
             sed -e's/seq_hash/SeqHash/' -e's/name_hash/NameHash/' \
                 < digest.json \
-                > !{params.genome}v${version}_complete_digest/info.json
+                > novel_complete_digest/info.json
 
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
                 echo "Generating linked transcriptome and txdb for tximeta"
             fi
             Rscript ${verbose} !{projectDir}/bin/R/link_transcriptome.R \
-                -a !{annotation} -t !{transcripts} -i !{params.genome}v${version}_complete_digest
+                -a !{annotation} -t !{transcripts} -i novel_complete_digest
         '''
 }

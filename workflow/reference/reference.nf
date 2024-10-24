@@ -30,6 +30,7 @@ include { make_database } from '../../modules/R/make_database/make_database.nf'
 include { SHORT } from '../../subworkflow/reference/short/short.nf'
 include { LONG } from '../../subworkflow/reference/long/long.nf'
 include { SINGLE_CELL } from '../../subworkflow/reference/single_cell/single_cell.nf'
+include { DISCOVER } from '../../subworkflow/reference/discover/discover.nf'
 
 workflow REFERENCE
 {
@@ -48,6 +49,9 @@ workflow REFERENCE
     | collect // [complete.gtf, complete.fa]
     | combine(download_reference.out) // [complete.gtf, complete.fa, genome.fa]
     | link_transcriptome & SHORT & LONG & SINGLE_CELL
+
+    download_reference.out
+    | DISCOVER
 
     download_gencode_annotation.out
     | combine(download_repeat_annotation.out)

@@ -15,27 +15,23 @@
  */
  
 
-process star_index
+process star_index_genome
 {
     publishDir "${params.outdir}/", mode: 'copy', overwrite: params.force
     if (params.manage_resources)
     {
-        cpus 8
-        memory '64.GB' // TODO
+        cpus 32
+        memory '256.GB' // TODO
     }
     input:
-        tuple(
-            path(annotation),
-            path(genome)
-        )
+        path(genome)
     output:
-        path("*.star")
+        path("${params.genome}v${params.genome=='T2T'?'2':params.version}_discover_index_v*.star")
     shell:
         '''
             if [[ !{params.log}=="INFO" || !{params.log}=="DEBUG" ]]; then
                 echo "Creating complete STAR index"
                 echo "Genome: !{genome}"
-                echo "Annotation: !{annotation}"
             fi
             version="!{params.version}"
             if [[ "!{params.genome}"=="T2T" ]]; then
@@ -45,15 +41,10 @@ process star_index
                 set -x
             fi
 
-            zcat !{annotation} > annotation.gtf
             zcat !{genome} > genome.fa
-
             STAR --runMode genomeGenerate \
-                --genomeDir !{params.genome}v${version}_index_v$(STAR --version).star \
+                --genomeDir !{params.genome}v${version}_discover_index_v$(STAR --version).star \
                 --genomeFastaFiles genome.fa \
-                --sjdbGTFfile annotation.gtf \
-                --sjdbOverhang 149 \
-                --limitSjdbInsertNsj 6000000 \
-                --runThreadN !{task.cpus}
+                --runThreadN 32
         '''
 }

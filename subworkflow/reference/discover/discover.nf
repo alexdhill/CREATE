@@ -15,17 +15,16 @@
  */
  
 
-include { minimap2_index } from '../../../modules/minimap2/minimap2_index/minimap2_index.nf'
+include { star_index_genome } from '../../../modules/star/star_index/star_index_genome.nf'
 
-workflow LONG
+workflow DISCOVER
 {
     take:
-        complete // [complete.gtf, complete.fa, genome]
+        genome
     main:
-        if (params.index.split(',').contains('long') || params.index.split(',').contains('discover'))
+        if (params.index.split(',').contains('discover'))
         {
-            complete
-            | map{dat -> dat[1]}
-            | minimap2_index
+            genome
+            | star_index_genome
         }
 }

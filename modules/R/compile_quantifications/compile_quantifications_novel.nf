@@ -15,45 +15,39 @@
  */
  
 
-process star_index
+process compile_quantifications_novel
 {
     publishDir "${params.outdir}/", mode: 'copy', overwrite: params.force
     if (params.manage_resources)
     {
-        cpus 8
-        memory '64.GB' // TODO
+        cpus 1
+        memory '24GB'
     }
     input:
         tuple(
-            path(annotation),
-            path(genome)
+            path(quants),
+            path(cache),
+            path(tx2g)
         )
     output:
-        path("*.star")
+        path("counts/")
     shell:
         '''
-            if [[ !{params.log}=="INFO" || !{params.log}=="DEBUG" ]]; then
-                echo "Creating complete STAR index"
-                echo "Genome: !{genome}"
-                echo "Annotation: !{annotation}"
+            if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
+                echo "Compiling quants to H5 SummarizedExperiment"
+                echo "Cache: !{cache}"
+                echo "Tx2g: !{tx2g}"
+                echo "Quants:"
+                sed 's/ /\\n/g' <<< "!{quants}"
             fi
-            version="!{params.version}"
-            if [[ "!{params.genome}"=="T2T" ]]; then
-                version="2"
-            fi
+            verbose=""
             if [[ !{params.log}=="DEBUG" ]]; then
+                verbose="--verbose"
                 set -x
             fi
 
-            zcat !{annotation} > annotation.gtf
-            zcat !{genome} > genome.fa
-
-            STAR --runMode genomeGenerate \
-                --genomeDir !{params.genome}v${version}_index_v$(STAR --version).star \
-                --genomeFastaFiles genome.fa \
-                --sjdbGTFfile annotation.gtf \
-                --sjdbOverhang 149 \
-                --limitSjdbInsertNsj 6000000 \
-                --runThreadN !{task.cpus}
+            mkdir -p quants && mv !{quants} quants/
+            Rscript ${verbose} !{projectDir}/bin/R/compile_quantifications.R \
+                -q quants -r .
         '''
 }

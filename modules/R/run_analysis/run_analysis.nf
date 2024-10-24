@@ -25,8 +25,8 @@ process run_analysis
         )
     output:
         tuple(
-            path("plots/"),
-            path("data/")
+            path("plots/", optional: true),
+            path("data/", optional: true)
         )
     shell:
         if (params.metadata!="")
