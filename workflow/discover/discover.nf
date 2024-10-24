@@ -33,7 +33,6 @@ include { correct_flair_transcripts } from "../../modules/python/correct_flair_t
 include { salmon_index_novel } from "../../modules/salmon/salmon_index/salmon_index_novel.nf"
 include { minimap2_index_novel } from "../../modules/minimap2/minimap2_index/minimap2_index_novel.nf"
 include { make_novel_reference } from "../../modules/bash/make_novel_reference/make_novel_reference.nf"
-// include { NOVEL_INDEX } from "../../subworkflow/discover/novel_index/novel_index.nf"
 include { minimap2_align } from "../../modules/minimap2/minimap2_align/minimap2_align.nf"
 include { link_transcriptome_novel } from "../../modules/R/link_transcriptome/link_transcriptome_novel.nf"
 include { correct_flair_annotation } from "../../modules/python/correct_flair_annotation/correct_flair_annotation.nf"

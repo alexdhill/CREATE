@@ -67,8 +67,8 @@ options:
         --long_reads   The directory of the long-read sequences [REQUIRED]
         --paired_reads The directory of the paired-end sequences [REQUIRED]
         --lr_pattern   The pattern for the long-read files [default='*.fastq.gz']
-        --pe_pattern   The pattern for the paired-end files [default='*_R{1,2}_*.fastq.gz']
-        --dump         Save a 'novel' CREATE reference [default=false]
+        --pr_pattern   The pattern for the paired-end files [default='*_R{1,2}_*.fastq.gz']
+        --dump         Location to save the 'novel' CREATE reference [default=false]
 
     Subworkflow-specific options:
         [--exec local]
