@@ -75,7 +75,7 @@ workflow DISCOVER
         log.warn("Number of long reads and paired read samples do not match")
     }
 
-    prefix_list = (new File(params.prefix) as String[]).sort(false)
+    prefix_list = (new File(params.prefixes) as String[]).sort(false)
     log.info("Found ${prefix_list.length} prefixes")
     for (prefix in prefix_list)
     {

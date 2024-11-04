@@ -21,14 +21,13 @@
 
 CREATE is a pipeline for the quantification of repetitive elements alongside canonical genes. It is designed to be very high throughput, and can be run very quickly on a large number of samples. The core of CREATE's functions are based on Trim-Galore, Salmon, and Tximeta for fast read processing and storage.
 
-There are two modes to CREATE:
+There are three modes to CREATE:
   - REFERENCE: This mode creates a rich 'complete' set of reference files that contain a formatted compilation of both GENCODE annotations and transcripts, as well as repetitive element annotations and transcripts pulled from the RepeatMasker track on the UCSC genome browser. Reference directories can also be downloaded for ease of use.
   - QUANT: This mode takes a set of raw reads and outputs a highly efficient H5+RDS file that efficiently store a SummarizedExperimet (or SingleCellExperiment) object that can be used for downstream analysis.
+  - DISCOVER: This mode will take an existing CREATE reference and use long read samples to create a enriched reference with novel isoforms, and then quantify short read samples with the novel reference.
 
 #### Installation:
 As a nextflow pipeline, CREATE can be run with only an installation of conda. Make an environment with Nextflow installed and force create to utilize conda and the container format. *NOTE*: a docker installation is highly recommended to guarantee compatibility with most systems.
-
-#### WARNING: Due to an issue with the parameter parsing when running from github, please use `nextflow run alexdhill/CREATE -r discover` for the time being
 
 #### examples: REFERENCE
 ```
@@ -121,7 +120,7 @@ options:
   - [X] Finish Single-Cell quant
   - [X] Finish Nanopore quant
     - [X] Add DCS/RCS removal
-- [ ] Add novel isoform discovery (FLAIR)
+- [X] Add novel isoform discovery (FLAIR)
 - [X] Add Analysis ~~workflow~~ step to quant
   - [X] Finish biotype plots
   - [X] Finish PCA plots
