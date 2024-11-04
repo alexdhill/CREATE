@@ -17,7 +17,7 @@
 
 process trim_reads_single
 {
-    publishDir "${params.outdir}/trim/${sample}", mode: 'copy', enable: params.keep, overwrite: params.force
+    publishDir "${params.outdir}/reads/trimmed/", mode: 'copy', enable: params.keep, overwrite: params.force
     if (params.manage_resources)
     {
         cpus 8

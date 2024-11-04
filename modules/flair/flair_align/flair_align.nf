@@ -17,7 +17,7 @@
 
 process flair_align
 {
-    publishDir "${params.outdir}/align/nanopore", mode: 'copy', overwrite: params.force, enable: params.keep
+    publishDir "${params.outdir}/ranges/nanopore/raw", mode: 'copy', overwrite: params.force, enable: params.keep
     if (params.manage_resources)
     {
         cpus 8

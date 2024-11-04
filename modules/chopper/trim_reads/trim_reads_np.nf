@@ -18,7 +18,7 @@
 
 process trim_reads_np
 {
-    publishDir "${params.outdir}/trim/", mode: 'copy', enable: params.keep, overwrite: params.force
+    publishDir "${params.outdir}/reads/trimmed/", mode: 'copy', enable: params.keep, overwrite: params.force
     if (params.manage_resources)
     {
         cpus 8

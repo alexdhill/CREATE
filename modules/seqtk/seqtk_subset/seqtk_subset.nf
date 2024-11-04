@@ -17,7 +17,7 @@
 
 process seqtk_subset
 {
-    publishDir "${params.outdir}/filtered", mode: 'copy', overwrite: params.force, enable: params.keep
+    publishDir "${params.outdir}/reads/filtered", mode: 'copy', overwrite: params.force, enable: params.keep
     if (params.manage_resources)
     {
         cpus 1
