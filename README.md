@@ -178,3 +178,6 @@ nextflow run alexdhill/CREATE --discover \
   - [X] Finish Volcano plots
 - [X] Flesh out README
 - [ ] ~~Add profile selection to nextflow config~~ Add read-based resource requirements to processes
+- [ ] Add accession list support as input for quant (feature-samplesheet)
+- [ ] Make metadata matching intelligent (feature-metadata)
+- [ ] Add DESeq norm counts to output SE
