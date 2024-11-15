@@ -21,6 +21,8 @@
 import java.nio.file.FileSystems
 import java.io.File
 import java.util.Arrays
+import java.nio.file.Files
+import java.nio.file.Paths
 
 include { PAIRED_END } from '../../subworkflow/quant/paired_end/paired_end.nf'
 include { SINGLE_END } from '../../subworkflow/quant/single_end/single_end.nf'
@@ -33,20 +35,32 @@ workflow QUANT
      * File matcher for debug
      */
     sampleDir = (params.samples.lastIndexOf("/")+1==params.samples.length())?params.samples:params.samples+"/"
-    log.info("Listing ${sampleDir}${params.pattern}")
-    glob = FileSystems.getDefault().getPathMatcher("glob:${sampleDir}${params.pattern}")
-    files = Arrays.stream(new File(sampleDir).listFiles())
-        .filter(f -> glob.matches(f.toPath()))
-        .toArray();
-    Arrays.sort(files)
-    pair = (["single_end", "nanopore"].contains(params.library))?1:2
-    Arrays.copyOfRange(files, 0, Math.min(files.length, 10)).eachWithIndex{f,i -> {
-        if (i%(pair*2)<pair) log.info(">   \u001B[36m${f.toString()}\u001B[0m")
-        else log.info(">   ${f.toString()}")
-    }}
-    if (files.size() > 10) log.info(">   . . . and \u001B[32m${files.size()-10}\u001B[0m more")
-    log.info(" ")
-
+    if (new File(sampleDir).isDirectory() == false)
+    {
+        log.info("Listing ${sampleDir}")
+        def path = Paths.get(sampleDir)
+        def lines = Arrays.stream(Files.readAllLines(path))
+        Arrays.sort(lines)
+        pair = (["single_end", "nanopore"].contains(params.library))?1:2
+        Arrays.copyOfRange(lines, 0, Math.min(lines.length, 10)).eachWithIndex{f,i -> {
+            if (i%(pair*2)<pair) log.info(">   \u001B[36m${f}\u001B[0m")
+            else log.info(">   ${f}")
+        }}
+    } else {
+        log.info("Listing ${sampleDir}${params.pattern}")
+        glob = FileSystems.getDefault().getPathMatcher("glob:${sampleDir}${params.pattern}")
+        files = Arrays.stream(new File(sampleDir).listFiles())
+            .filter(f -> glob.matches(f.toPath()))
+            .toArray();
+        Arrays.sort(files)
+        pair = (["single_end", "nanopore"].contains(params.library))?1:2
+        Arrays.copyOfRange(files, 0, Math.min(files.length, 10)).eachWithIndex{f,i -> {
+            if (i%(pair*2)<pair) log.info(">   \u001B[36m${f.toString()}\u001B[0m")
+            else log.info(">   ${f.toString()}")
+        }}
+        if (files.size() > 10) log.info(">   . . . and \u001B[32m${files.size()-10}\u001B[0m more")
+        log.info(" ")
+    }
 
     /*
      * Gather files as channels
