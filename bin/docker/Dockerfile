@@ -161,6 +161,7 @@ RUN apt-get update -y \
     && tar -xvzf trim_galore.tar.gz \
     && mv /TrimGalore-0.6.10/ /TrimGalore
 
+
 ## BUILD PORECHOP
 FROM ubuntu:22.04 as PORECHOP
 ENV PORECHOP_VER 0.2.4
@@ -179,6 +180,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && tar -xf v${PORECHOP_VER}.tar.gz \
     && rm v${PORECHOP_VER}.tar.gz \
     && cd /Porechop-${PORECHOP_VER}
+
 
 ## BUILD CHOPPER
 FROM ubuntu:22.04 as CHOPPER
@@ -200,6 +202,7 @@ RUN apt-get update -y \
     && unzip v${CHOPPER_VER}.zip \
     && cd chopper-${CHOPPER_VER} \
     && $HOME/.cargo/bin/cargo build --release
+
 
 ## BUILD MINIMAP2
 FROM ubuntu:22.04 as MINIMAP2
@@ -329,7 +332,7 @@ RUN apt-get update \
 
 ## Build Final
 FROM ubuntu:22.04 as app
-COPY --from=FFQ /ffq-0.3.1 /usr/local/bin/ffq
+COPY --from=FFQ /ffq-0.3.1 /ffq
 COPY --from=SAMTOOLS /usr/local/bin/samtools /usr/local/bin/samtools
 COPY --from=BEDTOOLS /usr/local/bin/bedtools /usr/local/bin/bedtools
 COPY --from=GFFREAD /gffread/gffread /usr/local/bin/gffread
@@ -434,7 +437,8 @@ RUN apt-get update -y \
         matplotlib \
         pybedtools \
         fasta_digest \
-    && python3 -m pip install -e /usr/local/bin/ffq \
+    && python3 -m pip install -e /ffq \
+    && rm -rf /ffq \
     && Rscript -e \
        "install.packages(c( \
             'devtools', \

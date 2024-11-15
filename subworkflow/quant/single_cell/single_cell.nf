@@ -24,12 +24,26 @@ include { run_analysis } from "../../../modules/R/run_analysis/run_analysis.nf"
 workflow SINGLE_CELL
 {
     take:
-        reads
+        is_acc
     main:
         if (params.library=="single_cell")
         {
             reference = Channel.fromPath(params.ref)
             barcodes = Channel.fromPath(params.barcodes)
+            if (is_acc)
+            {
+                log.info("Downloading reads before running...")
+                Channel.fromPath(params.samples)
+                    .splitText(by:10)
+                    .flatten()
+                    .view()
+                | download_acc_paired
+                | set{reads}
+            } else
+            {
+                reads = Channel.fromFilePairs(params.samples+"/"+params.pattern)
+                    .map{sample -> [sample[0], sample[1][0], sample[1][1]]}
+            }
 
             reads
             | combine(reference)

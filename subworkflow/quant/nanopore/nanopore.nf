@@ -27,13 +27,27 @@ include { run_analysis } from "../../../modules/R/run_analysis/run_analysis.nf"
 workflow NANOPORE
 {
     take:
-        reads
+        is_acc
     main:
         if (params.library=="nanopore")
         {
             reference = Channel.fromPath(params.ref)
             dcs = Channel.fromPath(params.dcs)
             metadata = Channel.fromPath(params.metadata)
+            if (is_acc)
+            {
+                log.info("Downloading reads before running...")
+                Channel.fromPath(params.samples)
+                    .splitText(by:10)
+                    .flatten()
+                    .view()
+                | download_acc_single
+                | set{reads}
+            } else
+            {
+                reads = Channel.fromPath(params.samples+"/"+params.pattern)
+                .map{sample -> [sample.name.split(/\.f(ast)?q(\.gz)?/)[0], sample]}
+            }
 
             reads
             | count_reads_np
