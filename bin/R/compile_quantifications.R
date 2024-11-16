@@ -75,55 +75,43 @@ Dropping missing transcripts...
 }
 
 summarize_genes <- function(transcript_quants, txdb) {
-    print("A")
     txome_info <- metadata(transcript_quants)$txomeInfo
     tx2gene <- select(txdb, keys(txdb, "TXNAME"), "GENEID", "TXNAME")
-    print("B")
     ranges <- get_ranges(txdb, txome_info)
     seqinfo(ranges) <- seqinfo(transcript_quants)
-    print("C")
     tx_tmp <- list(
         abundance = assays(transcript_quants)[["abundance"]],
         counts = assays(transcript_quants)[["counts"]],
         length = assays(transcript_quants)[["length"]],
         countsFromAbundance = "no"
     )
-    print(tx_tmp)
-    print("D")
     inferential_indexes <- grep("infRep", assayNames(transcript_quants))
     if (length(inferential_indexes) > 0) {
         replicates <- list(assays(transcript_quants)[inferential_indexes])
         tx_tmp <- c(tx_tmp, infReps = replicates)
     }
-    print("E")
     agg_transcript_quants <- summarizeToGene(
         object = tx_tmp,
         tx2gene = tx2gene
     )
-    print("F")
     assays <- agg_transcript_quants[c("counts", "abundance", "length")]
     if (length(inferential_indexes) > 0) assays <- c(assays, infReps)
     assays <- check_transcripts(assays, ranges)
-    print("G")
     ranges <- ranges[rownames(assays[["counts"]])]
-    print("H")
     transcript_ids <- CharacterList(split(tx2gene$TXNAME, tx2gene$GENEID))
     if (all(names(ranges) %in% names(transcript_ids))) {
         transcript_ids <- transcript_ids[names(ranges)]
         mcols(ranges)$tx_ids <- transcript_ids
     }
-    print("I")
     if ("hasDuplicate" %in% colnames(mcols(transcript_quants))) {
         stopifnot(all(rownames(transcript_quants) %in% tx2gene[, 1]))
         tx2gene_filter <- tx2gene[match(rownames(transcript_quants), tx2gene[, 1]), ]
         duplicates <- LogicalList(split(mcolds(transcript_quants)$hasDuplicate, tx2gene_filter$GENEID))
         mcols(ranges)$numDupObjects <- sum(duplicates)
     }
-    print("J")
     metadata <- metadata(transcript_quants)
     metadata$countsFromAbundance <- "no"
     metadata$level <- "gene"
-    print("K")
     gene_quants <- SummarizedExperiment(
         assays = assays,
         rowRanges = ranges,
@@ -160,7 +148,9 @@ read_map <- function(reference_dir, class = TRUE) {
         return()
 }
 
-compile_quants <- function(quants, tx2g, reference) {
+compile_quants <- function(quants, tx2g, reference, metadata) {
+    message("Matching quantifications to the metadata sheet...")
+    conditions = read_csv(metadata, col_names=c("prefix", "condition"), progress=F, show_col_types=F)
     samples <- quants %>%
         list.files(full.names = TRUE) %>%
         lapply(function(path) {
@@ -169,7 +159,14 @@ compile_quants <- function(quants, tx2g, reference) {
             name_list <- lst("files" = quant, "names" = sample)
         }) %>%
         bind_rows() %>%
-        as.data.frame()
+        as.data.frame() %>%
+        apply(X=conditions, MARGIN=1, FUN=function(row, quant) {
+            quant %>%
+                mutate(prefix=unlist(lapply(names, function(s){substr(s, 1, nchar(row[["prefix"]]))}))) %>%
+                inner_join(as.data.frame(t(row)), by="prefix", relationship="one-to-one") %>%
+                select(-c("prefix"))
+        }, .) %>%
+        do.call(rbind, .)
 
     cache <- paste0(reference, "/.bfccache")
     bfc <- BiocFileCache(cache)
@@ -192,6 +189,11 @@ compile_quants <- function(quants, tx2g, reference) {
     rowData(gene_quants) <- rowData(gene_quants) %>%
         as.data.frame() %>%
         left_join(tx2g, multiple = "any", by = "gene_id")
+    
+    message("Adding normalized counts")
+    assays(gene_quants)$normalized = DESeqDataSet(gene_quants) %>%
+        estimateSizeFactors() %>%
+        counts(noramlize=TRUE)
 
     message("Saving gene quantifications...")
     saveHDF5SummarizedExperiment(gene_quants, dir = "counts", replace = TRUE)
@@ -244,6 +246,11 @@ main <- function() {
         help = "The CREATE reference"
     )
     parser$add_argument(
+        "-m", "--metadata",
+        action = "store",
+        help = "The metadata samplesheet with prefixes and conditions"
+    )
+    parser$add_argument(
         "-s", "--splintr",
         action = "store_true", default = FALSE, required = FALSE,
         help = "The split gene experiment for splintr"
@@ -253,9 +260,9 @@ main <- function() {
     tx2g <- read_map(args$reference)
 
     if (args$splintr) {
-        compile_af(args$quants, tx2g)
+        compile_af(args$quants, tx2g, args$metadata)
     } else {
-        compile_quants(args$quants, tx2g, args$reference)
+        compile_quants(args$quants, tx2g, args$reference, args$metadata)
     }
 }
 main()
