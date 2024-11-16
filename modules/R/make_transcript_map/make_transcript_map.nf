@@ -33,7 +33,7 @@ process make_transcript_map
                 echo "Gencode Annotation: !{gencode_annotation}"
             fi
             version="!{params.version}"
-            if [[ "!{params.genome}"=="T2T" ]]; then
+            if [[ "!{params.genome}" == "T2T" ]]; then
                 version="2"
             fi
             verbose=""

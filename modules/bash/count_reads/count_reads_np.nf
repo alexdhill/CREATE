@@ -35,12 +35,12 @@ process count_reads_np
         )
     shell:
         '''
-            if [[ !{params.log}=="INFO" || !{params.log}=="DEBUG" ]]; then
+            if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
                 echo "Counting reads..."
                 echo "Sample: !{sample}"
                 echo "Read: !{read}"
             fi
-            if [[ !{params.log}=="DEBUG" ]]; then
+            if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
             

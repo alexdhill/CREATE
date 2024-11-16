@@ -35,13 +35,13 @@ process salmon_quant_nanopore
         path("${sample}/")
     shell:
         '''
-            if [[ "!{params.log}"=="INFO" || "!{params.log}"=="DEBUG" ]]; then
+            if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
                 echo "Quantifying nanopore reads"
                 echo "Sample: !{sample} (!{nreads} reads)"
                 echo "BAM: !{bam}"
                 echo "Reference: !{reference}"
             fi
-            if [[ !{params.log}=="DEBUG" ]]; then
+            if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 

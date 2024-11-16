@@ -24,7 +24,7 @@ process download_gencode_annotation
         memory '1.GB'
     }
     output:
-        path("*_gencode_annotation.gtf.gz")
+        path("!{params.genome}v!{params.genome=='T2T'?'2':params.version}_gencode_annotation.gtf.gz")
     shell:
         if (params.isoquant)
         {
@@ -32,7 +32,7 @@ process download_gencode_annotation
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
                 echo "Preparing isquant annotation..."
             fi
-            if [[ "!{params.log}" == "INFO" ]]; then
+            if [[ "!{params.log}" == "DEBUG" ]]; then
                 echo "Isoquant: !{params.isoquant}"
             fi
             '''
@@ -40,11 +40,11 @@ process download_gencode_annotation
         else if (params.genome=="T2T")
         {
         '''
-            if [[ !{params.log}=="INFO" || !{params.log}=="DEBUG" ]]; then
+            if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
                 echo "Downloading T2T annotation..."
                 echo "... using T2Tv2"
             fi
-            if [[ !{params.log}=="DEBUG" ]]; then
+            if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 

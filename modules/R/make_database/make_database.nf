@@ -28,11 +28,11 @@ process make_database
         path(".bfccache/")
     shell:
         '''
-            if [[ "!{params.log}"=="INFO" || "!{params.log}"=="DEBUG" ]]; then
+            if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
                 echo "Making TxDb object for tximeta"
                 echo "Annotation: !{annotation}"
             fi
-            if [[ !{params.log}=="DEBUG" ]]; then
+            if [[ "!{params.log}" == "DEBUG" ]]; then
                 verbose="--verbose"
                 set -x
             fi

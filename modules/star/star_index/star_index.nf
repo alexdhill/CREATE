@@ -38,7 +38,7 @@ process star_index
                 echo "Annotation: !{annotation}"
             fi
             version="!{params.version}"
-            if [[ "!{params.genome}"=="T2T" ]]; then
+            if [[ "!{params.genome}" == "T2T" ]]; then
                 version="2"
             fi
             if [[ !{params.log}=="DEBUG" ]]; then

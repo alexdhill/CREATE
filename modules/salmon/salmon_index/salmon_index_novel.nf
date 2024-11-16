@@ -33,7 +33,7 @@ process salmon_index_novel
                 echo "Creating complete salmon index"
                 echo "Transcripts: !{transcripts}"
             fi
-            if [[ "!{params.log}"=="DEBUG" ]]; then
+            if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 
