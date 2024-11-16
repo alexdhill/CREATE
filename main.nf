@@ -101,7 +101,6 @@ if (params.reference)
     params.genome = ''
     params.isoquant = false
     params.index = ''
-    params.version = -1
     if (params.genome=='HG38')
     {
         params.version = 39
@@ -112,6 +111,7 @@ if (params.reference)
         }
     } else if (params.genome=="T2T")
     {
+        params.version = -1
         if (params.version!=-1)
         {
             println("--version: ${params.version}");
