@@ -41,6 +41,7 @@ workflow SINGLE_CELL
             | collect
             | map{quants -> [quants]}
             | combine(reference)
+            | combine(metadata)
             | compile_quantifications
         }
 }

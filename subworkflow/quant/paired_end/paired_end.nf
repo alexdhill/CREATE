@@ -39,8 +39,8 @@ workflow PAIRED_END
             | collect
             | map{quants -> [quants]}
             | combine(reference)
-            | compile_quantifications
             | combine(metadata)
+            | compile_quantifications
             | run_analysis
         }
 }

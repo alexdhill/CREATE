@@ -26,7 +26,8 @@ process compile_quantifications
     input:
         tuple(
             path(quants),
-            path(reference)
+            path(reference),
+            path(metadata)
         )
     output:
         path("counts/")
@@ -35,6 +36,7 @@ process compile_quantifications
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
                 echo "Compiling quants to H5 SummarizedExperiment"
                 echo "Reference: !{reference}"
+                echo "Metadata: !{metadata}"
                 echo "Quants:"
                 sed 's/ /\\n/g' <<< "!{quants}"
             fi
@@ -51,6 +53,6 @@ process compile_quantifications
 
             mkdir -p quants && mv !{quants} quants/
             Rscript ${verbose} !{projectDir}/bin/R/compile_quantifications.R \
-                -q quants -r !{reference} ${splintr}
+                -q quants -r !{reference} -m !{metadata} ${splintr}
         '''
 }
