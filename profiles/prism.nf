@@ -28,6 +28,16 @@ process
         queue = "short"
         time = '45m'
     }
+    withName: "make_repeat_transcripts"
+    {
+        queue = "short"
+        time = '1h'
+    }
+    withName: "make_transcript_map"
+    {
+        queue = "short"
+        time = '1h'
+    }
 
     withName: "make_complete_annotation"
     {
