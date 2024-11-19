@@ -72,6 +72,16 @@ process
 
     // Quant
 
+    withName: "download_acc_paired"
+    {
+        queue = "short"
+        time = "1h"
+    }
+    withName: "download_acc_single"
+    {
+        queue = "short"
+        time = "1h"
+    }
     withName: "count_reads_pe"
     {
         queue = "short"
