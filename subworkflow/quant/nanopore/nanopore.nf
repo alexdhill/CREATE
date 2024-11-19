@@ -15,6 +15,7 @@
  */
 
 
+include { download_acc_single } from "../../../modules/ffq/download_acc/download_acc_single.nf"
 include { count_reads_np } from "../../../modules/bash/count_reads/count_reads_np.nf"
 include { minimap2_align_dcs } from "../../../modules/minimap2/minimap2_align/minimap2_align_dcs.nf"
 include { seqtk_subset } from "../../../modules/seqtk/seqtk_subset/seqtk_subset.nf"
@@ -38,9 +39,9 @@ workflow NANOPORE
             {
                 log.info("Downloading reads before running...")
                 Channel.fromPath(params.samples)
-                    .splitText(by:10)
+                    .splitText()
                     .flatten()
-                    .view()
+                    .map{sra -> sra.trim()}
                 | download_acc_single
                 | set{reads}
             } else

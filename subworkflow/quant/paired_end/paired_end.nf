@@ -15,6 +15,7 @@
  */
 
 
+include { download_acc_paired } from "../../../modules/ffq/download_acc/download_acc_paired.nf"
 include { count_reads_pe } from "../../../modules/bash/count_reads/count_reads_pe.nf"
 include { trim_reads_paired } from "../../../modules/trim-galore/trim_reads/trim_reads_paired.nf"
 include { salmon_quant_paired } from "../../../modules/salmon/salmon_quant/salmon_quant_paired.nf"
@@ -34,9 +35,9 @@ workflow PAIRED_END
             {
                 log.info("Downloading reads before running...")
                 Channel.fromPath(params.samples)
-                    .splitText(by:10)
+                    .splitText()
                     .flatten()
-                    .view()
+                    .map{sra -> sra.trim()}
                 | download_acc_paired
                 | set{reads}
             } else

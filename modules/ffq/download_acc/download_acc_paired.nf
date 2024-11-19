@@ -32,16 +32,16 @@ process download_acc_paired
         )
     shell:
         '''
-            if [[ !{params.log}=="INFO" || !{params.log}=="DEBUG" ]]; then
+            if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
                 echo "Downloading reads..."
                 echo "Sample: !{acc}"
             fi
-            if [[ !{params.log}=="DEBUG" ]]; then
+            if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
             
             mkdir files
-            ffq --ftp % \
+            ffq --ftp !{acc} \
             | sed 's/\"//g' \
             | grep 'url:' \
             | awk '{print $2}' \

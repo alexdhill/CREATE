@@ -15,6 +15,7 @@
  */
 
 
+include { download_acc_paired } from "../../../modules/ffq/download_acc/download_acc_paired.nf"
 include { alevin_align } from "../../../modules/salmon/alevin_align/alevin_align.nf"
 include { alevin_collate } from "../../../modules/salmon/alevin_collate/alevin_collate.nf"
 include { alevin_quantify } from "../../../modules/salmon/alevin_quantify/alevin_quantify.nf"
@@ -34,9 +35,9 @@ workflow SINGLE_CELL
             {
                 log.info("Downloading reads before running...")
                 Channel.fromPath(params.samples)
-                    .splitText(by:10)
+                    .splitText()
                     .flatten()
-                    .view()
+                    .map{sra -> sra.trim()}
                 | download_acc_paired
                 | set{reads}
             } else
