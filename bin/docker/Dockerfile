@@ -438,7 +438,6 @@ RUN apt-get update -y \
         pybedtools \
         fasta_digest \
     && python3 -m pip install -e /ffq \
-    && rm -rf /ffq \
     && Rscript -e \
        "install.packages(c( \
             'devtools', \
