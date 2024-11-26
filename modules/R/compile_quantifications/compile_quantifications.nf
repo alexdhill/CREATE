@@ -13,7 +13,7 @@
  * licensor will not be liable to you for any damages arising out of these terms or the use or
  * nature of the software, under any kind of legal claim.
  */
- 
+
 
 process compile_quantifications
 {
@@ -47,7 +47,7 @@ process compile_quantifications
             fi
 
             splintr=""
-            if [ -n "!{params.get('library')}" ] && [ "!{params.library}" -eq "single_cell" ]; then
+            if [ -n "!{params.get('library')}" ] && [ "!{params.library}" == "single_cell" ]; then
                 splintr="-s"
             fi
 

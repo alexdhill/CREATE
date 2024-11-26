@@ -164,7 +164,7 @@ compile_quants <- function(quants, tx2g, reference, metadata) {
             quant %>%
                 mutate(prefix=unlist(lapply(names, function(s){substr(s, 1, nchar(row[["prefix"]]))}))) %>%
                 inner_join(as.data.frame(t(row)), by="prefix", relationship="one-to-one") %>%
-                select(-c("prefix"))
+                dplyr::select(-c("prefix"))
         }, .) %>%
         do.call(rbind, .)
 
