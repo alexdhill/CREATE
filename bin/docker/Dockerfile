@@ -379,6 +379,7 @@ RUN apt-get update -y \
     && add-apt-repository universe \
     && apt-get update -y \
     && apt-get install -y --no-install-recommends \
+        jq \
         time \
         perl \
         pigz \

@@ -22,6 +22,8 @@ process download_acc_paired
         cpus 1
         memory '1.GB'
     }
+    errorStrategy "retry"
+    maxRetries 10
     input:
         val(acc)
     output:
@@ -39,12 +41,20 @@ process download_acc_paired
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
-            
-            mkdir files
-            ffq --ftp !{acc} \
-            | sed 's/\"//g' \
-            | grep 'url:' \
-            | awk '{print $2}' \
-            | xargs -I% wget %
+
+            function download_acc {
+                md5="${1}"
+                url="${2}"
+                md5sum=""
+                while [[  ]]; do
+                    wget ${url}
+                    md5sum="$(md5sum $(basename ${url}) | cut -f1 -d' ')"
+                done
+            }
+            export -f download_acc
+
+            ffq --ftp !{acc} 2>/dev/null
+            | jq '.[] | "\\(.md5) \\(.url)"'
+            | xargs -I% bash -c "download_acc %"
         '''
 }
