@@ -24,6 +24,7 @@ suppressPackageStartupMessages({
     library(BiocFileCache)
     library(SummarizedExperiment)
     library(HDF5Array)
+    library(DESeq2)
 })
 
 get_ranges <- function(txdb, txome_info) {
