@@ -1,9 +1,16 @@
 main = function()
 {
     suppressMessages({
+        library(tidyr)
+        library(dplyr)
+        library(magrittr)
+        library(stringr)
+        library(readr)
         library(argparse)
         library(ggplot2)
         library(patchwork)
+        library(HDF5Array)
+        library(SummarizedExperiment)
     })
 
     parser = ArgumentParser()
@@ -40,7 +47,7 @@ main = function()
             values_to = "count"
         ) %>%
         select(-c(tx_ids)) %>%
-        left_join(as.data.frame(colData(quants)), by=c("sample"="names")
+        left_join(as.data.frame(colData(quants)), by=c("sample"="names"))
 
     message("Plotting biotype detection...")
     detection_plot = master %>%
@@ -103,6 +110,7 @@ main = function()
     )
 
     message("Running DESeq2...")
+    metadata = colData(quants)
     deseq = runDESeq2(quants, metadata)
     if (length(is.na(deseq))>1 || !is.na(deseq))
     {    

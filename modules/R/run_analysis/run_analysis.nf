@@ -19,18 +19,13 @@ process run_analysis
 {
     publishDir "${params.outdir}/results", mode: 'copy', overwrite: params.force
     input:
-        tuple(
-            path(counts),
-            path(metadata)
-        )
+        path(counts)
     output:
         tuple(
             path("plots/", optional: true),
             path("data/", optional: true)
         )
     shell:
-        if (params.metadata!="")
-        {
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
                 echo "Generating biotypes plots..."
@@ -47,5 +42,4 @@ process run_analysis
                 --quants !{counts} \
                 --output .
         '''
-        }
 }
