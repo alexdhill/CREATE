@@ -72,12 +72,7 @@ process
 
     // Quant
 
-    withName: "download_acc_paired"
-    {
-        queue = "short"
-        time = "1h"
-    }
-    withName: "download_acc_single"
+    withName: "download_acc"
     {
         queue = "short"
         time = "1h"

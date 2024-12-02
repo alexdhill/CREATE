@@ -15,7 +15,7 @@
  */
 
 
-process download_acc_paired
+process download_acc
 {
     if (params.manage_resources)
     {
@@ -25,12 +25,15 @@ process download_acc_paired
     errorStrategy "retry"
     maxRetries 10
     input:
-        val(acc)
+        tuple(
+            val("acc"),
+            val("file"),
+            val("md5")
+        )
     output:
         tuple(
             val("${acc}"),
-            path("${acc}_1.fastq.gz"),
-            path("${acc}_2.fastq.gz")
+            path("*.fastq.gz")
         )
     shell:
         '''
@@ -42,19 +45,13 @@ process download_acc_paired
                 set -x
             fi
 
-            function download_acc {
-                md5="${1}"
-                url="${2}"
-                md5sum=""
-                while [[  ]]; do
-                    wget ${url}
-                    md5sum="$(md5sum $(basename ${url}) | cut -f1 -d' ')"
+            md5sum=""
+            until [[ "!{md5}" == "${md5sum}" ]]; do
+                until `wget !{file}`; do
+                    echo "Download failed... retrying in 5s"
+                    sleep 5
                 done
-            }
-            export -f download_acc
-
-            ffq --ftp !{acc} 2>/dev/null
-            | jq '.[] | "\\(.md5) \\(.url)"'
-            | xargs -I% bash -c "download_acc %"
+                md5sum="$(md5sum $(basename !{file}) | awk '{print $1}')"
+            done
         '''
 }

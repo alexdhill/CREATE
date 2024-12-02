@@ -37,6 +37,7 @@ workflow QUANT
     acc_list = (new File(params.samples).isDirectory() == false)
     if (acc_list)
     {
+        // Parse and print file
         log.info("Listing ${params.samples}")
         def path = Paths.get(params.samples)
         def lines = Files.readAllLines(path).toArray()
@@ -45,7 +46,10 @@ workflow QUANT
         }}
         if (lines.size() > 10) log.info(">   . . . and \u001B[32m${lines.size()-10}\u001B[0m more")
         log.info(" ")
+        // Gather reads
+        // TODO
     } else {
+        // Parse and print sample dir
         sampleDir = (params.samples.lastIndexOf("/")+1==params.samples.length())?params.samples:params.samples+"/"
         log.info("Listing ${sampleDir}${params.pattern}")
         glob = FileSystems.getDefault().getPathMatcher("glob:${sampleDir}${params.pattern}")
@@ -60,6 +64,8 @@ workflow QUANT
         }}
         if (files.size() > 10) log.info(">   . . . and \u001B[32m${files.size()-10}\u001B[0m more")
         log.info(" ")
+        // Gather reads
+        // TODO
     }
 
     /*

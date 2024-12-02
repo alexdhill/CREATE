@@ -15,7 +15,8 @@
  */
 
 
-include { download_acc_single } from "../../../modules/ffq/download_acc/download_acc_single.nf"
+include { gather_ftp } from "../../../modules/ffq/gather_ftp/gather_ftp.nf"
+include { download_acc } from "../../../modules/bash/download_acc/download_acc.nf"
 include { count_reads_np } from "../../../modules/bash/count_reads/count_reads_np.nf"
 include { minimap2_align_dcs } from "../../../modules/minimap2/minimap2_align/minimap2_align_dcs.nf"
 include { seqtk_subset } from "../../../modules/seqtk/seqtk_subset/seqtk_subset.nf"
@@ -39,10 +40,10 @@ workflow NANOPORE
             {
                 log.info("Downloading reads before running...")
                 Channel.fromPath(params.samples)
-                    .splitText()
-                    .flatten()
-                    .map{sra -> sra.trim()}
-                | download_acc_single
+                | gather_ftp
+                | splitCsv(header: ['acc', 'ftp', 'md5'])
+                | map{row -> ["${row.acc}", "${row.ftp}", "${row.md5}"]}
+                | download_acc
                 | set{reads}
             } else
             {

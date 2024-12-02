@@ -15,7 +15,8 @@
  */
 
 
-include { download_acc_single } from "../../../modules/ffq/download_acc/download_acc_single.nf"
+include { gather_ftp } from "../../../modules/ffq/gather_ftp/gather_ftp.nf"
+include { download_acc } from "../../../modules/bash/download_acc/download_acc.nf"
 include { count_reads_se } from "../../../modules/bash/count_reads/count_reads_se.nf"
 include { trim_reads_single } from "../../../modules/trim-galore/trim_reads/trim_reads_single.nf"
 include { salmon_quant_single } from "../../../modules/salmon/salmon_quant/salmon_quant_single.nf"
@@ -35,10 +36,10 @@ workflow SINGLE_END
             {
                 log.info("Downloading reads before running...")
                 Channel.fromPath(params.samples)
-                    .splitText()
-                    .flatten()
-                    .map{sra -> sra.trim()}
-                | download_acc_single
+                | gather_ftp
+                | splitCsv(header: ['acc', 'ftp', 'md5'])
+                | map{row -> ["${row.acc}", "${row.ftp}", "${row.md5}"]}
+                | download_acc
                 | set{reads}
             } else
             {

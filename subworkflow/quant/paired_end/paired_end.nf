@@ -13,9 +13,12 @@
  * licensor will not be liable to you for any damages arising out of these terms or the use or
  * nature of the software, under any kind of legal claim.
  */
+import java.nio.file.Files
+import java.nio.file.Paths
 
 
-include { download_acc_paired } from "../../../modules/ffq/download_acc/download_acc_paired.nf"
+include { gather_ftp } from "../../../modules/ffq/gather_ftp/gather_ftp.nf"
+include { download_acc } from "../../../modules/bash/download_acc/download_acc.nf"
 include { count_reads_pe } from "../../../modules/bash/count_reads/count_reads_pe.nf"
 include { trim_reads_paired } from "../../../modules/trim-galore/trim_reads/trim_reads_paired.nf"
 include { salmon_quant_paired } from "../../../modules/salmon/salmon_quant/salmon_quant_paired.nf"
@@ -35,10 +38,12 @@ workflow PAIRED_END
             {
                 log.info("Downloading reads before running...")
                 Channel.fromPath(params.samples)
-                    .splitText()
-                    .flatten()
-                    .map{sra -> sra.trim()}
-                | download_acc_paired
+                | gather_ftp
+                | splitCsv(header: ['acc', 'ftp', 'md5'])
+                | map{row -> ["${row.acc}", "${row.ftp}", "${row.md5}"]}
+                | download_acc
+                | groupTuple()
+                | map{tup -> [tup[0], tup[1][0], tup[1][1]]}
                 | set{reads}
             } else
             {

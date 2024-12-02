@@ -15,45 +15,37 @@
  */
 
 
-process download_acc_single
+process gather_ftp
 {
     if (params.manage_resources)
     {
         cpus 1
         memory '1.GB'
     }
-    errorStrategy "retry"
-    maxRetries 10
+    executor = "local"
     input:
-        val(acc)
+        path(acc)
     output:
-        tuple(
-            val("${acc}"),
-            path("${acc}.fastq.gz"),
-        )
+        path("samples.url")
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Downloading read..."
+                echo "Collecting FTP links..."
                 echo "Sample: !{acc}"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
-            
-            function download_acc {
-                md5="${1}"
-                url="${2}"
-                md5sum=""
-                while [[  ]]; do
-                    wget ${url}
-                    md5sum="$(md5sum $(basename ${url}) | cut -f1 -d' ')"
-                done
-            }
-            export -f download_acc
 
-            ffq --ftp !{acc} 2>/dev/null
-            | jq '"\\(.md5) \\(.url)"'
-            | xargs -I% bash -c "download_acc %"
+            for sra in `xargs < !{acc}`; do
+                until `ffq --ftp ${sra} >> samples.json`; do
+                    echo "Failed at ${sra}, retrying in 5s..."
+                    sleep 5
+                done
+            done
+
+            jq '.[] | "\\(.accession),\\(.url),\\(.md5)"' samples.json \
+            | sed 's/"//g' \
+            > samples.url
         '''
 }
