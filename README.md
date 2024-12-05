@@ -134,7 +134,7 @@ nextflow run alexdhill/CREATE --discover \
  - `--dump`: path to save the novel CREATE reference generated from the discover pipeline [ONLY used with `--discover`]
  - `--exec`: specifies the method of job execution [select from local or slurm]
  - `--force`: overwrite existing output if possible
- - `--genome`: specifies which reference genome to use [select from HG38 or T2T] [ONLY used with `--reference`]
+ - `--genome`: specifies which reference genome to use [select from HG38, MM39, or T2T] [ONLY used with `--reference`]
  - `--help`: prints help message and exits
  - `--index`: specifies which quantification index(es) to generate. Multiple can be specified as comma-delimited [select from short, long, or single_cell] [ONLY used with `--reference`]
  - `--isoquant`: path to an isoquant-generated GTF to use instead of the specified reference genome's GENCODE GTF. [ONLY used with `--reference`]
@@ -158,7 +158,7 @@ nextflow run alexdhill/CREATE --discover \
  - `--samples`: path to the directory to search for the RNA-seq samples [ONLY used with `--quant`]
  - `--scratch`: path to the scratch directory to store working data in [ONLY used with `--exec slurm`]
  - `--threads`: the maximum number of threads to allocate between **all** running jobs [BETA]
- - `--version`: the version of the gencode annotation to use [ONLY used with `--reference` and `--genome HG38`]
+ - `--version`: the version of the gencode annotation to use, must be prefixed by `M` if building a mouse reference [ONLY used with `--reference` and `--genome HG38`]
 
 #### Roadmap:
 - [X] Finish Reference workflows
@@ -182,3 +182,4 @@ nextflow run alexdhill/CREATE --discover \
 - [ ] Add semi-intelligent prefix parsing for compilation [feature-metadata]
 - [ ] Add variance-stabilized normalized counts to output assays [feature-metadata]
 - [ ] Add alignment mode [feature-align]
+- [ ] Add mouse genome (GRCm39/mm39) support [feature-mouse]
