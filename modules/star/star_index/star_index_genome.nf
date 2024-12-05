@@ -29,15 +29,15 @@ process star_index_genome
         path("${params.genome}v${params.genome=='T2T'?'2':params.version}_discover_index_v*.star")
     shell:
         '''
-            if [[ !{params.log}=="INFO" || !{params.log}=="DEBUG" ]]; then
+            if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
                 echo "Creating complete STAR index"
                 echo "Genome: !{genome}"
             fi
             version="!{params.version}"
-            if [[ "!{params.genome}"=="T2T" ]]; then
+            if [[ "!{params.genome}" == "T2T" ]]; then
                 version="2"
             fi
-            if [[ !{params.log}=="DEBUG" ]]; then
+            if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 

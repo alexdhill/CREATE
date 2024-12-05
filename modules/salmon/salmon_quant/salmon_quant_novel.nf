@@ -37,14 +37,14 @@ process salmon_quant_novel
         path("${sample}/")
     shell:
         '''
-            if [[ "!{params.log}"=="INFO" || "!{params.log}"=="DEBUG" ]]; then
+            if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
                 echo "Quantifying paired reads"
                 echo "Sample: !{sample} (!{nreads} reads)"
                 echo "Read 1: !{read_1}"
                 echo "Read 2: !{read_2}"
                 echo "Index: !{index}"
             fi
-            if [[ !{params.log}=="DEBUG" ]]; then
+            if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 

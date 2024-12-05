@@ -31,7 +31,7 @@ process make_complete_annotation
             path(gencode_tx)
         )
     output:
-        path("*_complete_annotation.gtf.gz")
+        path("!{params.genome}v!{params.genome=='T2T'?'2':params.version}_complete_annotation.gtf.gz")
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
@@ -40,7 +40,7 @@ process make_complete_annotation
                 echo "Gencode: !{gencode}"
             fi
             version="!{params.version}"
-            if [[ "!{params.genome}"=="T2T" ]]; then
+            if [[ "!{params.genome}" == "T2T" ]]; then
                 version="2"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then

@@ -178,6 +178,7 @@ nextflow run alexdhill/CREATE --discover \
   - [X] Finish Volcano plots
 - [X] Flesh out README
 - [ ] ~~Add profile selection to nextflow config~~ Add read-based resource requirements to processes
-- [ ] Add accession list support as input for quant (feature-samplesheet)
-- [ ] Make metadata matching intelligent (feature-metadata)
-- [ ] Add DESeq norm counts to output SE
+- [ ] Add accession list support to automate downloads [feature-samplesheet]
+- [ ] Add semi-intelligent prefix parsing for compilation [feature-metadata]
+- [ ] Add variance-stabilized normalized counts to output assays [feature-metadata]
+- [ ] Add alignment mode [feature-align]

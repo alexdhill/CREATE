@@ -41,7 +41,7 @@ process compile_quantifications_novel
                 sed 's/ /\\n/g' <<< "!{quants}"
             fi
             verbose=""
-            if [[ !{params.log}=="DEBUG" ]]; then
+            if [[ "!{params.log}" == "DEBUG" ]]; then
                 verbose="--verbose"
                 set -x
             fi

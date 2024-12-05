@@ -42,7 +42,7 @@ process make_splintr_transcripts
                 echo "Genome: !{genome}"
             fi
             version="!{params.version}"
-            if [[ "!{params.genome}"=="T2T" ]]; then
+            if [[ "!{params.genome}" == "T2T" ]]; then
                 version="2"
             fi
             verbose=""

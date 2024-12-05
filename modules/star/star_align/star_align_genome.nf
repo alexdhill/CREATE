@@ -40,14 +40,14 @@ process star_align_genome
         )
     shell:
         '''
-            if [[ !{params.log}=="INFO" || !{params.log}=="DEBUG" ]]; then
+            if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
                 echo "Creating complete salmon index"
                 echo "Sample: !{sample}"
                 echo "Read 1: !{read_1}"
                 echo "Read 2: !{read_2}"
                 echo "Reference: !{reference}"
             fi
-            if [[ !{params.log}=="DEBUG" ]]; then
+            if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 

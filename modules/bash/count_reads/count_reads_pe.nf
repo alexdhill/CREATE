@@ -37,13 +37,13 @@ process count_reads_pe
         )
     shell:
         '''
-            if [[ !{params.log}=="INFO" || !{params.log}=="DEBUG" ]]; then
+            if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
                 echo "Counting reads..."
                 echo "Sample: !{sample}"
                 echo "Read 1: !{read_1}"
                 echo "Read 2: !{read_2}"
             fi
-            if [[ !{params.log}=="DEBUG" ]]; then
+            if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
             
