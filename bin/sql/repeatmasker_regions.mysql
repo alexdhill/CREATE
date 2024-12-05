@@ -25,7 +25,7 @@
 ### this finds lines with chrX_IDv1_type naming and extracts the middle string
 # needed to name the alt/patch/fix chromosomes according to gencode style
 
-mysql --batch --user=genome --host=genome-mysql.cse.ucsc.edu -N -A -D hg38 -e \
+mysql --batch --user=genome --host=genome-mysql.cse.ucsc.edu -N -A -D ${1} -e \
     'select
         genoName,
         genoStart,

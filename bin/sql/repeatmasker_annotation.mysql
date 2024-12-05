@@ -19,7 +19,7 @@
 ## -D = --database
 ## --batch = print as TSV, escape special characters
 
-mysql --batch --user=genome --host=genome-mysql.cse.ucsc.edu -N -A -D hg38 -e \
+mysql --batch --user=genome --host=genome-mysql.cse.ucsc.edu -N -A -D ${1} -e \
     'select 
 		genoName,
         "hg38_rmsk",

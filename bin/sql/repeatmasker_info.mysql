@@ -23,7 +23,7 @@
 # `distinct` reduces the selection to distinct row entries
 # this table should be used in a left join where x is the data table and y is this info table
 
-mysql --user=genome --host=genome-mysql.cse.ucsc.edu -N -A -D hg38 -e \
+mysql --user=genome --host=genome-mysql.cse.ucsc.edu -N -A -D ${1} -e \
     'select distinct
         repName,
         repClass,
