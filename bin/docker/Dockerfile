@@ -12,6 +12,24 @@
 ## licensor will not be liable to you for any damages arising out of these terms or the use or
 ## nature of the software, under any kind of legal claim.
 
+
+## BUILD FFQ
+FROM ubuntu:22.04 AS FFQ
+ENV DEBIAN_FRONTEND noninteractive
+ENV FFQ_VER 0.3.1
+RUN apt-get update -y \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+        make \
+        wget \
+        python3 \
+        python3-pip \
+    && wget --no-check-certificate \
+        https://github.com/pachterlab/ffq/archive/refs/tags/v${FFQ_VER}.tar.gz \
+    && tar -xzf v${FFQ_VER}.tar.gz \
+    && python3 -m pip install -e ffq-${FFQ_VER}
+
+
 ## BUILD SAMTOOLS
 FROM ubuntu:22.04 as SAMTOOLS
 ENV DEBIAN_FRONTEND noninteractive
@@ -143,6 +161,7 @@ RUN apt-get update -y \
     && tar -xvzf trim_galore.tar.gz \
     && mv /TrimGalore-0.6.10/ /TrimGalore
 
+
 ## BUILD PORECHOP
 FROM ubuntu:22.04 as PORECHOP
 ENV PORECHOP_VER 0.2.4
@@ -161,6 +180,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && tar -xf v${PORECHOP_VER}.tar.gz \
     && rm v${PORECHOP_VER}.tar.gz \
     && cd /Porechop-${PORECHOP_VER}
+
 
 ## BUILD CHOPPER
 FROM ubuntu:22.04 as CHOPPER
@@ -182,6 +202,7 @@ RUN apt-get update -y \
     && unzip v${CHOPPER_VER}.zip \
     && cd chopper-${CHOPPER_VER} \
     && $HOME/.cargo/bin/cargo build --release
+
 
 ## BUILD MINIMAP2
 FROM ubuntu:22.04 as MINIMAP2
@@ -311,6 +332,7 @@ RUN apt-get update \
 
 ## Build Final
 FROM ubuntu:22.04 as app
+COPY --from=FFQ /ffq-0.3.1 /ffq
 COPY --from=SAMTOOLS /usr/local/bin/samtools /usr/local/bin/samtools
 COPY --from=BEDTOOLS /usr/local/bin/bedtools /usr/local/bin/bedtools
 COPY --from=GFFREAD /gffread/gffread /usr/local/bin/gffread
@@ -329,6 +351,7 @@ COPY --from=STAR /STAR*/bin/*static/* /usr/local/bin/
 COPY --from=SEQTK /usr/local/bin/seqtk /usr/local/bin/seqtk
 COPY --from=FLAIR /flair-* /usr/local/bin/flair
 ENV DEBIAN_FRONTEND noninteractive
+ENV FFQ_VER 0.3.1
 ENV SAMTOOLS_VER 1.19
 ENV BEDTOOLS_VER 2.31.0
 ENV FASTQC_VER 0.12.1
@@ -356,6 +379,7 @@ RUN apt-get update -y \
     && add-apt-repository universe \
     && apt-get update -y \
     && apt-get install -y --no-install-recommends \
+        jq \
         time \
         perl \
         pigz \
@@ -414,6 +438,7 @@ RUN apt-get update -y \
         matplotlib \
         pybedtools \
         fasta_digest \
+    && python3 -m pip install -e /ffq \
     && Rscript -e \
        "install.packages(c( \
             'devtools', \
