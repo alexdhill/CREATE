@@ -44,15 +44,20 @@ process download_repeat_regions
         {
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Downloading HG38 repeat regions..."
+                echo "Downloading !{params.genome} repeat regions..."
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 
-            bash !{projectDir}/bin/sql/repeatmasker_regions.mysql > raw_rmsk.bed
+            build="hg38"
+            if [[ "$(echo !{} | sed 's/\\B\\w*//' )" == "M" ]]; then
+                build="mm39"
+            fi
+
+            bash !{projectDir}/bin/sql/repeatmasker_regions.mysql ${build} > raw_rmsk.bed
             for i in `seq 1 22` X Y; do
-                grep -w "^chr$i" raw_rmsk.bed >> HG38v!{params.version}_repeat_regions.bed
+                grep -w "^chr$i" raw_rmsk.bed >> !{params.genome}v!{params.version}_repeat_regions.bed
             done
         '''
         }

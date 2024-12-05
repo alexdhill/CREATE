@@ -47,17 +47,24 @@ process download_reference
         {
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Downloading HG38 genome..."
+                echo "Downloading !{params.genome} genome..."
             fi
             if [[ !{params.log}=="DEBUG" ]]; then
                 set -x
             fi
 
-            wget -qO- ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_!{params.version}/GRCh38.primary_assembly.genome.fa.gz \
+            species="human"
+            build="GRCh38"
+            if [[ "$(echo !{} | sed 's/\\B\\w*//' )" == "M" ]]; then
+                species="mouse"
+                build="GRCm39"
+            fi
+
+            wget -qO- ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_${species}/release_!{params.version}/${build}.primary_assembly.genome.fa.gz \
             | gzip -cd \
             | sed 's/\\s.*//' \
             | gzip --fast \
-            > HG38v!{params.version}_genome.fa.gz
+            > !{params.genome}v!{params.version}_genome.fa.gz
         '''
         }
 }

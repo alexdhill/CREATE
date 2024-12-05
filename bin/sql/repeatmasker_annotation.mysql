@@ -22,7 +22,7 @@
 mysql --batch --user=genome --host=genome-mysql.cse.ucsc.edu -N -A -D ${1} -e \
     'select 
 		genoName,
-        "hg38_rmsk",
+        "${1}_rmsk",
         "exon",
         genoStart,
         genoEnd,

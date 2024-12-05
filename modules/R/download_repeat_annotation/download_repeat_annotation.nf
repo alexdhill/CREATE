@@ -58,7 +58,7 @@ $1"\\tT2T_rmsk\\texon\\t"$2"\\t"$3"\\t"$5"\\t"$6"\\t0\\tgene_id \\""$4"\\"; tran
         {
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Downloading HG38 repeat annotation..."
+                echo "Downloading !{params.genome} repeat annotation..."
             fi
             verbose=""
             if [[ "!{params.log}" == "DEBUG" ]]; then
@@ -66,8 +66,13 @@ $1"\\tT2T_rmsk\\texon\\t"$2"\\t"$3"\\t"$5"\\t"$6"\\t0\\tgene_id \\""$4"\\"; tran
                 verbose="-v"
             fi
 
-            bash !{projectDir}/bin/sql/repeatmasker_info.mysql > repeat_info.tsv
-            bash !{projectDir}/bin/sql/repeatmasker_annotation.mysql > raw_rmsk.gtf
+            build="hg38"
+            if [[ "$(echo !{} | sed 's/\\B\\w*//' )" == "M" ]]; then
+                build="mm39"
+            fi
+
+            bash !{projectDir}/bin/sql/repeatmasker_info.mysql ${build} > repeat_info.tsv
+            bash !{projectDir}/bin/sql/repeatmasker_annotation.mysql ${build} > raw_rmsk.gtf
             for chr in `seq 1 22` X Y; do
                 cat raw_rmsk.gtf | grep  "^chr${chr}\t" | sed -re"s/\t$//"
             done \
@@ -86,16 +91,16 @@ $1"\\tT2T_rmsk\\texon\\t"$2"\\t"$3"\\t"$5"\\t"$6"\\t0\\tgene_id \\""$4"\\"; tran
                 --out filtered_biotyped.gtf
 
             sed 's/""/"/g' filtered_biotyped.gtf \
-            > HG38v!{params.version}_repeat_annotation.gtf
+            > !{params.genome}v!{params.version}_repeat_annotation.gtf
 
-            if [[ `wc -l HG38v!{params.version}_repeat_annotation.gtf` == '0' ]]; then
+            if [[ `wc -l !{params.genome}v!{params.version}_repeat_annotation.gtf` == '0' ]]; then
                 echo "Error formatting GTF"
                 exit 1
             fi
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
                 echo "Compressing annotation..."
             fi
-            gzip HG38v!{params.version}_repeat_annotation.gtf
+            gzip !{params.genome}v!{params.version}_repeat_annotation.gtf
         '''
         }
 }

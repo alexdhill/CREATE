@@ -63,17 +63,22 @@ process download_gencode_annotation
 
             if [[ !{params.log}=="INFO" || !{params.log}=="DEBUG" ]]; then
                 echo "Downloading HG38 annotation"
-                echo "... using HG38v!{params.version}"
+                echo "... using !{params.genome}v!{params.version}"
             fi
             if [[ !{params.log}=="DEBUG" ]]; then
                 set -x
             fi
 
-            wget -qO- ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_!{params.version}/gencode.v!{params.version}.annotation.gtf.gz \
+            species="human"
+            if [[ "$(echo !{} | sed 's/\\B\\w*//' )" == "M" ]]; then
+                species="mouse"
+            fi
+
+            wget -qO- ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_${species}/release_!{params.version}/gencode.v!{params.version}.annotation.gtf.gz \
             | gzip -cd \
             | sed 's/|/ /g' \
             | gzip --best \
-            > HG38v!{params.version}_gencode_annotation.gtf.gz
+            > !{params.genome}v!{params.version}_gencode_annotation.gtf.gz
         '''
         }
 }
