@@ -104,16 +104,11 @@ if (params.reference)
     if (params.genome=='HG38' || params.genome=="MM39")
     {
         params.version = 39
-        if (params.version < 1)
+        if ((params.genome[0]=="M") && !(params.version[0]=="M"))
         {
+            println("--genome: ${params.genome}")
             println("--version: ${params.version}")
-            throw new IllegalArgumentException('Gencode version must be at least 1')
-            if ((params.genome[0]=="M") && !(params.version[0]=="M"))
-            {
-                println("--genome: ${params.genome}")
-                println("--version: ${params.version}")
-                throw new IllegalArgumentException('Gencode version MUST start with `M` when building mouse reference')
-            }
+            throw new IllegalArgumentException('Gencode version MUST start with `M` when building mouse reference')
         }
     } else if (params.genome=="T2T")
     {
