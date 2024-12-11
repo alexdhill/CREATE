@@ -15,6 +15,8 @@
  */
 
 
+include { gather_ftp } from "../../../modules/ffq/gather_ftp/gather_ftp.nf"
+include { download_acc } from "../../../modules/bash/download_acc/download_acc.nf"
 include { count_reads_se } from "../../../modules/bash/count_reads/count_reads_se.nf"
 include { trim_reads_single } from "../../../modules/trim-galore/trim_reads/trim_reads_single.nf"
 include { salmon_quant_single } from "../../../modules/salmon/salmon_quant/salmon_quant_single.nf"
@@ -24,12 +26,26 @@ include { run_analysis } from "../../../modules/R/run_analysis/run_analysis.nf"
 workflow SINGLE_END
 {
     take:
-        reads
+        is_acc
     main:
         if (params.library=="single_end")
         {
             reference = Channel.fromPath(params.ref)
             metadata = Channel.fromPath(params.metadata)
+            if (is_acc)
+            {
+                log.info("Downloading reads before running...")
+                Channel.fromPath(params.samples)
+                | gather_ftp
+                | splitCsv(header: ['acc', 'ftp', 'md5'])
+                | map{row -> ["${row.acc}", "${row.ftp}", "${row.md5}"]}
+                | download_acc
+                | set{reads}
+            } else
+            {
+                reads = Channel.fromPath(params.samples+"/"+params.pattern)
+                .map{sample -> [sample.name.split(/\.f(ast)?q(\.gz)?/)[0], sample]}
+            }
 
             reads
             | count_reads_se

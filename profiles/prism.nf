@@ -82,10 +82,15 @@ process
 
     // Quant
 
+    withName: "download_acc"
+    {
+        queue = "short"
+        time = "1h"
+    }
     withName: "count_reads_pe"
     {
         queue = "short"
-        time = '10m'
+        time = '1h'
     }
     withName: "count_reads_se"
     {
