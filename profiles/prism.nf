@@ -75,17 +75,17 @@ process
     withName: "count_reads_pe"
     {
         queue = "short"
-        time = '10m'
+        time = '1h'
     }
     withName: "count_reads_se"
     {
         queue = "short"
-        time = '10m'
+        time = '1h'
     }
     withName: "count_reads_np"
     {
         queue = "short"
-        time = '10m'
+        time = '1h'
     }
 
     withName: "trim_reads_paired"
