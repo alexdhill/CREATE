@@ -44,30 +44,29 @@ readTranscriptMap <- function(reference_dir, class=TRUE)
         return()
 }
 
-runDESeq2 <- function(quants, metadata)
+runDESeq2 <- function(quants)
 {
     suppressMessages({
         library(DESeq2)
     })
 
-    valid_conditions = metadata$condition %>%
+    valid_conditions = colData(quants)$condition %>%
         unique() %>%
-        lapply(function(c){if (sum(metadata$condition==c)>2) return(c)}) %>%
+        lapply(function(c){if (sum(colData(quants)$condition==c)>2) return(c)}) %>%
         unlist()
 
     colData = colData(quants) %>%
         as.data.frame() %>%
-        mutate(sample=names, names=NULL) %>%
-        left_join(metadata, by="sample") %>%
         filter(condition %in% valid_conditions)
 
     deseq_data = quants %>%
-        assay() %>%
+        assays() %>%
+        extract2("counts") %>%
         as.data.frame() %>%
         add(0.5) %>%
         floor() %>%
-        select(all_of(colData$sample))
-    
+        select(all_of(colData$names))
+
     if (ncol(deseq_data) == 0) return(NA)
 
     deseq = DESeq2::DESeqDataSetFromMatrix(

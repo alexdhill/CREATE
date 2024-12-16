@@ -39,7 +39,7 @@ main = function()
         assays() %>%
         extract2("normalized") %>%
         as.data.frame() %>%
-        mutate(gene_id = rownames(.) %>%
+        mutate(gene_id = rownames(.)) %>%
         left_join(as.data.frame(rowData(quants)), by="gene_id") %>%
         pivot_longer(
             cols = -c("gene_id", "gene_name", "gene_biotype", "tx_ids"),
@@ -110,12 +110,10 @@ main = function()
     )
 
     message("Running DESeq2...")
-    metadata = colData(quants)
-    deseq = runDESeq2(quants, metadata)
+    deseq = runDESeq2(quants)
     if (length(is.na(deseq))>1 || !is.na(deseq))
-    {    
-        
-        conditions = unlist(lapply(unique(metadata$condition), function(c) if (sum(metadata$condition==c)>2) return(c))) # alpha
+    {
+        conditions = unlist(lapply(unique(colData(quants)$condition), function(c) if (sum(colData(quants)$condition==c)>2) return(c))) # alpha
         if (length(conditions) >= 2)
         {
             message("Printing differential expression results...")
