@@ -44,7 +44,7 @@ process link_transcriptome
                 echo "Index: !{index}"
             fi
             version="!{params.version}"
-            if [[ "!{params.genome}"=="T2T" ]]; then
+            if [[ "!{params.genome}" == "T2T" ]]; then
                 version="2"
             fi
             splici="false"
@@ -57,6 +57,7 @@ process link_transcriptome
                 set -x
             fi
 
+            echo "$version $(id -a)"
             gzip -cd !{transcripts} > txome.fa
             mkdir -p !{params.genome}v${version}_complete_digest
             compute_fasta_digest --reference txome.fa \

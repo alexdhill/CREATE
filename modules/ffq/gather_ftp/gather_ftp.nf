@@ -13,50 +13,39 @@
  * licensor will not be liable to you for any damages arising out of these terms or the use or
  * nature of the software, under any kind of legal claim.
  */
- 
 
-process trim_reads_paired
+
+process gather_ftp
 {
-    publishDir "${params.outdir}/reads/trimmed", mode: 'copy', enable: params.keep, overwrite: params.force
     if (params.manage_resources)
     {
-        cpus 8
-        memory '16.GB'
-        time '30m'
+        cpus 1
+        memory '1.GB'
     }
+    executor = "local"
     input:
-        tuple(
-            val(sample),
-            path(read_1),
-            path(read_2),
-            val(nreads)
-        )
+        path(acc)
     output:
-        tuple(
-            val("${sample}"),
-            path("${sample}_val_1.fq.gz"),
-            path("${sample}_val_2.fq.gz"),
-            env(NREADS)
-        )
+        path("samples.url")
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Trimming paired reads..."
-                echo "Sample: !{sample}"
-                echo "Read 1: !{read_1}"
-                echo "Read 2: !{read_2}"
-                echo "n Reads: !{nreads}"
+                echo "Collecting FTP links..."
+                echo "Sample: !{acc}"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 
-            trim_galore --paired --gzip  !{read_1} !{read_2} \
-                --2colour 20 --length 75 --basename !{sample} \
-                -j !{task.cpus} --output_dir .
+            for sra in `xargs < !{acc}`; do
+                until `ffq --ftp ${sra} >> samples.json`; do
+                    echo "Failed at ${sra}, retrying in 5s..."
+                    sleep 5
+                done
+            done
 
-            NREADS=`gzip -cd !{sample}_val_1.fq.gz \
-            | wc -l \
-            | awk '{print $1/4}'`
+            jq '.[] | "\\(.accession),\\(.url),\\(.md5)"' samples.json \
+            | sed 's/"//g' \
+            > samples.url
         '''
 }

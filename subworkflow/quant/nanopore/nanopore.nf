@@ -15,6 +15,8 @@
  */
 
 
+include { gather_ftp } from "../../../modules/ffq/gather_ftp/gather_ftp.nf"
+include { download_acc } from "../../../modules/bash/download_acc/download_acc.nf"
 include { count_reads_np } from "../../../modules/bash/count_reads/count_reads_np.nf"
 include { minimap2_align_dcs } from "../../../modules/minimap2/minimap2_align/minimap2_align_dcs.nf"
 include { seqtk_subset } from "../../../modules/seqtk/seqtk_subset/seqtk_subset.nf"
@@ -27,13 +29,27 @@ include { run_analysis } from "../../../modules/R/run_analysis/run_analysis.nf"
 workflow NANOPORE
 {
     take:
-        reads
+        is_acc
     main:
         if (params.library=="nanopore")
         {
             reference = Channel.fromPath(params.ref)
             dcs = Channel.fromPath(params.dcs)
             metadata = Channel.fromPath(params.metadata)
+            if (is_acc)
+            {
+                log.info("Downloading reads before running...")
+                Channel.fromPath(params.samples)
+                | gather_ftp
+                | splitCsv(header: ['acc', 'ftp', 'md5'])
+                | map{row -> ["${row.acc}", "${row.ftp}", "${row.md5}"]}
+                | download_acc
+                | set{reads}
+            } else
+            {
+                reads = Channel.fromPath(params.samples+"/"+params.pattern)
+                .map{sample -> [sample.name.split(/\.f(ast)?q(\.gz)?/)[0], sample]}
+            }
 
             reads
             | count_reads_np

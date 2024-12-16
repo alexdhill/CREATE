@@ -37,10 +37,10 @@ process salmon_index
                 echo "Transcripts: !{transcripts}"
             fi
             version="!{params.version}"
-            if [[ "!{params.genome}"=="T2T" ]]; then
+            if [[ "!{params.genome}" == "T2T" ]]; then
                 version="2"
             fi
-            if [[ "!{params.log}"=="DEBUG" ]]; then
+            if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 

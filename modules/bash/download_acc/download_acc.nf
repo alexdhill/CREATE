@@ -13,50 +13,45 @@
  * licensor will not be liable to you for any damages arising out of these terms or the use or
  * nature of the software, under any kind of legal claim.
  */
- 
 
-process trim_reads_paired
+
+process download_acc
 {
-    publishDir "${params.outdir}/reads/trimmed", mode: 'copy', enable: params.keep, overwrite: params.force
     if (params.manage_resources)
     {
-        cpus 8
-        memory '16.GB'
-        time '30m'
+        cpus 1
+        memory '1.GB'
     }
+    errorStrategy "retry"
+    maxRetries 10
     input:
         tuple(
-            val(sample),
-            path(read_1),
-            path(read_2),
-            val(nreads)
+            val("acc"),
+            val("file"),
+            val("md5")
         )
     output:
         tuple(
-            val("${sample}"),
-            path("${sample}_val_1.fq.gz"),
-            path("${sample}_val_2.fq.gz"),
-            env(NREADS)
+            val("${acc}"),
+            path("*.fastq.gz")
         )
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Trimming paired reads..."
-                echo "Sample: !{sample}"
-                echo "Read 1: !{read_1}"
-                echo "Read 2: !{read_2}"
-                echo "n Reads: !{nreads}"
+                echo "Downloading reads..."
+                echo "Sample: !{acc}"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 
-            trim_galore --paired --gzip  !{read_1} !{read_2} \
-                --2colour 20 --length 75 --basename !{sample} \
-                -j !{task.cpus} --output_dir .
-
-            NREADS=`gzip -cd !{sample}_val_1.fq.gz \
-            | wc -l \
-            | awk '{print $1/4}'`
+            md5sum=""
+            until [[ "!{md5}" == "${md5sum}" ]]; do
+                until `wget !{file}`; do
+                    echo "Download failed... retrying in 5s"
+                    sleep 5
+                done
+                md5sum="$(md5sum $(basename !{file}) | awk '{print $1}')"
+            done
         '''
 }

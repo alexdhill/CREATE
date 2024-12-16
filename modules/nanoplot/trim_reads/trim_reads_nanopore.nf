@@ -38,13 +38,13 @@ process trim_reads_nanopore
         )
     shell:
         '''
-            if [[ "!{params.log}"=="INFO" || "!{params.log}"=="DEBUG" ]]; then
+            if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
                 echo "Trimming nanopore reads..."
                 echo "Sample: !{sample}"
                 echo "Read: !{read}"
                 echo "n Reads: !{nreads}"
             fi
-            if [[ !{params.log}=="DEBUG" ]]; then
+            if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 
