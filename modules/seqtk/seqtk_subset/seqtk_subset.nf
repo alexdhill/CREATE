@@ -48,20 +48,8 @@ process seqtk_subset
                 set -x
             fi
 
-            cat !{controls} \
-            | sort \
-            > control_names \
-            & zcat !{read} \
-            | sed -n '1~4p' \
-            | cut -d' ' -f1 \
-            | sed 's/@//' \
-            | sort \
-            > read_names \
-            & comm -23 read_names control_names \
-            > non_control_reads.txt \
-
-            gzip -cd !{read} > reads &
-            seqtk subseq reads non_control_reads.txt \
+            gzip -cd !{read} \
+            | python !{projectDir}/bin/python/filter_fastq.py !{controls} \
             | gzip \
             > !{sample}_filtered.fq.gz
 
