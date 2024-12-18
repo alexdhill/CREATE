@@ -49,10 +49,10 @@ process seqtk_subset
             fi
 
             gzip -cd !{read} \
-            | python !{projectDir}/bin/python/filter_fastq.py !{controls} \
+            | python3 !{projectDir}/bin/python/filter_fastq.py !{controls} \
             | gzip \
             > !{sample}_filtered.fq.gz
 
-            NREADS="$(cat non_control_reads.txt | wc -l)"
+            NREADS="$(zcat !{sample}_filtered.fq.gz | wc -l)"
         '''
 }
