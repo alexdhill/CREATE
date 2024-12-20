@@ -53,6 +53,6 @@ process seqtk_subset
             | gzip \
             > !{sample}_filtered.fq.gz
 
-            NREADS="$(zcat !{sample}_filtered.fq.gz | wc -l)"
+            NREADS="$(zcat !{sample}_filtered.fq.gz | wc -l | awk '{$1/4}')"
         '''
 }
