@@ -55,8 +55,6 @@ workflow NANOPORE
             | count_reads_np
             | combine(dcs)
             | minimap2_align_dcs
-            | join(reads)
-            | filter_fastq
             | trim_reads_nanopore
             | combine(reference)
             | minimap2_align
