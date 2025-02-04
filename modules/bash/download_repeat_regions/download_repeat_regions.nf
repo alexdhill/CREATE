@@ -29,7 +29,7 @@ process download_repeat_regions
         if (params.genome=="T2T")
         {
         '''
-            if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
+            if [[ "${params.log}" == "INFO" || "${params.log}" == "DEBUG" ]]; then
                 echo "Downloading T2T repeat regions..."
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
