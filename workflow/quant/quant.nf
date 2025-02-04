@@ -34,7 +34,7 @@ workflow QUANT
     /*
      * File matcher for debug
      */
-    acc_list = (new File(params.samples).isDirectory() == false)
+    acc_list = ((new File(params.samples).isDirectory()) == false)
     if (acc_list)
     {
         // Parse and print file

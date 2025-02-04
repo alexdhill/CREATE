@@ -19,7 +19,7 @@ include { gather_ftp } from "../../../modules/ffq/gather_ftp/gather_ftp.nf"
 include { download_acc } from "../../../modules/bash/download_acc/download_acc.nf"
 include { count_reads_np } from "../../../modules/bash/count_reads/count_reads_np.nf"
 include { minimap2_align_dcs } from "../../../modules/minimap2/minimap2_align/minimap2_align_dcs.nf"
-include { seqtk_subset } from "../../../modules/seqtk/seqtk_subset/seqtk_subset.nf"
+include { filter_fastq } from "../../../modules/python/filter_fastq/filter_fastq.nf"
 include { trim_reads_nanopore } from "../../../modules/nanoplot/trim_reads/trim_reads_nanopore.nf"
 include { minimap2_align } from "../../../modules/minimap2/minimap2_align/minimap2_align.nf"
 include { salmon_quant_nanopore } from "../../../modules/salmon/salmon_quant/salmon_quant_nanopore.nf"
@@ -55,8 +55,6 @@ workflow NANOPORE
             | count_reads_np
             | combine(dcs)
             | minimap2_align_dcs
-            | join(reads)
-            | seqtk_subset
             | trim_reads_nanopore
             | combine(reference)
             | minimap2_align

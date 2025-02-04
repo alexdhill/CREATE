@@ -34,7 +34,7 @@ process minimap2_align_dcs
         tuple(
             val("${sample}"),
             val("${nreads}"),
-            path("control_reads.txt")
+            path("${sample}_filtered.fastq.gz")
         )
     shell:
         '''
@@ -51,10 +51,8 @@ process minimap2_align_dcs
             minimap2 -ax splice -t 8 \
                 !{control} \
                 !{read} \
-            | samtools view -F4 - \
-            | cut -f1 \
-            | sort \
-            | uniq \
-            > control_reads.txt
+            | samtools fastq -f4 - \
+            | gzip -c \
+            > !{sample}_filtered.fastq.gz
         '''
 }

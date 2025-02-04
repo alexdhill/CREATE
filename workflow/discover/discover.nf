@@ -21,7 +21,6 @@ import java.util.Arrays
 include { count_reads_pe } from "../../modules/bash/count_reads/count_reads_pe.nf"
 include { count_reads_np } from "../../modules/bash/count_reads/count_reads_np.nf"
 include { minimap2_align_dcs } from "../../modules/minimap2/minimap2_align/minimap2_align_dcs.nf"
-include { seqtk_subset } from "../../modules/seqtk/seqtk_subset/seqtk_subset.nf"
 include { trim_reads_nanopore } from "../../modules/nanoplot/trim_reads/trim_reads_nanopore.nf"
 include { trim_reads_paired } from "../../modules/trim-galore/trim_reads/trim_reads_paired.nf"
 include { star_align_genome } from "../../modules/star/star_align/star_align_genome.nf"
@@ -113,8 +112,6 @@ workflow DISCOVER
     count_reads_np(long_channel)
     | combine(dcs)
     | minimap2_align_dcs
-    | join(long_channel)
-    | seqtk_subset
     | trim_reads_nanopore
     | combine(reference)
     | flair_align
