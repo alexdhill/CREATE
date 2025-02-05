@@ -24,19 +24,19 @@ process download_repeat_regions
         memory '1.GB'
     }
     output:
-        path("*_repeat_regions.bed")
+        path("${params.genome}v${params.genome=='T2T'?'2':params.version}_repeat_regions.bed")
     shell:
         if (params.genome=="T2T")
         {
         '''
-            if [[ "${params.log}" == "INFO" || "${params.log}" == "DEBUG" ]]; then
+            if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
                 echo "Downloading T2T repeat regions..."
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 
-            wget -qO- https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/annotation/chm13v2.0_RepeatMasker_4.1.2p1.2022Apr14.bed \
+            wget -qO- 'https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/annotation/chm13v2.0_RepeatMasker_4.1.2p1.2022Apr14.bed' \
             > T2Tv2_repeat_regions.bed
         '''
         }
