@@ -24,7 +24,7 @@ process download_gencode_annotation
         memory '1.GB'
     }
     output:
-        path("${params.genome}v${params.genome=='T2T'?'2':params.version}_gencode_annotation.gtf.gz")
+        path("${params.genome}v${params.genome=='T2T'?'2':params.version}_gencode_annotation.gff3.gz")
     shell:
         if (params.isoquant)
         {
@@ -49,8 +49,13 @@ process download_gencode_annotation
             fi
 
             wget -qO- 'https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/annotation/chm13.draft_v2.0.gene_annotation.gff3' \
-            | sed -E '/^#/!s/^/chr/' \
-            | sed 's/"; transcript_version "/./' \
+            | sed \
+                -e's/transcript_id=/new_transcript_id=/' \
+                -e's/source_transcript=/transcript_id=/' \
+                -e's/gene_id=/new_gene_id=/' \
+                -e's/source_gene=/gene_id=/' \
+                -e 's/;/; /g' \
+                -e 's/=/ /g' \
             | gzip --best \
             > T2Tv2_gencode_annotation.gtf.gz
         '''
