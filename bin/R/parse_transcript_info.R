@@ -18,22 +18,19 @@ suppressMessages(library(readr))
 suppressMessages(library(stringr))
 suppressMessages(library(magrittr))
 
-filter_info <- function(i) {
-    grepl("transcript_id|gene_id|gene_biotype|gene_name", i) %>%
-        return()
-}
-
 parse_info <- function(info, out) {
     readLines(info) %>%
         lapply(., function(i) {
             unlist(strsplit(i, ';')) %>%
             .[grepl(pattern="transcript_id|gene_id|gene_biotype|gene_name", x=.)] %>%
             gsub("^\\s+|\"", "", .) %>%
-            set_names(lapply(., function(x) {strsplit(x, "\\s+")[[1]][1]})) %>%
-            lapply(function(x) strsplit(x, "\\s+")[[1]][2]) %>%
+            set_names(lapply(., function(x) {strsplit(x, "\\s+|=")[[1]][1]})) %>%
+            lapply(function(x) strsplit(x, "\\s+|=")[[1]][2]) %>%
+            unlist() %>%
             return()
         }) %>%
-        bind_rows() %>%
+        do.call(args=., what='rbind') %>%
+        as.data.frame() %>%
         mutate(gene_name=case_when(is.na(gene_name)~gene_id, .default=gene_name)) %>%
         distinct() %>%
         write_csv(., out, col_names = TRUE)
