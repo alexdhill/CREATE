@@ -24,7 +24,7 @@ process download_gencode_annotation
         memory '1.GB'
     }
     output:
-        path("${params.genome}v${params.genome=='T2T'?'2':params.version}_gencode_annotation.gff3.gz")
+        path("${params.genome}v${params.genome=='T2T'?'2':params.version}_gencode_annotation.gtf.gz")
     shell:
         if (params.isoquant)
         {
@@ -54,8 +54,8 @@ process download_gencode_annotation
                 -e's/source_transcript=/transcript_id=/' \
                 -e's/gene_id=/new_gene_id=/' \
                 -e's/source_gene=/gene_id=/' \
-                -e 's/;/; /g' \
-                -e 's/=/ /g' \
+                -e's/;/; /g' \
+                -e's/=/ /g' \
             | gzip --best \
             > T2Tv2_gencode_annotation.gtf.gz
         '''
