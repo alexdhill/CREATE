@@ -40,16 +40,14 @@ process salmon_quant_nanopore
                 echo "Sample: !{sample} (!{nreads} reads)"
                 echo "BAM: !{bam}"
                 echo "Reference: !{reference}"
-                echo "User parameters: $(!{params.parameters} | jq '.salmon' )"
+                echo "User parameters: $(jq '.salmon' !{params.parameters})"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
-            params="$(echo !{params.parameters} | jq '.salmon')"
+            params="$(jq '.salmon' !{params.parameters})"
             if [[ "${params}" == "null" ]]; then
                 params=""
-            else
-                params=$(echo !{params.parameters} | jq '.salmon')
             fi
 
             salmon quant --libType U --ont -a !{bam} \

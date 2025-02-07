@@ -43,16 +43,14 @@ process trim_reads_np
                 echo "Sample: !{sample}"
                 echo "Read: !{read}"
                 echo "n Reads: !{nreads}"
-
+                echo "User parameters: $(jq '.chopper' !{params.parameters})"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
-            params="$(echo !{params.parameters} | jq '.chopper')"
+            params="$(jq '.chopper' !{params.parameters})"
             if [[ "${params}" == "null" ]]; then
                 params=""
-            else
-                params="$(echo !{params.parameters} | jq '.chopper')"
             fi
 
             chopper \

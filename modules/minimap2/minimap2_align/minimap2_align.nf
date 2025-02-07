@@ -43,16 +43,14 @@ process minimap2_align
                 echo "Sample: !{sample}"
                 echo "Read: !{read} (!{nreads} reads)"
                 echo "Reference: !{reference}"
-                echo "User parameters: $(!{params.parameters} | jq '.minimap2' )"
+                echo "User parameters: $(jq '.minimap2' !{params.parameters})"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
-            params="$(echo !{params.parameters} | jq '.minimap2')"
+            params="$(jq '.minimap2' !{params.parameters})"
             if [[ "${params}" == "null" ]]; then
                 params=""
-            else
-                params=$(echo !{params.parameters} | jq '.minimap2')
             fi
 
             minimap2 -ax splice \

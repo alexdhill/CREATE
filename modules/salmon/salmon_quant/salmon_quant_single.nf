@@ -41,16 +41,14 @@ process salmon_quant_single
                 echo "Read: !{read}"
                 echo "n Reads: !{nreads}"
                 echo "Reference: !{reference}"
-                echo "User parameters: $(!{params.parameters} | jq '.salmon' )"
+                echo "User parameters: $(jq '.salmon' | params.parameters)"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
-            params="$(echo !{params.parameters} | jq '.salmon')"
+            params="$(jq '.salmon' !{params.parameters})"
             if [[ "${params}" == "null" ]]; then
                 params=""
-            else
-                params=$(echo !{params.parameters} | jq '.salmon')
             fi
 
             salmon quant --libType A -r !{read} \
