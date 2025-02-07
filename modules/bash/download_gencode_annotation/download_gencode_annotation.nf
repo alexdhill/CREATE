@@ -56,6 +56,8 @@ process download_gencode_annotation
                 -e's/source_gene=/gene_id=/' \
                 -e's/;/; /g' \
                 -e's/=/ /g' \
+            | grep -v 'StringTie' \
+            | grep -v 'gene_biotype unknown' \
             | gzip --best \
             > T2Tv2_gencode_annotation.gtf.gz
         '''
