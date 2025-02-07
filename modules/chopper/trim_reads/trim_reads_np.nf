@@ -43,9 +43,16 @@ process trim_reads_np
                 echo "Sample: !{sample}"
                 echo "Read: !{read}"
                 echo "n Reads: !{nreads}"
+
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
+            fi
+            params="$(echo !{params.parameters} | jq '.chopper')"
+            if [[ "${params}" == "null" ]]; then
+                params=""
+            else
+                params="$(echo !{params.parameters} | jq '.chopper')"
             fi
 
             chopper \
@@ -54,6 +61,7 @@ process trim_reads_np
                 -l 75 \
                 --threads 8 \
                 -o trimmed.fq \
+                ${params} \
             | gzip \
             > !{sample}_filtered_trimmed.fq.gz
 

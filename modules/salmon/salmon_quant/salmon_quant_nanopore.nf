@@ -40,14 +40,22 @@ process salmon_quant_nanopore
                 echo "Sample: !{sample} (!{nreads} reads)"
                 echo "BAM: !{bam}"
                 echo "Reference: !{reference}"
+                echo "User parameters: $(!{params.parameters} | jq '.salmon' )"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
+            fi
+            params="$(echo !{params.parameters} | jq '.salmon')"
+            if [[ "${params}" == "null" ]]; then
+                params=""
+            else
+                params=$(echo !{params.parameters} | jq '.salmon')
             fi
 
             salmon quant --libType U --ont -a !{bam} \
                 -p 8 --noLengthCorrection --noErrorModel \
                 -t !{reference}/*complete_transcripts.fa.gz --output !{sample} \
+                ${params}
 
             if [[ ! -e !{sample}/quant.sf ]]; then
                 echo "\033[1;31mERR: Salmon quantification failed\033[0m" 1>&2

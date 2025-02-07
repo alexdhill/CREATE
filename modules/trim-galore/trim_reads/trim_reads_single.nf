@@ -40,14 +40,23 @@ process trim_reads_single
                 echo "Trimming single reads..."
                 echo "Sample: !{sample}"
                 echo "Read: !{read}"
+                echo "n Reads: !{nreads}"
+                echo "User parameters: $(!{params.parameters} | jq '.trim-galore' )"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
+            params="$(echo !{params.parameters} | jq '.trim-galore')"
+            if [[ "${params}" == "null" ]]; then
+                params=""
+            else
+                params=$(echo !{params.parameters} | jq '.trim-galore')
+            fi
 
             trim_galore --gzip !{read} \
                 --2colour 20 --length 75 --basename !{sample} \
-                -j 8 --output_dir .
+                -j 8 --output_dir . \
+                ${params}
 
             NREADS=`gzip -cd !{sample}_trim.fq.gz \
             | wc -l \

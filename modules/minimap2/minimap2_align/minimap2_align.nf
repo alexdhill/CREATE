@@ -42,15 +42,24 @@ process minimap2_align
                 echo "Aligning to Minimap2 Index"
                 echo "Sample: !{sample}"
                 echo "Read: !{read} (!{nreads} reads)"
+                echo "Reference: !{reference}"
+                echo "User parameters: $(!{params.parameters} | jq '.minimap2' )"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
+            fi
+            params="$(echo !{params.parameters} | jq '.minimap2')"
+            if [[ "${params}" == "null" ]]; then
+                params=""
+            else
+                params=$(echo !{params.parameters} | jq '.minimap2')
             fi
 
             minimap2 -ax splice \
                 -N 100 -t 8 \
                 !{reference}/*long_index*.mmi \
                 !{read} \
+                ${params} \
             | samtools view -bS - \
             > !{sample}.bam
         '''

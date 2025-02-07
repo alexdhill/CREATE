@@ -41,14 +41,22 @@ process salmon_quant_single
                 echo "Read: !{read}"
                 echo "n Reads: !{nreads}"
                 echo "Reference: !{reference}"
+                echo "User parameters: $(!{params.parameters} | jq '.salmon' )"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
+            params="$(echo !{params.parameters} | jq '.salmon')"
+            if [[ "${params}" == "null" ]]; then
+                params=""
+            else
+                params=$(echo !{params.parameters} | jq '.salmon')
+            fi
 
             salmon quant --libType A -r !{read} \
                 -i !{reference}/*.sidx -p 8 --output !{sample} \
-                --seqBias --gcBias --validateMappings --recoverOrphans --rangeFactorizationBins 4
+                --seqBias --gcBias --validateMappings --recoverOrphans --rangeFactorizationBins 4 \
+                --writeUnmappedNames ${params}
             
             if [[ ! -e !{sample}/quant.sf ]]; then
                 echo "\033[[1;31mERR: Salmon quantification failed\033[0m" 1>&2
