@@ -21,11 +21,12 @@ suppressMessages(library(magrittr))
 parse_info <- function(info, out) {
     readLines(info) %>%
         lapply(., function(i) {
-            unlist(strsplit(i, ';')) %>%
-            .[grepl(pattern="transcript_id|gene_id|gene_biotype|gene_name", x=.)] %>%
+            strsplit(i, ';') %>%
+            unlist() %>%
             gsub("^\\s+|\"", "", .) %>%
-            set_names(lapply(., function(x) {strsplit(x, "\\s+|=")[[1]][1]})) %>%
-            lapply(function(x) strsplit(x, "\\s+|=")[[1]][2]) %>%
+            .[grepl(pattern="^(transcript_id|gene_id|gene_biotype|gene_name)", x=.)] %>%
+            set_names(lapply(., function(x) {strsplit(x, "\\s+")[[1]][1]})) %>%
+            lapply(function(x) {strsplit(x, "\\s+")[[1]][2]}) %>%
             unlist() %>%
             return()
         }) %>%
