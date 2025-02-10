@@ -126,11 +126,12 @@ read_map <- function(reference_dir, class=TRUE)
 {
     reference_dir %>% 
         list.files(full.names=TRUE) %>%
-        str_subset("complete_map.tx2g") %>%
-        read_csv(col_names=TRUE, progress=FALSE, show_col_types=FALSE) %>%
-        select(gene_id, gene_name, gene_biotype) %>%
-        distinct() %>%
-        mutate(
+        stringr::str_subset("complete_map.tx2g") %>%
+        readr::read_csv(col_names=TRUE, progress=FALSE, show_col_types=FALSE) %>%
+        as.data.frame() %>%
+        dplyr::select(gene_id, gene_name, gene_biotype) %>%
+        dplyr::distinct() %>%
+        dplyr::mutate(
             biotype=case_when(
                 !str_detect(gene_biotype, ",") ~ gene_biotype,
                 TRUE ~ unlist(lapply(gene_biotype, function(x){strsplit(x, ",")[[1]][ifelse(class, 2, 1)]}))
@@ -140,7 +141,7 @@ read_map <- function(reference_dir, class=TRUE)
                 TRUE ~ "gene"
             )
         ) %>%
-        mutate(
+        dplyr::mutate(
             gene_biotype=case_when(
                 startsWith(biotype, "Mt_") | startsWith(gene_name, "MT-") ~ "Mitochondrial",
                 biotype == "protein_coding" ~ "Coding",
@@ -151,7 +152,7 @@ read_map <- function(reference_dir, class=TRUE)
                 TRUE ~ "Other repeat"
             )
         ) %>%
-        select(gene_id, gene_name, gene_biotype) %>%
+        dplyr::select(gene_id, gene_name, gene_biotype) %>%
         return()
 }
 
