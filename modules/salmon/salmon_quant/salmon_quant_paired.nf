@@ -30,7 +30,8 @@ process salmon_quant_paired
             path(read_1),
             path(read_2),
             val(nreads),
-            path(reference)
+            path(reference),
+            path(parameters)
         )
     output:
         path("${sample}/")
@@ -42,12 +43,12 @@ process salmon_quant_paired
                 echo "Read 1: !{read_1}"
                 echo "Read 2: !{read_2}"
                 echo "Reference: !{reference}"
-                echo "User parameters: $(jq '.salmon' !{params.parameters})"
+                echo "User parameters: $(jq '.salmon' !{parameters})"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
-            params="$(jq '.salmon' !{params.parameters})"
+            params="$(jq '.salmon' !{parameters})"
             if [[ "${params}" == "null" ]]; then
                 params=""
             fi

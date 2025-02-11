@@ -26,7 +26,8 @@ process trim_reads_single
         tuple(
             val(sample),
             path(read),
-            val(nreads)
+            val(nreads),
+            path(parameters)
         )
     output:
         tuple(
@@ -41,16 +42,14 @@ process trim_reads_single
                 echo "Sample: !{sample}"
                 echo "Read: !{read}"
                 echo "n Reads: !{nreads}"
-                echo "User parameters: $(!{params.parameters} | jq '.trim-galore' )"
+                echo "User parameters: $(!{parameters} | jq '.trim-galore' )"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
-            params="$(echo !{params.parameters} | jq '.trim-galore')"
+            params="$(echo !{parameters} | jq '.trim-galore')"
             if [[ "${params}" == "null" ]]; then
                 params=""
-            else
-                params=$(echo !{params.parameters} | jq '.trim-galore')
             fi
 
             trim_galore --gzip !{read} \

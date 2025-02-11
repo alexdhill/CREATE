@@ -31,7 +31,8 @@ process salmon_quant_novel
             path(read_1),
             path(read_2),
             val(nreads),
-            path(index)
+            path(index),
+            path(parameters)
         )
     output:
         path("${sample}/")
@@ -43,12 +44,12 @@ process salmon_quant_novel
                 echo "Read 1: !{read_1}"
                 echo "Read 2: !{read_2}"
                 echo "Index: !{index}"
-                echo "User parameters: $(jq '.salmon' !{params.parameters})"
+                echo "User parameters: $(jq '.salmon' !{parameters})"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
-            params="$(jq '.salmon' !{params.parameters})"
+            params="$(jq '.salmon' !{parameters})"
             if [[ "${params}" == "null" ]]; then
                 params=""
             fi

@@ -29,7 +29,8 @@ process salmon_quant_nanopore
             val(sample),
             val(nreads),
             path(bam),
-            path(reference)
+            path(reference),
+            path(parameters)
         )
     output:
         path("${sample}/")
@@ -40,12 +41,12 @@ process salmon_quant_nanopore
                 echo "Sample: !{sample} (!{nreads} reads)"
                 echo "BAM: !{bam}"
                 echo "Reference: !{reference}"
-                echo "User parameters: $(jq '.salmon' !{params.parameters})"
+                echo "User parameters: $(jq '.salmon' !{parameters})"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
-            params="$(jq '.salmon' !{params.parameters})"
+            params="$(jq '.salmon' !{parameters})"
             if [[ "${params}" == "null" ]]; then
                 params=""
             fi

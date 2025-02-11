@@ -34,6 +34,7 @@ workflow NANOPORE
         {
             reference = Channel.fromPath(params.ref)
             dcs = Channel.fromPath(params.dcs)
+            parameters = Channel.fromPath(params.parameters)
             metadata = Channel.fromPath(params.metadata)
             if (is_acc)
             {
@@ -56,8 +57,10 @@ workflow NANOPORE
             | minimap2_align_dcs
             | trim_reads_nanopore
             | combine(reference)
+            | combine(parameters)
             | minimap2_align
             | combine(reference)
+            | combine(parameters)
             | salmon_quant_nanopore
             | collect
             | map{quants -> [quants]}
