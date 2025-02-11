@@ -41,16 +41,18 @@ process download_repeat_regions
             | awk -F'\\t' '
             {
                 if (NR==1) {
-                CHM=$1;START=$2;STOP=$3;NAME=$4;LEN=$5;BULK=$6;ID=$10;
-                for (i=7; i<NF; i++) { BULK=BULK"\\t"$i };
-                } else {
-                if (ID==$10) {
-                    STOP=$3; LEN=STOP-START;
-                } else {
-                    print CHM"\\t"START"\\t"STOP"\\t"NAME"\\t"LEN"\\t"BULK"\\t"ID;
                     CHM=$1;START=$2;STOP=$3;NAME=$4;LEN=$5;BULK=$6;ID=$10;
-                    for (i=7; i<NF; i++) { BULK=BULK"\\t"$i }
-                }
+                    for (i=7; i<NF; i++) { BULK=BULK"\\t"$i };
+                } else {
+                    if (ID==$10) {
+                        if (STOP>$3) {STOP=$3}
+                        if (START<$2) {START=$2}
+                        LEN=STOP-START;
+                    } else {
+                        print CHM"\\t"START"\\t"STOP"\\t"NAME"\\t"LEN"\\t"BULK"\\t"ID;
+                        CHM=$1;START=$2;STOP=$3;NAME=$4;LEN=$5;BULK=$6;ID=$10;
+                        for (i=7; i<NF; i++) { BULK=BULK"\\t"$i }
+                    }
                 }
             }
             END {
