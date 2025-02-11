@@ -20,19 +20,21 @@ suppressMessages(library(magrittr))
 
 parse_info <- function(info, out) {
     readLines(info) %>%
-        lapply(., function(i) {
-            strsplit(i, ';') %>%
+        lapply(function(attributes) {
+            strsplit(attributes, "; ") %>%
             unlist() %>%
             gsub("^\\s+|\"", "", .) %>%
-            .[grepl(pattern="^(transcript_id|gene_id|gene_biotype|gene_name)", x=.)] %>%
-            set_names(lapply(., function(x) {strsplit(x, "\\s+")[[1]][1]})) %>%
-            lapply(function(x) {strsplit(x, "\\s+")[[1]][2]}) %>%
-            unlist() %>%
-            return()
+            lapply(X=c("transcript_id", "gene_id", "gene_biotype", "gene_name"), FUN=function(attr, attrs) {
+                attrs %>%
+                    extract(grepl(paste0("^",attr,"\\s+"), .)) %>%
+                    set_names(strsplit(., "\\s+")[[1]][1]) %>%
+                    lapply(function(v) str_split(v, "\\s+", n=2)[[1]][2]) %>%
+                    unlist()
+            }, attrs=.) %>%
+            unlist()
         }) %>%
         do.call(args=., what='rbind') %>%
         as.data.frame() %>%
-        mutate(gene_name=case_when(is.na(gene_name)~gene_id, .default=gene_name)) %>%
         distinct() %>%
         write_csv(., out, col_names = TRUE)
 }
