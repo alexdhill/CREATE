@@ -37,6 +37,7 @@ process download_repeat_regions
             fi
 
             wget -qO- 'https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/annotation/chm13v2.0_RepeatMasker_4.1.2p1.2022Apr14.bed' \
+            | sort -k 10n \
             | awk -F'\\t' '
             {
                 if (NR==1) {
