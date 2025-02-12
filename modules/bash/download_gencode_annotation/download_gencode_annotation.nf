@@ -58,6 +58,7 @@ process download_gencode_annotation
                 -e's/=/ /g' \
             | grep -v 'StringTie' \
             | grep -v 'gene_biotype unknown' \
+            | grep -v "^#" \
             | gzip --best \
             > T2Tv2_gencode_annotation.gtf.gz
         '''
