@@ -49,11 +49,11 @@ process trim_reads_single
             fi
             params="$(jq '."trim-galore"' !{parameters})"
             if [[ "${params}" == "null" ]]; then
-                params=""
+                params="-l 75 --2color 20"
             fi
 
             trim_galore --gzip !{read} \
-                --2colour 20 --length 75 --basename !{sample} \
+                --basename !{sample} \
                 -j 8 --output_dir . \
                 ${params}
 

@@ -54,11 +54,11 @@ process trim_reads_paired
             fi
             params="$(jq '."trim-galore"' !{parameters})"
             if [[ "${params}" == "null" ]]; then
-                params=""
+                params="-l 75 --2color 20"
             fi
 
             trim_galore --paired --gzip  !{read_1} !{read_2} \
-                --2colour 20 --length 75 --basename !{sample} \
+                --basename !{sample} \
                 -j !{task.cpus} --output_dir . \
                 ${params}
 
