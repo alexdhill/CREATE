@@ -42,12 +42,12 @@ process trim_reads_single
                 echo "Sample: !{sample}"
                 echo "Read: !{read}"
                 echo "n Reads: !{nreads}"
-                echo "User parameters: $(jq '.trim-galore' !{parameters})"
+                echo "User parameters: $(jq '."trim-galore"' !{parameters})"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
-            params="$(jq '.trim-galore' !{parameters})"
+            params="$(jq '."trim-galore"' !{parameters})"
             if [[ "${params}" == "null" ]]; then
                 params=""
             fi
