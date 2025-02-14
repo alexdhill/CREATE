@@ -52,7 +52,7 @@ process trim_reads_paired
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
-            params="$(jq '."trim-galore"' !{parameters})"
+            params=$(jq '."trim-galore"' !{parameters})
             if [[ "${params}" == "null" ]]; then
                 params="-l 75 --2color 20"
             fi
