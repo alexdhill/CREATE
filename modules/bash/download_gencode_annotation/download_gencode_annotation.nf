@@ -50,12 +50,8 @@ process download_gencode_annotation
 
             wget -qO- 'https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/annotation/chm13.draft_v2.0.gene_annotation.gff3' \
             | sed \
-                -e's/transcript_id=/new_transcript_id=/' \
-                -e's/source_transcript=/transcript_id=/' \
-                -e's/gene_id=/new_gene_id=/' \
-                -e's/source_gene=/gene_id=/' \
-                -e's/;/; /g' \
-                -e's/=/ /g' \
+                -e's/;/"; /g' \
+                -e's/=/ "/g' \
             | grep -v 'StringTie' \
             | grep -v 'gene_biotype unknown' \
             | grep -v "^#" \
