@@ -8,22 +8,22 @@ profiles
             withName: "download_gencode_annotation"
             {
                 queue = "short"
-                time = '5m'
+                time = '15m'
             }
             withName: "download_gencode_transcripts"
             {
                 queue = "short"
-                time = '5m'
+                time = '15m'
             }
             withName: "download_reference"
             {
                 queue = "short"
-                time = '10m'
+                time = '15m'
             }
             withName: "download_repeat_regions"
             {
                 queue = "short"
-                time = '5m'
+                time = '15m'
             }
 
             withName: "download_repeat_annotation"
@@ -45,12 +45,12 @@ profiles
             withName: "make_complete_annotation"
             {
                 queue = "short"
-                time = '5m'
+                time = '15m'
             }
             withName: "make_complete_transcripts"
             {
                 queue = "short"
-                time = '5m'
+                time = '15m'
             }
 
             withName: "link_transcriptome"
@@ -80,7 +80,7 @@ profiles
             withName: "minimap2_index"
             {
                 queue = "short"
-                time = '5m'
+                time = '30m'
             }
 
             // Quant
@@ -121,7 +121,7 @@ profiles
                 time = '1h'
             }
 
-            withName: "filter_fastq"
+            withName: "minimap2_align_dcs"
             {
                 queue = "short"
                 time = '1h'
@@ -149,6 +149,12 @@ profiles
                 time = '3h'
             }
 
+            withName: "run_analysis"
+            {
+                queue = "medium"
+                time = '1h'
+            }
+
             // Discover
             withName: "star_align_genome"
             {
@@ -174,7 +180,7 @@ profiles
             withName: "flair_collapse"
             {
                 queue = "medium"
-                time = '12h'
+                time = '24h'
             }
             withName: "correct_flair_annotation"
             {
