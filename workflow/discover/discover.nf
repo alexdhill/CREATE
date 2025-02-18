@@ -27,6 +27,8 @@ include { star_align_genome } from "../../modules/star/star_align/star_align_gen
 include { flair_junctions } from "../../modules/flair/flair_junctions/flair_junctions.nf"
 include { flair_align } from "../../modules/flair/flair_align/flair_align.nf"
 include { flair_correct } from "../../modules/flair/flair_correct/flair_correct.nf"
+include { flair_correct } from "../../modules/flair/flair_correct/combine_collapsed_bed.nf"
+include { flair_correct } from "../../modules/flair/flair_correct/split_correct_bed.nf"
 include { flair_collapse } from "../../modules/flair/flair_collapse/flair_collapse.nf"
 include { correct_flair_transcripts } from "../../modules/python/correct_flair_transcripts/correct_flair_transcripts.nf"
 include { salmon_index_novel } from "../../modules/salmon/salmon_index/salmon_index_novel.nf"
@@ -136,7 +138,11 @@ workflow DISCOVER
         | map{reads -> [reads]}
     )
     | combine(reference)
+    |split_corrected_bed
     | flair_collapse
+    | map{res -> res[1]}
+    |combine_collapsed_bed
+    //vikas need help here
     | map{isoforms -> isoforms[0]}
     | correct_flair_transcripts
     | salmon_index_novel & minimap2_index_novel

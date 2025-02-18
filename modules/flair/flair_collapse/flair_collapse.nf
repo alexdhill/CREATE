@@ -13,7 +13,6 @@
  * licensor will not be liable to you for any damages arising out of these terms or the use or
  * nature of the software, under any kind of legal claim.
  */
- 
 
 process flair_collapse
 {
@@ -31,10 +30,10 @@ process flair_collapse
         )
     output:
         tuple(
-            path("novel.isoforms.fa"),
-            path("novel.isoforms.bed"),
-            path("novel.isoforms.gtf"),
-            path("novel.isoform.read.map.txt")
+            path("*.isoforms.fa"),
+            path("*.isoforms.bed"),
+            path("*.isoforms.gtf"),
+            path("*.isoform.read.map.txt")
         )
     shell:
         '''
@@ -43,11 +42,11 @@ process flair_collapse
                 echo "BEDs:\n!{regions}"
                 echo "Reads:\n!{reads}"
             fi
-            cat !{regions} > master.bed
-
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
+
+            base=$(basename -s .bed !{regions})
 
             gzip -cd !{reference}/*genome.fa.gz > genome.fa
             gzip -cd !{reference}/*_complete_annotation.gtf.gz > annotation.gtf
@@ -60,7 +59,7 @@ process flair_collapse
                 --stringent \
                 --check_splice \
                 --generate_map \
-                --threads 8 \
-                --output novel
+                --threads !{task.cpus} \
+                --output $base
         '''
 }
