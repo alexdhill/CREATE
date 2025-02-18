@@ -45,8 +45,8 @@ process download_repeat_regions
                     for (i=7; i<NF; i++) { BULK=BULK"\\t"$i };
                 } else {
                     if (ID==$10) {
-                        if (STOP>$3) {STOP=$3}
-                        if (START<$2) {START=$2}
+                        if (STOP<$3) {STOP=$3}
+                        if (START>$2) {START=$2}
                         LEN=STOP-START;
                     } else {
                         print CHM"\\t"START"\\t"STOP"\\t"NAME"\\t"LEN"\\t"BULK"\\t"ID;
