@@ -22,6 +22,7 @@ include { count_reads_pe } from "../../modules/bash/count_reads/count_reads_pe.n
 include { count_reads_np } from "../../modules/bash/count_reads/count_reads_np.nf"
 include { minimap2_align_dcs } from "../../modules/minimap2/minimap2_align/minimap2_align_dcs.nf"
 include { trim_reads_nanopore } from "../../modules/nanoplot/trim_reads/trim_reads_nanopore.nf"
+include { trim_reads_np } from "../../modules/chopper/trim_reads/trim_reads_np.nf"
 include { trim_reads_paired } from "../../modules/trim-galore/trim_reads/trim_reads_paired.nf"
 include { star_align_genome } from "../../modules/star/star_align/star_align_genome.nf"
 include { flair_junctions } from "../../modules/flair/flair_junctions/flair_junctions.nf"
@@ -114,7 +115,7 @@ workflow DISCOVER
     count_reads_np(long_channel)
     | combine(dcs)
     | minimap2_align_dcs
-    | trim_reads_nanopore
+    | trim_reads_np
     | combine(reference)
     | flair_align
     | join(
@@ -134,7 +135,7 @@ workflow DISCOVER
     | split_correct_bed
     | flatten()
     | combine(
-        trim_reads_nanopore.out
+        trim_reads_np.out
         | map{res -> res[2]}
         | collect
         | map{reads -> [reads]}
