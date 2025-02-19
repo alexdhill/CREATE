@@ -131,7 +131,7 @@ workflow DISCOVER
     | map{res -> res[1]}
     | collect
     | map{beds -> [beds]}
-    | split_correct_bed
+    | split_correct_bed.flatten()
     | combine(
         trim_reads_nanopore.out
         | map{res -> res[2]}

@@ -23,11 +23,11 @@ process flair_collapse
         memory '64.GB' // TODO
     }
     input:
-        tuple(
+
             path(region),
-            path(reads),
+            tuple(path(reads)),
             path(reference)
-        )
+    
     output:
         tuple(
             path("*.isoforms.fa"),
