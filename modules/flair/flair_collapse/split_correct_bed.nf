@@ -16,16 +16,16 @@
 
 process split_correct_bed
 {
-    publishDir "${params.outdir}/split_correct_beds", mode: 'copy', overwrite: params.force, enable: params.keep
+    publishDir "${params.outdir}/align/chromosomes/", mode: 'copy', overwrite: params.force, enable: params.keep
     if (params.manage_resources)
     {
         cpus 1
         memory '16.GB' // TODO
     }
     input:
-        tuple(path(regions))
+        path(regions)
     output:
-            path("*.correct.split.bed")
+        path("*.correct.split.bed")
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then

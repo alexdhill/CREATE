@@ -23,16 +23,18 @@ process flair_collapse
         memory '64.GB' // TODO
     }
     input:
-    tuple(
+        tuple(
             path(region),
             path(reads),
             path(reference)
-    )
+        )
     output:
-        tuple val('fasta'), path("*.isoforms.fa")
-        tuple val('bed'), path("*.isoforms.bed")  
-        tuple val('gtf'), path("*.isoforms.gtf") 
-        tuple val('readmap'), path("*.split.isoform.read.map.txt") 
+        tuple(
+            path("*.isoforms.fa"),
+            path("*.isoforms.bed"),
+            path("*.isoforms.gtf"),
+            path("*.split.isoform.read.map.txt"),
+        )
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
