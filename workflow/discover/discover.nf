@@ -141,7 +141,7 @@ workflow DISCOVER
     )
     | combine(reference)
     | flair_collapse 
-    | merge
+    | merge()
     // | map{fa -> fa[0],
     //        bed -> bed[1],
     //        gtf -> gtf[2],
