@@ -23,7 +23,7 @@ process split_correct_bed
         memory '16.GB' // TODO
     }
     input:
-        path(regions)
+        tuple(path(regions))
     output:
             path("*.correct.split.bed")
     shell:
