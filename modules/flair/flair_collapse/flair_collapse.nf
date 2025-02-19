@@ -25,7 +25,7 @@ process flair_collapse
     input:
 
             path(region),
-            tuple(path(reads)),
+            path(reads),
             path(reference)
     
     output:
