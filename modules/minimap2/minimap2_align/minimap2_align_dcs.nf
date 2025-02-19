@@ -48,7 +48,7 @@ process minimap2_align_dcs
                 set -x
             fi
 
-            minimap2 -ax splice -t 8 \
+            minimap2 -ax splice -t !{task.cpus} \
                 !{control} \
                 !{read} \
             | samtools fastq -f4 - \

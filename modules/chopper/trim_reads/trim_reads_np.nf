@@ -51,8 +51,8 @@ process trim_reads_np
             chopper \
                 -i !{read} \
                 -q 20 \
-                -l 75 \
-                --threads 8 \
+                -l 70 \
+                --threads !{task.cpus} \
                 -o trimmed.fq \
             | gzip \
             > !{sample}_filtered_trimmed.fq.gz
