@@ -52,7 +52,7 @@ process minimap2_align_dcs
                 !{control} \
                 !{read} \
             | samtools fastq -f4 - \
-            | gzip -c \
+            | pigz \
             > !{sample}_filtered.fastq.gz
         '''
 }
