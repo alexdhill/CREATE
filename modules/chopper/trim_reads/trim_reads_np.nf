@@ -53,8 +53,7 @@ process trim_reads_np
                 -q 20 \
                 -l 70 \
                 --threads !{task.cpus} \
-                -o trimmed.fq \
-            | gzip \
+            | pigz \
             > !{sample}_filtered_trimmed.fq.gz
 
             NREADS=`gzip -cd !{sample}_filtered_trimmed.fq.gz \

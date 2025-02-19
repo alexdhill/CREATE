@@ -48,7 +48,7 @@ process trim_reads_nanopore
                 set -x
             fi
 
-            gzip -cd !{read} \
+            pigz -cd !{read} \
             > filtered.fq
             porechop \
                 --format auto \
