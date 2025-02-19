@@ -25,9 +25,7 @@ process split_correct_bed
     input:
         path(regions)
     output:
-        tuple(
-            path("*.correct.split.bed"),
-        )
+            path("*.correct.split.bed")
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
