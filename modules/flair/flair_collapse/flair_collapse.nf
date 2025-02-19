@@ -52,7 +52,7 @@ process flair_collapse
             gzip -cd !{reference}/*_complete_annotation.gtf.gz > annotation.gtf
             flair collapse \
                 --genome genome.fa \
-                --query master.bed \
+                --query !{region} \
                 --reads !{reads} \
                 --gtf annotation.gtf \
                 --annotation_reliant generate \
