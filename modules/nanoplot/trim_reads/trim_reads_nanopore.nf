@@ -53,9 +53,9 @@ process trim_reads_nanopore
             porechop \
                 --format auto \
                 -i filtered.fq \
-                -t 8 \
+                -t !{task.cpus} \
                 -o trimmed.fq
-            gzip -c trimmed.fq \
+            pigz -c trimmed.fq \
             > !{sample}_filtered_trimmed.fq.gz
 
             NREADS=`gzip -cd !{sample}_filtered_trimmed.fq.gz \
