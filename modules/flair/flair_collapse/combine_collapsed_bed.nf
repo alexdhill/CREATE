@@ -23,12 +23,10 @@ process combine_collapsed_bed
         memory '16.GB' // TODO
     }
     input:
-        tuple(
             path(isoform_fastas),
             path(isoform_beds),
             path(isoform_gtfs),
             path(isoform_read_maps)
-        )
     output:
         tuple(
             path("collapse_combined.fasta"),
