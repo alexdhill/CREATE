@@ -29,11 +29,11 @@ process flair_collapse
             path(reference)
     )
     output:
-        tuple(
-            path("*.isoforms.fa"),
-            path("*.isoforms.bed"),
-            path("*.isoforms.gtf"),
-            path("*.isoform.read.map.txt")
+    tuple(
+            tuple(val('fasta'), path("collapse_combined.fasta")),
+            tuple(val('bed'),path("collapse_combined.bed")),
+            tuple(val('gtf'),path("collapse_combined.gtf")),
+            tuple(val('readmap'),path("collapse_combined.read.map.txt"))
         )
     shell:
         '''
