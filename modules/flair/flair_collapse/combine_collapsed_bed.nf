@@ -22,11 +22,12 @@ process combine_collapsed_bed
         cpus 1
         memory '16.GB' // TODO
     }
+    //for some reason this only works with file and not path
     input:
-            path(isoform_fastas),
-            path(isoform_beds),
-            path(isoform_gtfs),
-            path(isoform_read_maps)
+            tuple val(fasta), file(isoform_fastas)
+            tuple val(bed), file(isoform_beds)
+            tuple val(gtf), file(isoform_gtfs)
+            tuple val(readmap), file(isoform_read_maps)
     output:
         tuple(
             path("collapse_combined.fasta"),
@@ -44,11 +45,14 @@ process combine_collapsed_bed
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
                 echo "Combining per-chromosome FLAIR collapsed bed files"
-                echo "BEDs:\n!{corrected_beds}"
+                echo "fastas:\n!{isoform_fastas}"
+                echo "beds:\n!{isoform_beds}"
+                echo "gtfs:\n!{isoform_gtfs}"
+                echo "readmaps:\n!{isoform_read_maps}"
             fi
 
             cat !{isoform_fastas} > collapse_combined.fasta
-            cat !{corrected_beds} > collapse_combined.bed
+            cat !{isoform_beds} > collapse_combined.bed
             cat !{isoform_gtfs} > collapse_combined.gtf
             cat !{isoform_read_maps} > collapse_combined.read.map.txt
             

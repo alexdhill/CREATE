@@ -29,12 +29,10 @@ process flair_collapse
             path(reference)
     )
     output:
-        tuple(
-            path("*.isoforms.fa"),
-            path("*.isoforms.bed"),
-            path("*.isoforms.gtf"),
-            path("*.isoform.read.map.txt")
-        )
+        tuple val('fasta'), path("*.isoforms.fa")
+        tuple val('bed'), path("*.isoforms.bed")  
+        tuple val('gtf'), path("*.isoforms.gtf") 
+        tuple val('readmap'), path("*.isoform.read.map.txt") 
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then

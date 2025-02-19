@@ -140,26 +140,30 @@ workflow DISCOVER
         | map{reads -> [reads]}
     )
     | combine(reference)
-    | flair_collapse 
-    | merge()
+    | flair_collapse
     // | map{fa -> fa[0],
     //        bed -> bed[1],
     //        gtf -> gtf[2],
     //        readmap -> readmap[3]}
     // | map{res -> res[1]}
-    | combine_collapsed_bed
+    // | groupTuple()
+
+    combine_collapsed_bed( flair_collapse.out[0].groupTuple(),
+     flair_collapse.out[1].groupTuple(),
+     flair_collapse.out[2].groupTuple(),
+     flair_collapse.out[3].groupTuple())
     //vikas need help here
     | map{isoforms -> isoforms[0]}
     | correct_flair_transcripts
     | salmon_index_novel & minimap2_index_novel
 
     // Save correct output
-    flair_collapse.out
+    combine_collapsed_bed.out
     | combine(reference)
     | make_novel_reference
 
     // Correct bad GTF and make TX2G map
-    flair_collapse.out
+    combine_collapsed_bed.out
     | map{res -> res[2]}
     | correct_flair_annotation
     | combine(reference)
