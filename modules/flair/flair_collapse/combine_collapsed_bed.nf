@@ -32,8 +32,14 @@ process combine_collapsed_bed
             path("collapse_combined.fasta"),
             path("collapse_combined.bed"),
             path("collapse_combined.gtf"),
-            path("collapse_combined.read.map.txt"),
+            path("collapse_combined.read.map.txt")
         )
+        /*        tuple(
+            tuple(val('fasta'), path("collapse_combined.fasta")),
+            tuple(val('bed'),path("collapse_combined.bed")),
+            tuple(val('gtf'),path("collapse_combined.gtf")),
+            tuple(val('readmap'),path("collapse_combined.read.map.txt"))
+        )*/
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
