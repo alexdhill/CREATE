@@ -24,11 +24,17 @@ process combine_collapsed_bed
     }
     input:
         tuple(
-            path(corrected_beds),
+            path(isoform_fastas),
+            path(isoform_beds),
+            path(isoform_gtfs),
+            path(isoform_read_maps)
         )
     output:
         tuple(
+            path("collapse_combined.fasta"),
             path("collapse_combined.bed"),
+            path("collapse_combined.gtf"),
+            path("collapse_combined.read.map.txt"),
         )
     shell:
         '''
@@ -37,7 +43,10 @@ process combine_collapsed_bed
                 echo "BEDs:\n!{corrected_beds}"
             fi
 
+            cat !{isoform_fastas} > collapse_combined.fasta
             cat !{corrected_beds} > collapse_combined.bed
+            cat !{isoform_gtfs} > collapse_combined.gtf
+            cat !{isoform_read_maps} > collapse_combined.read.map.txt
             
         '''
 }

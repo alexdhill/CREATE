@@ -23,9 +23,7 @@ process split_correct_bed
         memory '16.GB' // TODO
     }
     input:
-        tuple(
-            path(regions),
-        )
+        path(regions)
     output:
         tuple(
             path("*.correct.split.bed"),
@@ -37,8 +35,7 @@ process split_correct_bed
                 echo "BEDs:\n!{regions}"
             fi
 
-            cat !{regions} > master.bed
-            awk '{print > $1".correct.split.bed"}' master.bed
+            cat !{regions}  | awk '{print > $1".correct.split.bed"}' 
 
         '''
 }

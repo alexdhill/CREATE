@@ -24,7 +24,7 @@ process flair_collapse
     }
     input:
         tuple(
-            path(regions),
+            path(region),
             path(reads),
             path(reference)
         )
@@ -39,14 +39,14 @@ process flair_collapse
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
                 echo "Running FLAIR discovery"
-                echo "BEDs:\n!{regions}"
+                echo "BEDs:\n!{region}"
                 echo "Reads:\n!{reads}"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 
-            base=$(basename -s .bed !{regions})
+            base=$(basename -s .bed !{region})
 
             gzip -cd !{reference}/*genome.fa.gz > genome.fa
             gzip -cd !{reference}/*_complete_annotation.gtf.gz > annotation.gtf
