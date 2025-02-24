@@ -24,7 +24,7 @@ process download_gencode_annotation
         memory '1.GB'
     }
     output:
-        path("!{params.genome}v!{params.genome=='T2T'?'2':params.version}_gencode_annotation.gtf.gz")
+        path("${params.genome}v${params.genome=='T2T'?'2':params.version}_gencode_annotation.gtf.gz")
     shell:
         if (params.isoquant)
         {
@@ -48,10 +48,13 @@ process download_gencode_annotation
                 set -x
             fi
 
-            wget -qO- https://ftp.ensembl.org/pub/rapid-release/species/Homo_sapiens/GCA_009914755.4/ensembl/geneset/2022_07/Homo_sapiens-GCA_009914755.4-2022_07-genes.gtf.gz \
-            | gzip -cd \
-            | sed -E '/^#/!s/^/chr/' \
-            | sed 's/"; transcript_version "/./' \
+            wget -qO- 'https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/annotation/chm13.draft_v2.0.gene_annotation.gff3' \
+            | sed \
+                -e's/;/"; /g' \
+                -e's/=/ "/g' \
+            | grep -v 'StringTie' \
+            | grep -v 'gene_biotype unknown' \
+            | grep -v "^#" \
             | gzip --best \
             > T2Tv2_gencode_annotation.gtf.gz
         '''
