@@ -320,15 +320,16 @@ RUN apt-get update -y \
 FROM ubuntu:22.04 as FLAIR
 ENV DEBIAN_FRONTEND noninteractive
 ENV FLAIR_VER 2.0.0
+ENV FLAIR_MASTER_COMMIT d777b30
+
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         wget \
         unzip \
     && wget --no-check-certificate \
-        https://github.com/BrooksLabUCSC/flair/archive/refs/tags/${FLAIR_VER}.zip \
-    && unzip ${FLAIR_VER}.zip \
-    && chmod +x flair-${FLAIR_VER}/flair.py
-
+        https://github.com/BrooksLabUCSC/flair/archive/${FLAIR_MASTER_COMMIT}.zip \
+    && unzip ${FLAIR_MASTER_COMMIT}.zip \
+    && chmod +x flair-${FLAIR_MASTER_COMMIT}*/flair.py
 
 ## Build Final
 FROM ubuntu:22.04 as app
@@ -433,6 +434,7 @@ RUN apt-get update -y \
         pysam \
         pandas \
         seaborn \
+        pipettor \
         cutadapt \
         biopython \
         matplotlib \

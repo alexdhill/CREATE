@@ -50,7 +50,7 @@ process trim_reads_np
 
             chopper \
                 -i !{read} \
-                -q 20 \
+                -q 12 \
                 -l 70 \
                 --threads !{task.cpus} \
             | pigz \
