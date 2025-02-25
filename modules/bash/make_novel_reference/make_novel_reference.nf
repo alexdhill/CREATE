@@ -33,9 +33,9 @@ process make_novel_reference
         )
     output:
         tuple(
-            path("${params.genome}v${params.genome=='T2T'?'2':params.version}_complete_regions.bed.gz"),
-            path("${params.genome}v${params.genome=='T2T'?'2':params.version}_complete_readmap.txt"),
-            path("${params.genome}v${params.genome=='T2T'?'2':params.version}_genome.fa.gz")
+            path("*_complete_regions.bed.gz"),
+            path("*_complete_readmap.txt"),
+            path("*_genome.fa.gz")
         )
     shell:
         '''
