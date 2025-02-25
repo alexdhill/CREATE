@@ -21,7 +21,7 @@ process correct_flair_annotation
     if (params.manage_resources)
     {
         cpus 1
-        memory '1.GB'
+        memory '8.GB'
     }
     input:
         path(annotation)
@@ -39,6 +39,6 @@ process correct_flair_annotation
 
             python3 !{projectDir}/bin/python/correct_flair_annotation.py !{annotation} \
             | gzip -c \
-            > novel_complete_annotation.gtf.gz
+            > novel_complete_annotation.gtf.gz 
         '''
 }
