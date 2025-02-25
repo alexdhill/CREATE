@@ -24,7 +24,7 @@ process download_repeat_regions
         memory '1.GB'
     }
     output:
-        path("*_repeat_regions.bed")
+        path("${params.genome}v${params.genome=='T2T'?'2':params.version}_repeat_regions.bed")
     shell:
         if (params.genome=="T2T")
         {
@@ -36,7 +36,29 @@ process download_repeat_regions
                 set -x
             fi
 
-            wget -qO- https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/annotation/chm13v2.0_RepeatMasker_4.1.2p1.2022Apr14.bed \
+            wget -qO- 'https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/annotation/chm13v2.0_RepeatMasker_4.1.2p1.2022Apr14.bed' \
+            | sort -k'10n' -k'2n' \
+            | awk -F'\\t' '
+            {
+                if (NR==1) {
+                    CHM=$1;START=$2;STOP=$3;NAME=$4;LEN=$5;BULK=$6;ID=$10;
+                    for (i=7; i<NF; i++) { BULK=BULK"\\t"$i };
+                } else {
+                    if (ID==$10) {
+                        if (STOP<$3) {STOP=$3}
+                        if (START>$2) {START=$2}
+                        LEN=STOP-START;
+                    } else {
+                        print CHM"\\t"START"\\t"STOP"\\t"NAME"\\t"LEN"\\t"BULK"\\t"ID;
+                        CHM=$1;START=$2;STOP=$3;NAME=$4;LEN=$5;BULK=$6;ID=$10;
+                        for (i=7; i<NF; i++) { BULK=BULK"\\t"$i }
+                    }
+                }
+            }
+            END {
+                print CHM"\\t"START"\\t"STOP"\\t"NAME"\\t"LEN"\\t"BULK"\\t"ID
+            }
+            ' \
             > T2Tv2_repeat_regions.bed
         '''
         }

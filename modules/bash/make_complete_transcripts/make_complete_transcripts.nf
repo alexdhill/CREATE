@@ -31,7 +31,7 @@ process make_complete_transcripts
             path(gencode)
         )
     output:
-        path("!{params.genome}v!{params.genome=='T2T'?'2':params.version}_complete_transcripts.fa.gz")
+        path("${params.genome}v${params.genome=='T2T'?'2':params.version}_complete_transcripts.fa.gz")
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then

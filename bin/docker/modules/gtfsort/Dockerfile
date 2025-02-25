@@ -12,19 +12,24 @@
 ## licensor will not be liable to you for any damages arising out of these terms or the use or
 ## nature of the software, under any kind of legal claim.
 
-## BUID GFFREAD
-FROM ubuntu:22.04 as GFFREAD
-ENV DEBIAN_FRONTEND noninteractive
-ENV GFFREAD_VER 0.12.7
+## BUILD GTFSORT
+FROM ubuntu:22.04 as GTFSORT
+ENV GTFSORT_VER 0.2.2
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
-        ca-certificates \
         build-essential \
         make \
-        wget \
+        curl \
         unzip \
-        git \
-    && wget https://github.com/gpertea/gffread/archive/refs/tags/v${GFFREAD_VER}.zip \
-    && unzip v${GFFREAD_VER}.zip \
-    && cd ./gffread-${GFFREAD_VER} \
-    && make release
+        cmake \
+        pkg-config \
+        zlib1g-dev \
+        ca-certificates \
+    && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
+    && curl -kL https://github.com/alejandrogzi/gtfsort/archive/refs/tags/v.${GTFSORT_VER}.zip \
+        -o gtfsort-v${GTFSORT_VER}.zip \
+    && ls \
+    && unzip gtfsort-v${GTFSORT_VER}.zip \
+    && cd gtfsort-v.${GTFSORT_VER} \
+    && $HOME/.cargo/bin/cargo update \
+    && $HOME/.cargo/bin/cargo build --release

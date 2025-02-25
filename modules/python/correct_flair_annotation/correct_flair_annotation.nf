@@ -21,7 +21,7 @@ process correct_flair_annotation
     if (params.manage_resources)
     {
         cpus 1
-        memory '1.GB'
+        memory '16.GB'
     }
     input:
         path(annotation)

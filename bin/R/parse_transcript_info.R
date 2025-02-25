@@ -18,23 +18,23 @@ suppressMessages(library(readr))
 suppressMessages(library(stringr))
 suppressMessages(library(magrittr))
 
-filter_info <- function(i) {
-    grepl("transcript_id|gene_id|gene_biotype|gene_name", i) %>%
-        return()
-}
-
 parse_info <- function(info, out) {
     readLines(info) %>%
-        lapply(., function(i) {
-            unlist(strsplit(i, ';')) %>%
-            .[grepl(pattern="transcript_id|gene_id|gene_biotype|gene_name", x=.)] %>%
+        lapply(function(attributes) {
+            strsplit(attributes, "; ") %>%
+            unlist() %>%
             gsub("^\\s+|\"", "", .) %>%
-            set_names(lapply(., function(x) {strsplit(x, "\\s+")[[1]][1]})) %>%
-            lapply(function(x) strsplit(x, "\\s+")[[1]][2]) %>%
-            return()
+            lapply(X=c("transcript_id", "gene_id", "gene_biotype", "gene_name"), FUN=function(attr, attrs) {
+                attrs %>%
+                    extract(grepl(paste0("^",attr,"\\s+"), .)) %>%
+                    set_names(strsplit(., "\\s+")[[1]][1]) %>%
+                    lapply(function(v) str_split(v, "\\s+", n=2)[[1]][2]) %>%
+                    unlist()
+            }, attrs=.) %>%
+            unlist()
         }) %>%
-        bind_rows() %>%
-        mutate(gene_name=case_when(is.na(gene_name)~gene_id, .default=gene_name)) %>%
+        do.call(args=., what='rbind') %>%
+        as.data.frame() %>%
         distinct() %>%
         write_csv(., out, col_names = TRUE)
 }

@@ -24,7 +24,7 @@ process download_gencode_transcripts
         memory '1.GB'
     }
     output:
-        path("!{params.genome}v!{params.genome=='T2T'?'2':params.version}_transcripts.fa.gz")
+        path("${params.genome}v${params.genome=='T2T'?'2':params.version}_gencode_transcripts.fa.gz")
     shell:
         if (params.genome=="T2T")
         {

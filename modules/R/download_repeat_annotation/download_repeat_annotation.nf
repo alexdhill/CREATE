@@ -45,9 +45,9 @@ process download_repeat_annotation
 
             cat !{regions} \
             | awk -F"\\t" '{print \
-$1"\\tT2T_rmsk\\tgene\\t"$2"\\t"$3"\\t"$5"\\t"$6"\\t.\\tgene_id \\""$4"\\"; transcript_id \\""$4"_range="$1":"$2"-"$3"_strand="$6"\\"; gene_biotype \\""$8","$7"\\";\\n"\
-$1"\\tT2T_rmsk\\ttranscript\\t"$2"\\t"$3"\\t"$5"\\t"$6"\\t.\\tgene_id \\""$4"\\"; transcript_id \\""$4"_range="$1":"$2"-"$3"_strand="$6"\\"; gene_biotype \\""$8","$7"\\";\\n"\
-$1"\\tT2T_rmsk\\texon\\t"$2"\\t"$3"\\t"$5"\\t"$6"\\t0\\tgene_id \\""$4"\\"; transcript_id \\""$4"_range="$1":"$2"-"$3_strand"="$6"\\";  gene_biotype \\""$8","$7"\\"; exon_numer \\"1\\";"}' \
+$1"\\tT2T_rmsk\\tgene\\t"$2"\\t"$3"\\t"$5"\\t"$6"\\t.\\tgene_id \\""$4"\\"; gene_name \\""$4"\\"; transcript_id \\""$4"_range="$1":"$2"-"$3"_strand="$6"\\"; gene_biotype \\""$8","$7"\\"; \\n"\
+$1"\\tT2T_rmsk\\ttranscript\\t"$2"\\t"$3"\\t"$5"\\t"$6"\\t.\\tgene_id \\""$4"\\"; gene_name \\""$4"\\"; transcript_id \\""$4"_range="$1":"$2"-"$3"_strand="$6"\\"; gene_biotype \\""$8","$7"\\"; \\n"\
+$1"\\tT2T_rmsk\\texon\\t"$2"\\t"$3"\\t"$5"\\t"$6"\\t0\\tgene_id \\""$4"\\"; gene_name \\""$4"\\"; transcript_id \\""$4"_range="$1":"$2"-"$3"_strand="$6"\\";  gene_biotype \\""$8","$7"\\"; exon_numer \\"1\\"; "}' \
             | gzip --best \
             > T2Tv2_repeat_annotation.gtf.gz
             ## GTF: seq source feature start stop score strand frame group

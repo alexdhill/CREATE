@@ -21,7 +21,7 @@ process salmon_quant_paired
     if (params.manage_resources)
     {
         cpus 8
-        memory '32.GB'
+        memory '48.GB'
         time '6h'
     }
     input:
