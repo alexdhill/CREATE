@@ -46,6 +46,7 @@ process flair_collapse
 
             base=$(basename -s .bed !{region})
 
+
             gzip -cd !{reference}/*genome.fa.gz > genome.fa
             gzip -cd !{reference}/*_complete_annotation.gtf.gz > annotation.gtf
             flair collapse \
