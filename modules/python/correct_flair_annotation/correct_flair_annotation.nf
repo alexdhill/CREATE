@@ -38,7 +38,7 @@ process correct_flair_annotation
             fi
 
             python3 !{projectDir}/bin/python/correct_flair_annotation.py !{annotation} \
-            | gzip -c \
+            | pigz -cp !{task.cpus} \
             > novel_complete_annotation.gtf.gz
         '''
 }

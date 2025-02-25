@@ -41,10 +41,11 @@ process star_index_genome
                 set -x
             fi
 
-            zcat !{genome} > genome.fa
+            mkfifo genome
+            pigz -cdp !{task.cpus} !{genome} > genome
             STAR --runMode genomeGenerate \
                 --genomeDir !{params.genome}v${version}_discover_index_v$(STAR --version).star \
-                --genomeFastaFiles genome.fa \
+                --genomeFastaFiles genome \
                 --runThreadN 32
         '''
 }

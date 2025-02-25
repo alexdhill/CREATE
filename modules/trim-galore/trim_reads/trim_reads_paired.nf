@@ -51,12 +51,11 @@ process trim_reads_paired
                 set -x
             fi
 
-            trim_galore --paired --gzip  !{read_1} !{read_2} \
+            trim_galore --paired --gzip !{read_1} !{read_2} \
                 --2colour 20 --length 75 --basename !{sample} \
                 -j !{task.cpus} --output_dir .
 
-            NREADS=`gzip -cd !{sample}_val_1.fq.gz \
-            | wc -l \
-            | awk '{print $1/4}'`
+            NREADS=`pigz -cdp !{task.cpus} !{sample}_val_1.fq.gz \
+            | awk 'END {print NR/4}'`
         '''
 }

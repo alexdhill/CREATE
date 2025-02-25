@@ -41,7 +41,7 @@ process make_novel_tx2g
             fi
 
             cp !{reference}/*_complete_map.tx2g novel_complete_map.tx2g
-            gzip -cd !{annotation} \
+            pigz -cdp !{task.cpus} !{annotation} \
             | grep -v "ENST" \
             | grep -v '=' \
             | python3 !{projectDir}/bin/python/make_novel_tx2g.py \

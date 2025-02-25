@@ -51,13 +51,14 @@ process star_align_genome
                 set -x
             fi
 
-            zcat !{read_1} > read1.fq
-            zcat !{read_2} > read2.fq
-            zcat !{reference}/*_genome.fa.gz > genome.fa
+            mkfifo read1 read2 genome
+            pigz -cdp !{task.cpus} !{read_1} > read1
+            pigz -cdp !{task.cpus} !{read_2} > read2
+            pigz -cdp !{task.cpus} !{reference}/*_genome.fa.gz > genome
 
             STAR \
                 --genomeDir !{reference}/*discover_index*.star \
-                --readFilesIn read1.fq read2.fq \
+                --readFilesIn read1 read2 \
                 --outFileNamePrefix !{sample}. \
                 --outSAMtype BAM SortedByCoordinate \
                 --outSAMunmapped Within \
@@ -68,7 +69,7 @@ process star_align_genome
                 exit 1
             fi
 
-            samtools view -bf4 -T genome.fa !{sample}.Aligned.sortedByCoord.out.bam > !{sample}_unmapped.bam &
-            samtools view -bF4 -T genome.fa !{sample}.Aligned.sortedByCoord.out.bam > !{sample}.bam
+            samtools view -bf4 -T genome !{sample}.Aligned.sortedByCoord.out.bam > !{sample}_unmapped.bam &
+            samtools view -bF4 -T genome !{sample}.Aligned.sortedByCoord.out.bam > !{sample}.bam
         '''
 }

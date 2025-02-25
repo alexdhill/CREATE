@@ -45,13 +45,14 @@ process star_index
                 set -x
             fi
 
-            zcat !{annotation} > annotation.gtf
-            zcat !{genome} > genome.fa
+            mkfifo 
+            pigz -cdp !{task.cpus} !{annotation} > annotation
+            pigz -cdp !{task.cpus} !{genome} > genome
 
             STAR --runMode genomeGenerate \
                 --genomeDir !{params.genome}v${version}_index_v$(STAR --version).star \
-                --genomeFastaFiles genome.fa \
-                --sjdbGTFfile annotation.gtf \
+                --genomeFastaFiles genome \
+                --sjdbGTFfile annotation \
                 --sjdbOverhang 149 \
                 --limitSjdbInsertNsj 6000000 \
                 --runThreadN !{task.cpus}

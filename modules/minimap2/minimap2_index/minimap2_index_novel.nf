@@ -37,7 +37,7 @@ process minimap2_index_novel
                 set -x
             fi
 
-            gzip -cd !{transcripts} \
+            pigz -cdp !{task.cpus} !{transcripts} \
             > transcripts.fa
 
             minimap2 transcripts.fa \

@@ -38,7 +38,7 @@ process correct_flair_transcripts
             fi
 
             python3 !{projectDir}/bin/python/correct_flair_transcripts.py !{transcripts} \
-            | gzip -c \
+            | pigz -cp !{task.cpus} \
             > novel_complete_transcripts.fa.gz
         '''
 }

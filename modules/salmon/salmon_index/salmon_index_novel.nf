@@ -37,11 +37,11 @@ process salmon_index_novel
                 set -x
             fi
 
-            gzip -cd !{transcripts} \
+            pigz -cdp !{task.cpus} !{transcripts} \
             > transcripts.fa
 
             salmon index -t transcripts.fa \
-                -p 8 \
+                -p !{task.cpus} \
                 -i novel_short_index_v$(salmon --version | awk '{print $2}').sidx
         '''
 }

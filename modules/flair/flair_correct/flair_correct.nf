@@ -46,7 +46,7 @@ process flair_correct
                 set -x
             fi
 
-            gzip -cd !{reference}/*_complete_annotation.gtf.gz > annotation.gtf
+            pigz -cdp !{task.cpus} !{reference}/*_complete_annotation.gtf.gz > annotation.gtf
             flair correct \
                 --genome !{reference}/*_genome.fa.gz \
                 --query !{regions} \
