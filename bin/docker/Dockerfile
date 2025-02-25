@@ -433,6 +433,7 @@ RUN apt-get update -y \
         pysam \
         pandas \
         seaborn \
+        pipettor \
         cutadapt \
         biopython \
         matplotlib \
