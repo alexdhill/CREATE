@@ -140,7 +140,7 @@ workflow DISCOVER
     | combine(reference)
     | flair_collapse
     | multiMap {
-        dat -> 
+        dat ->
             fastas: dat[0]
             beds: dat[1]
             gtfs: dat[2]
