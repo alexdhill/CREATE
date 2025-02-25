@@ -20,7 +20,7 @@ process download_gencode_annotation
     publishDir "${params.outdir}/", mode: 'copy', enabled: params.keep, overwrite: params.force
     if (params.manage_resources)
     {
-        cpus 1
+        cpus 4
         memory '1.GB'
     }
     output:
@@ -48,6 +48,7 @@ process download_gencode_annotation
                 set -x
             fi
 
+            mkfifo unsorted sorted
             wget -qO- 'https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/annotation/chm13.draft_v2.0.gene_annotation.gff3' \
             | sed \
                 -e's/;/"; /g' \
@@ -55,7 +56,9 @@ process download_gencode_annotation
             | grep -v 'StringTie' \
             | grep -v 'gene_biotype unknown' \
             | grep -v "^#" \
-            | gzip --best \
+            > unsorted
+            gtfsort -i unsorted -o sorted
+            | pigz --best -cp !{task.cpus} sorted \
             > T2Tv2_gencode_annotation.gtf.gz
         '''
         }
@@ -75,7 +78,7 @@ process download_gencode_annotation
             wget -qO- ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_!{params.version}/gencode.v!{params.version}.annotation.gtf.gz \
             | gzip -cd \
             | sed 's/|/ /g' \
-            | gzip --best \
+            | pigz --best -cp !{task.cpus} \
             > HG38v!{params.version}_gencode_annotation.gtf.gz
         '''
         }
