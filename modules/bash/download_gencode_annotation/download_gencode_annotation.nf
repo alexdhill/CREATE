@@ -35,6 +35,9 @@ process download_gencode_annotation
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 echo "Isoquant: !{params.isoquant}"
             fi
+            
+            # need to rename this file but using mv moves the original file to the nf workdir
+            cp !{params.isoquant} T2Tv2_gencode_annotation.gtf.gz
             '''
         }
         else if (params.genome=="T2T")
