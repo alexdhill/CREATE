@@ -19,7 +19,7 @@ process combine_collapsed_bed
     publishDir "${params.dump}/", mode: 'copy', overwrite: params.force, enabled: params.dump!=''
     if (params.manage_resources)
     {
-        cpus 1
+        cpus 4
         memory '16.GB' // TODO
     }
     //for some reason this only works with file and not path
@@ -49,10 +49,9 @@ process combine_collapsed_bed
                 set -x
             fi
 
-            cat !{fastas} | gzip -c > novel_transcripts.fa.gz
-            cat !{beds} > novel_regions.bed
-            cat !{gtfs} | gzip -c > novel_annotation.gtf.gz
-            cat !{maps} > novel_readmap.txt
-            echo !{params.print_novel_reference}
+            cat !{fastas} | awk '/^>/ { f = !a[$0]++ } f' | pigz -cp !{task.cpus} > novel_transcripts.fa.gz
+            cat !{beds} | awk '!seen[$0]++' > novel_regions.bed
+            cat !{gtfs} | awk '!seen[$0]++'| pigz -cp !{task.cpus} > novel_annotation.gtf.gz
+            cat !{maps} | awk '!seen[$0]++' > novel_readmap.txt
         '''
 }
