@@ -27,8 +27,10 @@ process compile_quantifications_novel
         tuple(
             path(quants),
             path(cache),
-            path(tx2g)
+            path(tx2g),
+            path(metadata)
         )
+        
     output:
         path("counts/")
     shell:
@@ -48,6 +50,6 @@ process compile_quantifications_novel
 
             mkdir -p quants && mv !{quants} quants/
             Rscript ${verbose} !{projectDir}/bin/R/compile_quantifications.R \
-                -q quants -r .
+                -q quants -r . -m !{metadata}
         '''
 }
