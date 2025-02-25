@@ -51,10 +51,10 @@ process combine_collapsed_bed
                 echo "readmaps:\n!{isoform_read_maps}"
             fi
 
-            cat !{isoform_fastas} > collapse_combined.fasta
-            cat !{isoform_beds} > collapse_combined.bed
-            cat !{isoform_gtfs} > collapse_combined.gtf
-            cat !{isoform_read_maps} > collapse_combined.read.map.txt
+            cat !{isoform_fastas} | awk '/^>/ { f = !a[$0]++ } f' > collapse_combined.fasta
+            cat !{isoform_beds} | sort | uniq > collapse_combined.bed
+            cat !{isoform_gtfs} | awk '!seen[$0]++' > collapse_combined.gtf
+            cat !{isoform_read_maps} | sort | uniq > collapse_combined.read.map.txt
             
         '''
 }
