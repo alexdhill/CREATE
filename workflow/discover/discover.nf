@@ -96,6 +96,7 @@ workflow DISCOVER
     reference = Channel.fromPath(params.ref)
     dcs = Channel.fromPath(params.dcs)
     prefixes = Channel.from(prefix_list)
+    metadata = Channel.fromPath(params.metadata)
 
     paired_channel = Channel.fromFilePairs(paired_dir+params.pr_pattern)
         .map{sample -> [sample[0], sample[1][0], sample[1][1]]}
@@ -187,5 +188,6 @@ workflow DISCOVER
         | map{res -> res[0]}
     )
     | combine(make_novel_tx2g.out)
+    | combine(metadata)
     | compile_quantifications_novel
 }
