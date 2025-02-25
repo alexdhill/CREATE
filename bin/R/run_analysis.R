@@ -27,13 +27,20 @@ main = function()
     message("Importing quantifications...")
     quants = loadHDF5SummarizedExperiment(args$quants)
 
-    message("Saving normalized counts...")
-        quants %>%
-            assays() %>%
-            extract2("normalized") %>%
-            as.data.frame() %>%
-            mutate(gene_id=rownames(.)) %>%
-            write_csv("data/normalized_counts.csv", col_names=T, progress=F)
+    message("Saving counts...")
+    quants %>%
+        assays() %>%
+        extract2("normalized") %>%
+        as.data.frame() %>%
+        mutate(gene_id = rownames(.)) %>%
+        write_csv("data/normalized_counts.csv", col_names=T, progress=F)
+
+    quants %>%
+        assays() %>%
+        extract2("counts") %>%
+        as.data.frame() %>%
+        mutate(gene_id = rownames(.)) %>%
+        write_csv("data/raw_counts.csv", col_names=T, progress=F)
     
     master = quants %>%
         assays() %>%
@@ -51,18 +58,19 @@ main = function()
 
     message("Plotting biotype detection...")
     detection_plot = master %>%
-        filter(count >= 10) %>%
+        filter(count >= 3) %>%
         group_by(gene_biotype, condition, sample) %>%
         summarise(ndetected=n()) %>%
         ggplot(aes(x=factor(gene_biotype, levels=names(biotype_colors)), y=ndetected, fill=factor(gene_biotype, levels=names(biotype_colors))))+
             facet_wrap(~condition, scales="free")+
             geom_boxplot(alpha=0.5)+
-            labs(x="Condition", y="# Genes (>=10 transcripts)")+
+            labs(x="Condition", y="# Genes (>=3 transcripts)")+
             scale_y_continuous(trans="log10")+
-            scale_fill_manual(values=biotype_colors, guide="none")
+            scale_fill_manual(values=biotype_colors, guide="none")+
+            theme(axis.text.x=element_text(angle=60, hjust=1))
     ggsave(
         plot=detection_plot, file="plots/gene_detection.pdf",
-        width=6, height=3, units="in", dpi=300
+        width=(length(unique(master$condition))*3), height=3.5, units="in", dpi=300
     )
 
     message("Plotting biotype composition...")
@@ -71,13 +79,31 @@ main = function()
         summarise(count=sum(count)) %>%
         ggplot(aes(x=sample, y=count, fill=factor(gene_biotype, levels=names(biotype_colors))))+
             facet_grid(~condition, scales="free_x", space="free")+
-            geom_bar(stat="identity")+
+            geom_bar(stat="identity", position="fill")+
             labs(x="Sample ID", y="Normalized Counts", fill="Gene Biotype")+
             scale_fill_manual(values=biotype_colors)+
-            theme(axis.text.x=element_text(angle=90, hjust=1))
+            scale_y_continuous(expand = c(0,0))+
+            geom_text(
+                data=quants %>%
+                    assays() %>%
+                    extract2("normalized") %>%
+                    apply(2, sum) %>%
+                    data.frame(sample=names(.), nreads=unname(.)) %>%
+                    mutate(y=Inf, gene_biotype="Coding") %>%
+                    left_join(as.data.frame(colData(quants)), by=c("sample"="names")),
+                aes(x=sample, y=y, label=paste0(round(nreads/1e6, digits=2), "M")),
+                hjust = 0.5, vjust = -0.5, size=2.5, fontface='bold'
+            )+
+            coord_cartesian(clip = 'off')+
+            theme(
+                axis.text.x=element_text(angle=60, hjust=1),
+                plot.margin = margin(0.12, 0.04, 0.04, 0.04, unit = "in"),
+                strip.text = element_text(size = rel(0.8), face = "bold", vjust=5),
+                strip.clip = "off"
+            )
     ggsave(
         plot=composition_plot, file="plots/biotype_composition.pdf",
-        width=6, height=4, units="in", dpi=300
+        width=(length(unique(master$sample))*(1/2)+2), height=4, units="in", dpi=300
     )
 
     message("Plotting PCA of normalized counts...")
@@ -106,7 +132,7 @@ main = function()
     ggsave(
         plot=pca_plot+variance_plot+plot_layout(guides="collect"),
         file="plots/pca.pdf",
-        width=8, height=4, units="in", dpi=300
+        width=6, height=3, units="in", dpi=300
     )
 
     message("Running DESeq2...")
@@ -135,25 +161,26 @@ main = function()
                         TRUE ~ "Not"
                     )) %>%
                     mutate(gene_biotype=case_when(status=="Sig"~gene_biotype, TRUE~"Not")) %>%
-                    ggplot(aes(x=log2FoldChange, y=-log10(padj), color=factor(gene_biotype, levels=c(names(biotype_colors), "Not"))))+
+                    mutate(padj=-log10(padj)) %>%
+                    ggplot(aes(x=log2FoldChange, y=padj, color=factor(gene_biotype, levels=c(names(biotype_colors), "Not"))))+
                         geom_point(aes(alpha=status), show.legend=TRUE)+
                         geom_text(
                             data=data.frame(
                                 gene_id="", gene_biotype="Not",
                                 log2FoldChange=min(deseq_res[!is.na(deseq_res$padj),]$log2FoldChange),
-                                padj=min(deseq_res[!is.na(deseq_res$padj),]$padj),
+                                padj=Inf,
                                 lab=strsplit(comp, "_vs_")[[1]][2]
                             ),
-                            aes(label=lab), vjust=-1, hjust=0
+                            aes(label=lab), vjust=-0.5, hjust=0
                         )+
                         geom_text(
                             data=data.frame(
                                 gene_id="", gene_biotype="Not",
                                 log2FoldChange=max(deseq_res[!is.na(deseq_res$padj),]$log2FoldChange),
-                                padj=min(deseq_res[!is.na(deseq_res$padj),]$padj),
+                                padj=Inf,
                                 lab=strsplit(comp, "_vs_")[[1]][1]
                             ),
-                            aes(label=lab), vjust=-1, hjust=1
+                            aes(label=lab), vjust=-0.5, hjust=1
                         )+
                         scale_color_manual(
                             breaks=names(biotype_colors),
@@ -163,7 +190,9 @@ main = function()
                         scale_alpha_manual(guide="none", values=c("Sig"=1, "Not"=0.15))+
                         geom_hline(yintercept=-log10(0.05), linetype="dashed")+
                         geom_vline(xintercept=c(-1, 1), linetype="dashed")+
-                        labs(x="log2(Fold Change)", y="-log10(adjusted p-value)", color="Gene Biotype")
+                        labs(x="log2(Fold Change)", y="-log10(adjusted p-value)", color="Gene Biotype")+
+                        coord_cartesian(clip = 'off')+
+                        theme(plot.margin = margin(0.24, 0.04, 0.04, 0.04, unit = "in"))
                 ggsave(
                     plot=volcano, file=paste0("plots/", comp, "_diff_expression.pdf"),
                     width=7, height=6, units="in", dpi=300
