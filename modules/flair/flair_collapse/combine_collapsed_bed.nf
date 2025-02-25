@@ -16,7 +16,7 @@
 
 process combine_collapsed_bed
 {
-    publishDir "${params.outdir}/combine_collapsed_bed", mode: 'copy', overwrite: params.force, enable: params.keep
+    publishDir "${params.dump}/", mode: 'copy', overwrite: params.force, enabled: params.dump!=''
     if (params.manage_resources)
     {
         cpus 1
@@ -30,10 +30,10 @@ process combine_collapsed_bed
         path(maps)
     output:
         tuple(
-            path("collapse_combined.fasta"),
-            path("collapse_combined.bed"),
-            path("collapse_combined.gtf"),
-            path("collapse_combined.read.map.txt")
+            path("novel_transcripts.fa.gz"),
+            path("novel_regions.bed"),
+            path("novel_annotation.gtf.gz"),
+            path("novel_readmap.txt")
         )
     shell:
         '''
@@ -43,11 +43,16 @@ process combine_collapsed_bed
                 echo "beds:\n!{beds}"
                 echo "gtfs:\n!{gtfs}"
                 echo "readmaps:\n!{maps}"
+                echo "!{params.print_novel_reference}"
+            fi
+            if [[ "!{params.log}" == "DEBUG" ]]; then
+                set -x
             fi
 
-            cat !{fastas} > collapse_combined.fasta
-            cat !{beds} > collapse_combined.bed
-            cat !{gtfs} > collapse_combined.gtf
-            cat !{maps} > collapse_combined.read.map.txt
+            cat !{fastas} | gzip -c > novel_transcripts.fa.gz
+            cat !{beds} > novel_regions.bed
+            cat !{gtfs} | gzip -c > novel_annotation.gtf.gz
+            cat !{maps} > novel_readmap.txt
+            echo !{params.print_novel_reference}
         '''
 }

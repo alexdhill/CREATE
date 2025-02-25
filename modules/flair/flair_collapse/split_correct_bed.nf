@@ -16,7 +16,7 @@
 
 process split_correct_bed
 {
-    publishDir "${params.outdir}/align/chromosomes/", mode: 'copy', overwrite: params.force, enable: params.keep
+    publishDir "${params.outdir}/align/chromosomes/", mode: 'copy', overwrite: params.force, enabled: params.keep
     if (params.manage_resources)
     {
         cpus 1
@@ -25,15 +25,18 @@ process split_correct_bed
     input:
         path(regions)
     output:
-        path("*.correct.split.bed")
+        path("*.split.bed")
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
                 echo "Splitting FLAIR corrected bed by chromosome"
                 echo "BEDs:\n!{regions}"
             fi
+            if [[ "!{params.log}" == "DEBUG" ]]; then
+                set -x
+            fi
 
-            cat !{regions}  | awk '{print > $1".correct.split.bed"}' 
-
+            cat !{regions} \
+            | awk '{print > $1".split.bed"}'
         '''
 }

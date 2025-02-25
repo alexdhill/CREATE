@@ -16,7 +16,6 @@
 
 process flair_collapse
 {
-    publishDir "${params.outdir}/isoforms", mode: 'copy', overwrite: params.force, enable: params.keep
     if (params.manage_resources)
     {
         cpus 8
@@ -46,7 +45,7 @@ process flair_collapse
                 set -x
             fi
 
-            base=$(basename -s .bed !{region})
+            base=$(basename -s .split.bed !{region})
 
             gzip -cd !{reference}/*genome.fa.gz > genome.fa
             gzip -cd !{reference}/*_complete_annotation.gtf.gz > annotation.gtf

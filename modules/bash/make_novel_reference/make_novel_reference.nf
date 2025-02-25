@@ -17,7 +17,7 @@
 
 process make_novel_reference
 {
-    publishDir "${params.dump}/", mode: 'copy', enable: params.dump!='', overwrite: params.force
+    publishDir "${params.dump}/", mode: 'copy', overwrite: params.force, enabled: params.dump!=''
     if (params.manage_resources)
     {
         cpus 1
@@ -51,7 +51,6 @@ process make_novel_reference
                 set -x
             fi
 
-            mkdir novel_!{reference}
             gzip -c !{regions} > novel_complete_regions.bed.gz
             cp !{read_map} novel_complete_readmap.txt
             cp !{reference}/*genome.fa.gz .
