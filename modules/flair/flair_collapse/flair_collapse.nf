@@ -16,23 +16,24 @@
 
 process flair_collapse
 {
-    publishDir "${params.outdir}/isoforms", mode: 'copy', overwrite: params.force, enable: params.keep
     if (params.manage_resources)
     {
         cpus 8
         memory '64.GB' // TODO
     }
     input:
-    tuple(
+        tuple(
             path(region),
             path(reads),
             path(reference)
-    )
+        )
     output:
-        tuple val('fasta'), path("*.isoforms.fa")
-        tuple val('bed'), path("*.isoforms.bed")  
-        tuple val('gtf'), path("*.isoforms.gtf") 
-        tuple val('readmap'), path("*.split.isoform.read.map.txt") 
+        tuple(
+            path("*.isoforms.fa"),
+            path("*.isoforms.bed"),
+            path("*.isoforms.gtf"),
+            path("*.split.isoform.read.map.txt"),
+        )
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
@@ -44,16 +45,18 @@ process flair_collapse
                 set -x
             fi
 
-            base=$(basename -s .bed !{region})
+            base=$(basename -s .split.bed !{region})
 
-
-            gzip -cd !{reference}/*genome.fa.gz > genome.fa
-            gzip -cd !{reference}/*_complete_annotation.gtf.gz > annotation.gtf
+            mkfifo genome annotation
+            pigz -cdp !{task.cpus} !{reference}/*genome.fa.gz > genome
+            pigz -cdp !{task.cpus} !{reference}/*_complete_annotation.gtf.gz \
+            | sed -E ':a;s/((gene_id|transcript_id) "[^"]*)_/\\1%%/;ta' \
+            > annotation
             flair collapse \
-                --genome genome.fa \
+                --genome genome \
                 --query !{region} \
                 --reads !{reads} \
-                --gtf annotation.gtf \
+                --gtf annotation \
                 --annotation_reliant generate \
                 --stringent \
                 --check_splice \

@@ -49,8 +49,7 @@ process trim_reads_single
                 --2colour 20 --length 75 --basename !{sample} \
                 -j 8 --output_dir .
 
-            NREADS=`gzip -cd !{sample}_trim.fq.gz \
-            | wc -l \
-            | awk '{print $1/4}'`
+            NREADS=`pigz -cdp !{task.cpus} !{sample}_trim.fq.gz \
+            | awk 'END {print NR/4}'`
         '''
 }

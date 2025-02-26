@@ -16,45 +16,42 @@
 
 process combine_collapsed_bed
 {
-    publishDir "${params.outdir}/combine_collapsed_bed", mode: 'copy', overwrite: params.force, enable: params.keep
+    publishDir "${params.dump}/", mode: 'copy', overwrite: params.force, enabled: params.dump!=''
     if (params.manage_resources)
     {
-        cpus 1
+        cpus 4
         memory '16.GB' // TODO
     }
     //for some reason this only works with file and not path
     input:
-            tuple val(fasta), file(isoform_fastas)
-            tuple val(bed), file(isoform_beds)
-            tuple val(gtf), file(isoform_gtfs)
-            tuple val(readmap), file(isoform_read_maps)
+        path(fastas)
+        path(beds)
+        path(gtfs)
+        path(maps)
     output:
         tuple(
-            path("collapse_combined.fasta"),
-            path("collapse_combined.bed"),
-            path("collapse_combined.gtf"),
-            path("collapse_combined.read.map.txt")
+            path("novel_transcripts.fa.gz"),
+            path("novel_regions.bed"),
+            path("novel_annotation.gtf.gz"),
+            path("novel_readmap.txt")
         )
-        /*        tuple(
-            tuple(val('fasta'), path("collapse_combined.fasta")),
-            tuple(val('bed'),path("collapse_combined.bed")),
-            tuple(val('gtf'),path("collapse_combined.gtf")),
-            tuple(val('readmap'),path("collapse_combined.read.map.txt"))
-        )*/
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
                 echo "Combining per-chromosome FLAIR collapsed bed files"
-                echo "fastas:\n!{isoform_fastas}"
-                echo "beds:\n!{isoform_beds}"
-                echo "gtfs:\n!{isoform_gtfs}"
-                echo "readmaps:\n!{isoform_read_maps}"
+                echo "fastas:\n!{fastas}"
+                echo "beds:\n!{beds}"
+                echo "gtfs:\n!{gtfs}"
+                echo "readmaps:\n!{maps}"
+                echo "!{params.print_novel_reference}"
+            fi
+            if [[ "!{params.log}" == "DEBUG" ]]; then
+                set -x
             fi
 
-            cat !{isoform_fastas} | awk '/^>/ { f = !a[$0]++ } f' > collapse_combined.fasta
-            cat !{isoform_beds} | sort | uniq > collapse_combined.bed
-            cat !{isoform_gtfs} | awk '!seen[$0]++' > collapse_combined.gtf
-            cat !{isoform_read_maps} | sort | uniq > collapse_combined.read.map.txt
-            
+            cat !{fastas} | awk '/^>/ { f = !a[$0]++ } f' | pigz -cp !{task.cpus} > novel_transcripts.fa.gz
+            cat !{beds} | awk '!seen[$0]++' > novel_regions.bed
+            cat !{gtfs} | awk '!seen[$0]++'| pigz -cp !{task.cpus} > novel_annotation.gtf.gz
+            cat !{maps} | awk '!seen[$0]++' > novel_readmap.txt
         '''
 }

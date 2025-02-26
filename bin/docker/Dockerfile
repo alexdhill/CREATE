@@ -319,17 +319,15 @@ RUN apt-get update -y \
 ## BUILD FLAIR
 FROM ubuntu:22.04 as FLAIR
 ENV DEBIAN_FRONTEND noninteractive
-ENV FLAIR_VER 2.0.0
-ENV FLAIR_MASTER_COMMIT d777b30
-
+ENV FLAIR_VER d777b30
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
+        git \
         wget \
-        unzip \
-    && wget --no-check-certificate \
-        https://github.com/BrooksLabUCSC/flair/archive/${FLAIR_MASTER_COMMIT}.zip \
-    && unzip ${FLAIR_MASTER_COMMIT}.zip \
-    && chmod +x flair-${FLAIR_MASTER_COMMIT}*/flair.py
+    && git clone https://www.github.com/BrooksLabUCSC/FLAIR \
+    && cd FLAIR \
+    && git checkout ${FLAIR_VER}
+
 
 ## Build Final
 FROM ubuntu:22.04 as app
@@ -350,7 +348,7 @@ COPY --from=SALMON /salmon*/bin/salmon /usr/local/bin/salmon
 COPY --from=ALEVIN /alevin-fry-*/target/release/alevin-fry /usr/local/bin/alevin-fry
 COPY --from=STAR /STAR*/bin/*static/* /usr/local/bin/
 COPY --from=SEQTK /usr/local/bin/seqtk /usr/local/bin/seqtk
-COPY --from=FLAIR /flair-* /usr/local/bin/flair
+COPY --from=FLAIR /FLAIR /usr/local/bin/flair
 ENV DEBIAN_FRONTEND noninteractive
 ENV FFQ_VER 0.3.1
 ENV SAMTOOLS_VER 1.19
@@ -362,6 +360,7 @@ ENV TRIMGALORE_VER 0.6.10
 ENV PORECHOP_VER 0.2.4
 ENV CHOPPER_VER 0.9.0
 ENV MINIMAP2_VER 2.26
+ENV FLAIR_VER d777b30
 ENV SALMON_VER 1.10.1
 ENV ALEVIN_VER 0.8.2
 ENV STAR_VER 2.7.11a

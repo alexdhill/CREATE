@@ -21,7 +21,6 @@ import java.util.Arrays
 include { count_reads_pe } from "../../modules/bash/count_reads/count_reads_pe.nf"
 include { count_reads_np } from "../../modules/bash/count_reads/count_reads_np.nf"
 include { minimap2_align_dcs } from "../../modules/minimap2/minimap2_align/minimap2_align_dcs.nf"
-include { trim_reads_nanopore } from "../../modules/nanoplot/trim_reads/trim_reads_nanopore.nf"
 include { trim_reads_np } from "../../modules/chopper/trim_reads/trim_reads_np.nf"
 include { trim_reads_paired } from "../../modules/trim-galore/trim_reads/trim_reads_paired.nf"
 include { star_align_genome } from "../../modules/star/star_align/star_align_genome.nf"
@@ -132,9 +131,7 @@ workflow DISCOVER
     | flair_correct
     | map{res -> res[1]}
     | collect
-    | map{beds -> [beds]}
     | split_correct_bed
-    | flatten()
     | combine(
         trim_reads_np.out
         | map{res -> res[2]}
@@ -143,18 +140,14 @@ workflow DISCOVER
     )
     | combine(reference)
     | flair_collapse
-    // | map{fa -> fa[0],
-    //        bed -> bed[1],
-    //        gtf -> gtf[2],
-    //        readmap -> readmap[3]}
-    // | map{res -> res[1]}
-    // | groupTuple()
-
-    combine_collapsed_bed( flair_collapse.out[0].groupTuple(),
-     flair_collapse.out[1].groupTuple(),
-     flair_collapse.out[2].groupTuple(),
-     flair_collapse.out[3].groupTuple())
-    //vikas need help here
+    | multiMap {
+        dat ->
+            fastas: dat[0]
+            beds: dat[1]
+            gtfs: dat[2]
+            maps: dat[3]
+    }
+    | combine_collapsed_bed
     | map{isoforms -> isoforms[0]}
     | correct_flair_transcripts
     | salmon_index_novel & minimap2_index_novel

@@ -17,7 +17,7 @@
 
 process correct_flair_transcripts
 {
-    publishDir "${params.dump}/", mode: 'copy', enable: params.dump!='', overwrite: params.force
+    publishDir "${params.dump}/", mode: 'copy', enabled: params.dump!='', overwrite: params.force
     if (params.manage_resources)
     {
         cpus 1
@@ -37,8 +37,8 @@ process correct_flair_transcripts
                 set -x
             fi
 
-            python3 !{projectDir}/bin/python/correct_flair_transcripts.py !{transcripts} \
-            | gzip -c \
+            sed -E '/^>/s/^(>[^%]+)%%([^_]+).*$/\1_\2/' !{transcripts} \
+            | pigz -cp !{task.cpus} \
             > novel_complete_transcripts.fa.gz
         '''
 }
