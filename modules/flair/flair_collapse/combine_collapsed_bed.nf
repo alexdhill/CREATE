@@ -12,54 +12,46 @@
  * As far as the law allows, the software comes as is, without any warranty or condition, and the
  * licensor will not be liable to you for any damages arising out of these terms or the use or
  * nature of the software, under any kind of legal claim.
- * connor was here 
  */
- 
 
-process trim_reads_nanopore
+process combine_collapsed_bed
 {
-    publishDir "${params.outdir}/trim/", mode: 'copy', enable: params.keep, overwrite: params.force
+    publishDir "${params.dump}/", mode: 'copy', overwrite: params.force, enabled: params.dump!=''
     if (params.manage_resources)
     {
-        cpus 8
-        memory '16.GB'
+        cpus 4
+        memory '16.GB' // TODO
     }
+    //for some reason this only works with file and not path
     input:
-        tuple(
-            val(sample),
-            val(nreads),
-            path(read)
-        )
+        path(fastas)
+        path(beds)
+        path(gtfs)
+        path(maps)
     output:
         tuple(
-            val("${sample}"),
-            env(NREADS),
-            path("${sample}_filtered_trimmed.fq.gz")
+            path("novel_transcripts.fa.gz"),
+            path("novel_regions.bed"),
+            path("novel_annotation.gtf.gz"),
+            path("novel_readmap.txt")
         )
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Trimming nanopore reads..."
-                echo "Sample: !{sample}"
-                echo "Read: !{read}"
-                echo "n Reads: !{nreads}"
+                echo "Combining per-chromosome FLAIR collapsed bed files"
+                echo "fastas:\n!{fastas}"
+                echo "beds:\n!{beds}"
+                echo "gtfs:\n!{gtfs}"
+                echo "readmaps:\n!{maps}"
+                echo "!{params.print_novel_reference}"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 
-            gzip -cd !{read} \
-            > filtered.fq
-            porechop \
-                --format auto \
-                -i filtered.fq \
-                -t 8 \
-                -o trimmed.fq
-            gzip -c trimmed.fq \
-            > !{sample}_filtered_trimmed.fq.gz
-
-            NREADS=`gzip -cd !{sample}_filtered_trimmed.fq.gz \
-            | wc -l \
-            | awk '{print $1/4}'`
+            cat !{fastas} | awk '/^>/ { f = !a[$0]++ } f' > novel_transcripts.fa &
+            cat !{beds} | awk '!seen[$0]++' > novel_regions.bed &
+            cat !{gtfs} | awk '!seen[$0]++' > novel_annotation.gtf &
+            cat !{maps} | awk '!seen[$0]++' > novel_readmap.txt
         '''
 }

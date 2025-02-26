@@ -13,40 +13,29 @@
  * licensor will not be liable to you for any damages arising out of these terms or the use or
  * nature of the software, under any kind of legal claim.
  */
- 
 
-process make_complete_annotation
+process split_correct_bed
 {
-    publishDir "${params.outdir}/", mode: 'copy', enable: params.keep, overwrite: params.force
+    publishDir "${params.outdir}/align/chromosomes/", mode: 'copy', overwrite: params.force, enabled: params.keep
     if (params.manage_resources)
     {
         cpus 1
-        memory '1.GB'
+        memory '16.GB' // TODO
     }
     input:
-        tuple(
-            path(repeat),
-            path(repeat_tx),
-            path(gencode),
-            path(gencode_tx)
-        )
+        path(regions)
     output:
-        path("${params.genome}v${params.genome=='T2T'?'2':params.version}_complete_annotation.gtf.gz")
+        path("*.split.bed")
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Generating complete annotation..."
-                echo "Repeats: !{repeat}"
-                echo "Gencode: !{gencode}"
-            fi
-            version="!{params.version}"
-            if [[ "!{params.genome}" == "T2T" ]]; then
-                version="2"
+                echo "Splitting FLAIR corrected bed by chromosome"
+                echo "BEDs:\n!{regions}"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 
-            cat !{gencode} !{repeat} > !{params.genome}v${version}_complete_annotation.gtf.gz
+            awk '{print > $1".split.bed"}' !{regions}
         '''
 }

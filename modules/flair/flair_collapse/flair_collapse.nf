@@ -13,11 +13,9 @@
  * licensor will not be liable to you for any damages arising out of these terms or the use or
  * nature of the software, under any kind of legal claim.
  */
- 
 
 process flair_collapse
 {
-    publishDir "${params.outdir}/isoforms", mode: 'copy', overwrite: params.force, enable: params.keep
     if (params.manage_resources)
     {
         cpus 8
@@ -25,42 +23,45 @@ process flair_collapse
     }
     input:
         tuple(
-            path(regions),
+            path(region),
             path(reads),
             path(reference)
         )
     output:
         tuple(
-            path("novel.isoforms.fa"),
-            path("novel.isoforms.bed"),
-            path("novel.isoforms.gtf"),
-            path("novel.isoform.read.map.txt")
+            path("*.isoforms.fa"),
+            path("*.isoforms.bed"),
+            path("*.isoforms.gtf"),
+            path("*.split.isoform.read.map.txt"),
         )
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
                 echo "Running FLAIR discovery"
-                echo "BEDs:\n!{regions}"
+                echo "BEDs:\n!{region}"
                 echo "Reads:\n!{reads}"
             fi
-            cat !{regions} > master.bed
-
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 
-            gzip -cd !{reference}/*genome.fa.gz > genome.fa
-            gzip -cd !{reference}/*_complete_annotation.gtf.gz > annotation.gtf
+            base=$(basename -s .split.bed !{region})
+
+            mkfifo genome annotation
+            pigz -cdp !{task.cpus} !{reference}/*genome.fa.gz > genome &
+            pigz -cdp !{task.cpus} !{reference}/*_complete_annotation.gtf.gz \
+            | sed -E ':a;s/((gene_id|transcript_id) "[^"]*)_/\\1%%/;ta' \
+            > annotation &
             flair collapse \
-                --genome genome.fa \
-                --query master.bed \
+                --genome genome \
+                --query !{region} \
                 --reads !{reads} \
-                --gtf annotation.gtf \
+                --gtf annotation \
                 --annotation_reliant generate \
                 --stringent \
                 --check_splice \
                 --generate_map \
-                --threads 8 \
-                --output novel
+                --threads !{task.cpus} \
+                --output $base
         '''
 }

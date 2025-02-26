@@ -21,7 +21,7 @@ process correct_flair_annotation
     if (params.manage_resources)
     {
         cpus 1
-        memory '1.GB'
+        memory '8.GB'
     }
     input:
         path(annotation)
@@ -37,8 +37,9 @@ process correct_flair_annotation
                 set -x
             fi
 
-            python3 !{projectDir}/bin/python/correct_flair_annotation.py !{annotation} \
-            | gzip -c \
+            sed -E ':a;s/((gene_id|transcript_id) "[^"]*)%%/\\1_/;ta' !{annotation} \
+            | python3 !{projectDir}/bin/python/correct_flair_annotation.py - \
+            | pigz -cp !{task.cpus} \
             > novel_complete_annotation.gtf.gz
         '''
 }

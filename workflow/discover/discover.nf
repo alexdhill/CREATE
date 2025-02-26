@@ -21,12 +21,14 @@ import java.util.Arrays
 include { count_reads_pe } from "../../modules/bash/count_reads/count_reads_pe.nf"
 include { count_reads_np } from "../../modules/bash/count_reads/count_reads_np.nf"
 include { minimap2_align_dcs } from "../../modules/minimap2/minimap2_align/minimap2_align_dcs.nf"
-include { trim_reads_nanopore } from "../../modules/nanoplot/trim_reads/trim_reads_nanopore.nf"
+include { trim_reads_np } from "../../modules/chopper/trim_reads/trim_reads_np.nf"
 include { trim_reads_paired } from "../../modules/trim-galore/trim_reads/trim_reads_paired.nf"
 include { star_align_genome } from "../../modules/star/star_align/star_align_genome.nf"
 include { flair_junctions } from "../../modules/flair/flair_junctions/flair_junctions.nf"
 include { flair_align } from "../../modules/flair/flair_align/flair_align.nf"
 include { flair_correct } from "../../modules/flair/flair_correct/flair_correct.nf"
+include { combine_collapsed_bed } from "../../modules/flair/flair_collapse/combine_collapsed_bed.nf"
+include { split_correct_bed } from "../../modules/flair/flair_collapse/split_correct_bed.nf"
 include { flair_collapse } from "../../modules/flair/flair_collapse/flair_collapse.nf"
 include { correct_flair_transcripts } from "../../modules/python/correct_flair_transcripts/correct_flair_transcripts.nf"
 include { salmon_index_novel } from "../../modules/salmon/salmon_index/salmon_index_novel.nf"
@@ -93,6 +95,7 @@ workflow DISCOVER
     reference = Channel.fromPath(params.ref)
     dcs = Channel.fromPath(params.dcs)
     prefixes = Channel.from(prefix_list)
+    metadata = Channel.fromPath(params.metadata)
 
     paired_channel = Channel.fromFilePairs(paired_dir+params.pr_pattern)
         .map{sample -> [sample[0], sample[1][0], sample[1][1]]}
@@ -112,7 +115,7 @@ workflow DISCOVER
     count_reads_np(long_channel)
     | combine(dcs)
     | minimap2_align_dcs
-    | trim_reads_nanopore
+    | trim_reads_np
     | combine(reference)
     | flair_align
     | join(
@@ -128,26 +131,35 @@ workflow DISCOVER
     | flair_correct
     | map{res -> res[1]}
     | collect
-    | map{beds -> [beds]}
+    | split_correct_bed
+    | flatten 
     | combine(
-        trim_reads_nanopore.out
+        trim_reads_np.out
         | map{res -> res[2]}
         | collect
         | map{reads -> [reads]}
     )
     | combine(reference)
     | flair_collapse
+    | multiMap {
+        dat ->
+            fastas: dat[0]
+            beds: dat[1]
+            gtfs: dat[2]
+            maps: dat[3]
+    }
+    | combine_collapsed_bed
     | map{isoforms -> isoforms[0]}
     | correct_flair_transcripts
     | salmon_index_novel & minimap2_index_novel
 
     // Save correct output
-    flair_collapse.out
+    combine_collapsed_bed.out
     | combine(reference)
     | make_novel_reference
 
     // Correct bad GTF and make TX2G map
-    flair_collapse.out
+    combine_collapsed_bed.out
     | map{res -> res[2]}
     | correct_flair_annotation
     | combine(reference)
@@ -170,5 +182,6 @@ workflow DISCOVER
         | map{res -> res[0]}
     )
     | combine(make_novel_tx2g.out)
+    | combine(metadata)
     | compile_quantifications_novel
 }

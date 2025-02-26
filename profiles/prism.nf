@@ -1,46 +1,43 @@
-profiles
+process
 {
-    hpc
-    {
-    process
-        {
-            // Ref
-            withName: "download_gencode_annotation"
-            {
-                queue = "short"
-                time = '5m'
-            }
-            withName: "download_gencode_transcripts"
-            {
-                queue = "short"
-                time = '5m'
-            }
-            withName: "download_reference"
-            {
-                queue = "short"
-                time = '10m'
-            }
-            withName: "download_repeat_regions"
-            {
-                queue = "short"
-                time = '5m'
-            }
+    // Ref
 
-            withName: "download_repeat_annotation"
-            {
-                queue = "short"
-                time = '45m'
-            }
-            withName: "make_repeat_transcripts"
-            {
-                queue = "short"
-                time = '1h'
-            }
-            withName: "make_transcript_map"
-            {
-                queue = "short"
-                time = '1h'
-            }
+    withName: "download_gencode_annotation"
+    {
+        queue = "short"
+        time = '5m'
+    }
+    withName: "download_gencode_transcripts"
+    {
+        queue = "short"
+        time = '5m'
+    }
+    withName: "download_reference"
+    {
+        queue = "short"
+        time = '10m'
+    }
+    withName: "download_repeat_regions"
+    {
+        queue = "short"
+        time = '5m'
+    }
+
+    withName: "download_repeat_annotation"
+    {
+        queue = "short"
+        time = '45m'
+    }
+    withName: "make_repeat_transcripts"
+    {
+        queue = "short"
+        time = '1h'
+    }
+    withName: "make_transcript_map"
+    {
+        queue = "short"
+        time = '1h'
+    }
 
             withName: "make_complete_annotation"
             {
