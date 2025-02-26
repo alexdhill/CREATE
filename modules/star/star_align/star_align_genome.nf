@@ -51,14 +51,15 @@ process star_align_genome
                 set -x
             fi
 
-            mkfifo read1 read2 genome
-            pigz -cdp !{task.cpus} !{read_1} > read1
-            pigz -cdp !{task.cpus} !{read_2} > read2
-            pigz -cdp !{task.cpus} !{reference}/*_genome.fa.gz > genome
+            #mkfifo read1 read2 genome
+            #pigz -cdp !{task.cpus} !{read_1} > read1
+            #pigz -cdp !{task.cpus} !{read_2} > read2
+            #pigz -cdp !{task.cpus} !{reference}/*_genome.fa.gz > genome
 
             STAR \
                 --genomeDir !{reference}/*discover_index*.star \
-                --readFilesIn read1 read2 \
+                --readFilesIn !{read_1} !{read_2} \
+                --readFilesCommand "pigz -cdp 2" \
                 --outFileNamePrefix !{sample}. \
                 --outSAMtype BAM SortedByCoordinate \
                 --outSAMunmapped Within \
