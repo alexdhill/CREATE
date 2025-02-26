@@ -42,7 +42,7 @@ process star_index_genome
             fi
 
             mkfifo genome
-            pigz -cdp !{task.cpus} !{genome} > genome
+            pigz -cdp !{task.cpus} !{genome} > genome &
             STAR --runMode genomeGenerate \
                 --genomeDir !{params.genome}v${version}_discover_index_v$(STAR --version).star \
                 --genomeFastaFiles genome \

@@ -36,7 +36,6 @@ process split_correct_bed
                 set -x
             fi
 
-            cat !{regions} \
-            | awk '{print > $1".split.bed"}'
+            awk '{print > $1".split.bed"}' !{regions}
         '''
 }

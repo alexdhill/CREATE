@@ -37,10 +37,10 @@ process salmon_index_novel
                 set -x
             fi
 
+            mkfifo transcripts
             pigz -cdp !{task.cpus} !{transcripts} \
-            > transcripts.fa
-
-            salmon index -t transcripts.fa \
+            > transcripts &
+            salmon index -t transcripts \
                 -p !{task.cpus} \
                 -i novel_short_index_v$(salmon --version | awk '{print $2}').sidx
         '''

@@ -49,9 +49,9 @@ process combine_collapsed_bed
                 set -x
             fi
 
-            cat !{fastas} | awk '/^>/ { f = !a[$0]++ } f' | pigz -cp !{task.cpus} > novel_transcripts.fa.gz
-            cat !{beds} | awk '!seen[$0]++' > novel_regions.bed
-            cat !{gtfs} | awk '!seen[$0]++'| pigz -cp !{task.cpus} > novel_annotation.gtf.gz
+            cat !{fastas} | awk '/^>/ { f = !a[$0]++ } f' | pigz -cp !{task.cpus} > novel_transcripts.fa.gz &
+            cat !{beds} | awk '!seen[$0]++' > novel_regions.bed &
+            cat !{gtfs} | awk '!seen[$0]++' | pigz -cp !{task.cpus} > novel_annotation.gtf.gz &
             cat !{maps} | awk '!seen[$0]++' > novel_readmap.txt
         '''
 }
