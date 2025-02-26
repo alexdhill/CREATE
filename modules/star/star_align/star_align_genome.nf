@@ -61,7 +61,7 @@ process star_align_genome
                 --outFileNamePrefix !{sample}. \
                 --outSAMtype BAM SortedByCoordinate \
                 --outSAMunmapped Within \
-                --runThreadN 8
+                --runThreadN !{task.cpus}
 
             if [[ ! -e !{sample}.Aligned.sortedByCoord.out.bam ]]; then
                 echo "\033[[1;31mERR: STAR alignment failed\033[0m" 1>&2
