@@ -51,11 +51,9 @@ process star_align_genome
                 set -x
             fi
 
-            #mkfifo read1 read2 genome
-            #pigz -cdp !{task.cpus} !{read_1} > read1
-            #pigz -cdp !{task.cpus} !{read_2} > read2
-            #pigz -cdp !{task.cpus} !{reference}/*_genome.fa.gz > genome
-
+            mkfifo read1 read2 genome
+            pigz -cdp $(( !{task.cpus} / 2 )) !{read_1} > read1 &
+            pigz -cdp $(( !{task.cpus} / 2 )) !{read_2} > read2 &
             STAR \
                 --genomeDir !{reference}/*discover_index*.star \
                 --readFilesIn !{read_1} !{read_2} \
@@ -70,6 +68,7 @@ process star_align_genome
                 exit 1
             fi
 
+            pigz -cdp !{task.cpus} !{reference}/*_genome.fa.gz > genome &
             samtools view -bf4 -T genome !{sample}.Aligned.sortedByCoord.out.bam > !{sample}_unmapped.bam &
             samtools view -bF4 -T genome !{sample}.Aligned.sortedByCoord.out.bam > !{sample}.bam
         '''

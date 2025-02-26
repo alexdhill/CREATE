@@ -45,10 +45,9 @@ process star_index
                 set -x
             fi
 
-            mkfifo 
-            pigz -cdp !{task.cpus} !{annotation} > annotation
-            pigz -cdp !{task.cpus} !{genome} > genome
-
+            mkfifo annotation genome
+            pigz -cdp !{task.cpus} !{annotation} > annotation &
+            pigz -cdp !{task.cpus} !{genome} > genome &
             STAR --runMode genomeGenerate \
                 --genomeDir !{params.genome}v${version}_index_v$(STAR --version).star \
                 --genomeFastaFiles genome \

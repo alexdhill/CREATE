@@ -44,8 +44,9 @@ process salmon_index
                 set -x
             fi
 
-            pigz -cdp !{task.cpus} !{transcripts} > txome.fa
-            salmon index -t txome.fa \
+            mkfifo transcripts
+            pigz -cdp !{task.cpus} !{transcripts} > transcripts &
+            salmon index -t transcripts \
                 -p !{task.cpus} \
                 -i !{params.genome}v${version}_!{prefix}_index_v$(salmon --version | awk '{print $2}').sidx
         '''
