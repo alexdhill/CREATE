@@ -37,7 +37,7 @@ process correct_flair_annotation
                 set -x
             fi
 
-            sed -E ':a;s/((gene_id|transcript_id) "[^"]*)%%/\1_/;ta' !{annotation} \
+            sed -E ':a;s/((gene_id|transcript_id) "[^"]*)%%/\\1_/;ta' !{annotation} \
             | python3 !{projectDir}/bin/python/correct_flair_annotation.py - \
             | pigz -cp !{task.cpus} \
             > novel_complete_annotation.gtf.gz
