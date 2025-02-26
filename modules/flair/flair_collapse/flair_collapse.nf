@@ -50,7 +50,7 @@ process flair_collapse
             mkfifo genome annotation
             pigz -cdp !{task.cpus} !{reference}/*genome.fa.gz > genome
             pigz -cdp !{task.cpus} !{reference}/*_complete_annotation.gtf.gz \
-            | sed -E ':a;s/((gene_id|transcript_id) "[^"]*)_/\1%%/;ta' \
+            | sed -E ':a;s/((gene_id|transcript_id) "[^"]*)_/\\1%%/;ta' \
             > annotation
             flair collapse \
                 --genome genome \
