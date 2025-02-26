@@ -132,6 +132,7 @@ workflow DISCOVER
     | map{res -> res[1]}
     | collect
     | split_correct_bed
+    | flatten 
     | combine(
         trim_reads_np.out
         | map{res -> res[2]}
