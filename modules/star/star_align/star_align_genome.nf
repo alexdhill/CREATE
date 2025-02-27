@@ -66,8 +66,9 @@ process star_align_genome
                 exit 1
             fi
 
-            pigz -cdp !{task.cpus} !{reference}/*_genome.fa.gz > genome
-            samtools view -bf4 -T genome !{sample}.Aligned.sortedByCoord.out.bam > !{sample}_unmapped.bam
-            samtools view -bF4 -T genome !{sample}.Aligned.sortedByCoord.out.bam > !{sample}.bam
+            mkfifo genome1 genome2
+            pigz -cdp !{task.cpus} !{reference}/*_genome.fa.gz > genome | tee genome1 genome2 > /dev/null &
+            samtools view -hbf4 -T genome1 !{sample}.Aligned.sortedByCoord.out.bam > !{sample}_unmapped.bam &
+            samtools view -hbF4 -T genome2 !{sample}.Aligned.sortedByCoord.out.bam > !{sample}.bam
         '''
 }
