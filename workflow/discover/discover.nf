@@ -139,6 +139,7 @@ workflow DISCOVER
     )
     | combine(reference)
     | flair_collapse
+    | collect
     | multiMap {
         dat ->
             fastas: dat[0]
