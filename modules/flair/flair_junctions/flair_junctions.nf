@@ -47,8 +47,7 @@ process flair_junctions
                 set -x
             fi
 
-            mkfifo aln
-            samtools view -hS !{alignment} > aln &
+            samtools view -hS !{alignment} > aln
             junctions_from_sam \
                 -s aln \
                 -n !{sample}
