@@ -115,13 +115,13 @@ profiles
                 queue = "short"
                 time = '1h'
             }
-            withName: "trim_reads_nanopore"
+            withName: "trim_reads_np"
             {
                 queue = "short"
                 time = '1h'
             }
 
-            withName: "filter_fastq"
+            withName: "minimap2_align_dcs"
             {
                 queue = "short"
                 time = '1h'
