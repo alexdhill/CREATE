@@ -4,23 +4,24 @@ channels:
   - conda-forge
   - r
 dependencies:
-  - samtools
-  - bedtools
-  - gffread
-  - fastqc
-  - multiqc
-  - ffq
-  - trim-galore
-  - chopper
+  - ffq==0.3.1
+  - samtools==1.19
+  - bedtools==2.31.0
+  - gffread==0.12.7
+  - gtfsort==0.2.2
+  - fastqc==0.12.1
+  - multiqc==1.19
+  - trim-galore==0.6.10
+  - chopper==0.9.0
   - minimap2==2.26
   - salmon==1.10.1
   - alevin-fry=0.10.0
   - star==2.7.11a
-  - seqtk
-  - flair
+  - seqtk==1.4
+  - flair==2.0.0
   - time
   - pigz
-  - r-base
+  - r-base=4.1.2
   - r-devtools
   - r-tidyr
   - r-dplyr
@@ -57,11 +58,11 @@ dependencies:
   - r-reticulate
   - r-languageserver
   - r-seurat
-  - pwwang::r-seuratwrappers
   - r-seuratdisk
   - r-metap
   - r-signac
   - r-velocyto.r
+  - pwwang::r-seuratwrappers
   - bioconductor-BiocIO
   - bioconductor-Biostrings
   - bioconductor-GenomicFeatures
@@ -85,7 +86,7 @@ dependencies:
   - bioconductor-decipher
   - bioconductor-drimseq
   - bioconductor-stager
-  - python
+  - python==3.10
   - pip
   - tqdm
   - ncls

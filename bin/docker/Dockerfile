@@ -134,7 +134,7 @@ RUN apt-get update \
 
 ## BUID MULTIQC
 FROM ubuntu:22.04 as MULTIQC
-ENV MULTIQC_VER 1.8
+ENV MULTIQC_VER 1.19
 RUN apt-get update \
     && apt-get install -y --no-install-recommends wget \
     && wget --no-check-certificate \
@@ -371,6 +371,7 @@ ENV SALMON_VER 1.10.1
 ENV ALEVIN_VER 0.10.0
 ENV STAR_VER 2.7.11a
 ENV SEQTK_VER 1.4
+ENV R_VER 4.1.2
 COPY --from=FFQ /ffq-${FFQ_VER} /ffq
 COPY --from=SAMTOOLS /usr/local/bin/samtools /usr/local/bin/samtools
 COPY --from=BEDTOOLS /usr/local/bin/bedtools /usr/local/bin/bedtools
@@ -400,6 +401,7 @@ RUN apt-get update -y \
     && wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc \
         | tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc \
     && add-apt-repository ppa:openjdk-r/ppa \
+    && add-apt-repository ppa:deadsnakes/ppa \
     && add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu jammy-cran40/" \
     && add-apt-repository universe \
     && apt-get update -y \
@@ -410,9 +412,9 @@ RUN apt-get update -y \
         pigz \
         locales \
         fftw3-dev \
-        r-base-dev \
+        r-base-dev=${R_VER}-1ubuntu2 \
         gfortran-10 \
-        python3-dev \
+        python3.10-dev \
         python3-pip \
         mysql-server \
         texlive-xetex \
