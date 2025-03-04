@@ -21,7 +21,7 @@ process download_gencode_annotation
     if (params.manage_resources)
     {
         cpus 4
-        memory '1.GB'
+        memory '8.GB'
     }
     output:
         path("${params.genome}v${params.genome=='T2T'?'2':params.version}_gencode_annotation.gtf.gz")
@@ -48,7 +48,6 @@ process download_gencode_annotation
                 set -x
             fi
 
-            mkfifo unsorted sorted
             wget -qO- 'https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/annotation/chm13.draft_v2.0.gene_annotation.gff3' \
             | sed \
                 -e's/;/"; /g' \
@@ -56,9 +55,9 @@ process download_gencode_annotation
             | grep -v 'StringTie' \
             | grep -v 'gene_biotype unknown' \
             | grep -v "^#" \
-            > unsorted
-            gtfsort -i unsorted -o sorted
-            | pigz --best -cp !{task.cpus} sorted \
+            > unsorted.gtf
+            gtfsort -i unsorted.gtf -o sorted.gtf
+            pigz --best -cp !{task.cpus} sorted.gtf \
             > T2Tv2_gencode_annotation.gtf.gz
         '''
         }
