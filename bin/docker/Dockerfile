@@ -33,7 +33,7 @@ RUN apt-get update -y \
 ## BUILD SAMTOOLS
 FROM ubuntu:22.04 as SAMTOOLS
 ENV DEBIAN_FRONTEND noninteractive
-ENV SAMTOOLS_VER 1.19
+ENV SAMTOOLS_VER 1.18
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
         build-essential \
@@ -46,8 +46,8 @@ RUN apt-get update -y \
         wget \
     && wget --no-check-certificate \
         https://github.com/samtools/samtools/releases/download/${SAMTOOLS_VER}/samtools-${SAMTOOLS_VER}.tar.bz2 \
-    && tar -xvf samtools-1.19.tar.bz2 \
-    && cd samtools-1.19 \ 
+    && tar -xvf samtools-${SAMTOOLS_VER}.tar.bz2 \
+    && cd samtools-${SAMTOOLS_VER} \ 
     && ./configure --prefix=/usr/local/bin/ \
     && make \
     && make install \
@@ -57,7 +57,7 @@ RUN apt-get update -y \
 ## BUILD BEDTOOLS
 FROM ubuntu:22.04 as BEDTOOLS
 ENV DEBIAN_FRONTEND noninteractive
-ENV BEDTOOLS_VER 2.31.0
+ENV BEDTOOLS_VER 2.31.1
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
         build-essential \
@@ -144,35 +144,6 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 
-## BUILD FASTP
-FROM ubuntu:22.04 as FASTP
-ENV FASTP_VER 0.23.4
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        build-essential automake autogen autoconf libtool \
-        wget git ca-certificates \
-        nasm yasm cmake \
-    && git clone https://github.com/intel/isa-l.git \
-    && cd isa-l \
-    && ./autogen.sh \
-    && ./configure \
-    && make -j8 \
-    && make -j8 install \
-    && cd .. \
-    && git clone https://github.com/ebiggers/libdeflate.git \
-    && cd libdeflate \
-    && cmake -B build \
-    && cmake --build build \
-    && cmake --install build \
-    && cd .. \
-    && wget https://github.com/OpenGene/fastp/archive/refs/tags/v${FASTP_VER}.tar.gz \
-    && tar -xvf v${FASTP_VER}.tar.gz \
-    && cd fastp* \
-    && make -j8 \
-    && make -j8 install \
-    && cd ..
-
-
 ## BUILD TRIMGALORE
 FROM ubuntu:22.04 as TRIMGALORE
 ENV TRIMGALORE_VER 0.6.10
@@ -184,26 +155,6 @@ RUN apt-get update -y \
         -o trim_galore.tar.gz \
     && tar -xvzf trim_galore.tar.gz \
     && mv /TrimGalore-0.6.10/ /TrimGalore
-
-
-## BUILD PORECHOP
-FROM ubuntu:22.04 as PORECHOP
-ENV PORECHOP_VER 0.2.4
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        procps \
-        wget \
-        python3-pip \
-        python3-distutils \
-        python3 \
-        make \
-        g++ \
-    && apt-get autoclean && rm -rf /var/lib/apt/lists/* \
-    && pip3 install setuptools \
-    && wget -q --no-check-certificate\
-        https://github.com/rrwick/Porechop/archive/refs/tags/v${PORECHOP_VER}.tar.gz \
-    && tar -xf v${PORECHOP_VER}.tar.gz \
-    && rm v${PORECHOP_VER}.tar.gz \
-    && cd /Porechop-${PORECHOP_VER}
 
 
 ## BUILD CHOPPER
@@ -356,22 +307,20 @@ RUN apt-get update \
 FROM ubuntu:22.04 as app
 ENV DEBIAN_FRONTEND noninteractive
 ENV FFQ_VER 0.3.1
-ENV SAMTOOLS_VER 1.19
+ENV SAMTOOLS_VER 1.18
 ENV BEDTOOLS_VER 2.31.0
 ENV GFFREAD_VER 0.12.7
 ENV GTFSORT_VER 0.2.2
 ENV FASTQC_VER 0.12.1
-ENV MULTIQC_VER 1.8
-ENV FASTP_VER 0.20.1
+ENV MULTIQC_VER 1.19
 ENV TRIMGALORE_VER 0.6.10
-ENV PORECHOP_VER 0.2.4
 ENV CHOPPER_VER 0.9.0
 ENV MINIMAP2_VER 2.26
 ENV SALMON_VER 1.10.1
 ENV ALEVIN_VER 0.10.0
 ENV STAR_VER 2.7.11a
 ENV SEQTK_VER 1.4
-ENV R_VER 4.1.2
+ENV R_VER 4.2.3
 COPY --from=FFQ /ffq-${FFQ_VER} /ffq
 COPY --from=SAMTOOLS /usr/local/bin/samtools /usr/local/bin/samtools
 COPY --from=BEDTOOLS /usr/local/bin/bedtools /usr/local/bin/bedtools
@@ -379,11 +328,7 @@ COPY --from=GFFREAD /gffread-${GFFREAD_VER}/gffread /usr/local/bin/gffread
 COPY --from=GTFSORT gtfsort-v.${GTFSORT_VER}/target/release/gtfsort /usr/local/bin/gtfsort
 COPY --from=FASTQC /FastQC /usr/local/bin/FastQC
 COPY --from=MULTIQC /pandoc-*-linux/bin/* /usr/local/bin
-COPY --from=FASTP /usr/local/bin/fastp /usr/local/bin/fastp
-COPY --from=FASTP /usr/local/lib/libdeflate.* /usr/lib/
-COPY --from=FASTP /usr/lib/libisal.* /usr/lib/
 COPY --from=TRIMGALORE /TrimGalore /usr/local/bin/TrimGalore
-COPY --from=PORECHOP /Porechop-${PORECHOP_VER} /Porechop
 COPY --from=CHOPPER /chopper-${CHOPPER_VER}/target/release/chopper /usr/local/bin/chopper
 COPY --from=MINIMAP2 /minimap2-${MINIMAP2_VER}/minimap2 /usr/local/bin/minimap2
 COPY --from=SALMON /salmon-${SALMON_VER}/bin/salmon /usr/local/bin/salmon
