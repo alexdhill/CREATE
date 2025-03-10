@@ -55,6 +55,7 @@ process download_gencode_annotation
             | grep -v 'StringTie' \
             | grep -v 'gene_biotype unknown' \
             | grep -v "^#" \
+            | grep -vP '\\t(CDS|start_codon|stop_codon)\\t' \
             > unsorted.gtf
             gtfsort -i unsorted.gtf -o sorted.gtf
             pigz --best -cp !{task.cpus} sorted.gtf \
