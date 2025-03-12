@@ -39,7 +39,7 @@ workflow REFERENCE
     download_repeat_regions()
     if (params.genome!="T2T")
     {
-        log.info("NonT2T genome detected. Downloading txome")
+        log.info("Non-T2T genome detected. Downloading txome")
         Channel.from(["", ""])
         | download_gencode_transcripts
     } else {
@@ -49,6 +49,7 @@ workflow REFERENCE
         | download_gencode_transcripts
     }
 
+    log.info("Starting main logic...")
     download_reference.out
     | combine(download_repeat_regions.out) // [genome.fa, repeats.bed]
     | (download_repeat_annotation & make_repeat_transcripts)

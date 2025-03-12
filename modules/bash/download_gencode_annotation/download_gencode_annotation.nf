@@ -55,9 +55,12 @@ process download_gencode_annotation
             | grep -v 'StringTie' \
             | grep -v 'gene_biotype unknown' \
             | grep -v "^#" \
-            | grep -vP '\\t(CDS|start_codon|stop_codon)\\t' \
-            > unsorted.gtf
-            gtfsort -i unsorted.gtf -o sorted.gtf
+            | grep -vP '\\t(CDS|start_codon|stop_codon|intron)\\t' \
+            > unsorted.gff3
+            gffread unsorted.gff3 -To unsorted.gtf
+            python3 !{projectDir}/bin/python/correct_flair_annotation.py unsorted.gtf \
+            > unsorted_genes.gtf
+            gtfsort -i unsorted_genes.gtf -o sorted.gtf
             pigz --best -cp !{task.cpus} sorted.gtf \
             > T2Tv2_gencode_annotation.gtf.gz
         '''

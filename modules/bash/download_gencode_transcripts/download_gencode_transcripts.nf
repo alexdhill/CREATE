@@ -35,7 +35,9 @@ process download_gencode_transcripts
         {
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Downloading T2Tv2 transcripts..."
+                echo "Generating T2Tv2 transcripts..."
+                echo "Annotation: !{annotation}"
+                echo "Genome: !{genome}"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
@@ -43,8 +45,8 @@ process download_gencode_transcripts
 
             pigz -cdp !{task.cpus} !{annotation} > genes
             pigz -cdp !{task.cpus} !{genome} > genome
-            gffread -w annotation -g genome \
-            | pigz -cp !{task.cpus} \
+            gffread -w txome -g genome genes
+            pigz -cp !{task.cpus} txome \
             > T2Tv2_gencode_transcripts.fa.gz
         '''
         }
