@@ -56,13 +56,17 @@ process download_gencode_annotation
             | grep -v 'gene_biotype unknown' \
             | grep -v "^#" \
             | grep -vP '\\t(CDS|start_codon|stop_codon|intron)\\t' \
-            > unsorted.gff3
-            gffread unsorted.gff3 -To unsorted.gtf
-            python3 !{projectDir}/bin/python/correct_flair_annotation.py unsorted.gtf \
-            > unsorted_genes.gtf
-            gtfsort -i unsorted_genes.gtf -o sorted.gtf
-            pigz --best -cp !{task.cpus} sorted.gtf \
+            | python3 !{projectDir}/bin/python/reduce_gff3.py \
+            | pigz -cp !{task.cpus} \
             > T2Tv2_gencode_annotation.gtf.gz
+            
+            #> unsorted.gff3
+            #gffread unsorted.gff3 -To unsorted.gtf
+            #python3 !{projectDir}/bin/python/correct_flair_annotation.py unsorted.gtf \
+            #> unsorted_genes.gtf
+            #gtfsort -i unsorted_genes.gtf -o sorted.gtf
+            #pigz --best -cp !{task.cpus} sorted.gtf \
+            #> T2Tv2_gencode_annotation.gtf.gz
         '''
         }
         else
