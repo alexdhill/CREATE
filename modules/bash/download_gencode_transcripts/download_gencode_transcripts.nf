@@ -20,23 +20,33 @@ process download_gencode_transcripts
     publishDir "${params.outdir}/", mode: 'copy', enabled: params.keep, overwrite: params.force
     if (params.manage_resources)
     {
-        cpus 1
-        memory '1.GB'
+        cpus 4
+        memory '4.GB'
     }
+    input:
+        tuple(
+            path(annotation),
+            path(genome)
+        )
     output:
-        path("!{params.genome}v!{params.genome=='T2T'?'2':params.version}_transcripts.fa.gz")
+        path("${params.genome}v${params.genome=='T2T'?'2':params.version}_gencode_transcripts.fa.gz")
     shell:
         if (params.genome=="T2T")
         {
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Downloading T2Tv2 transcripts..."
+                echo "Generating T2Tv2 transcripts..."
+                echo "Annotation: !{annotation}"
+                echo "Genome: !{genome}"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 
-            wget -qO- https://ftp.ensembl.org/pub/rapid-release/species/Homo_sapiens/GCA_009914755.4/ensembl/geneset/2022_07/Homo_sapiens-GCA_009914755.4-2022_07-cdna.fa.gz \
+            pigz -cdp !{task.cpus} !{annotation} > genes
+            pigz -cdp !{task.cpus} !{genome} > genome
+            gffread -w txome -g genome genes
+            pigz -cp !{task.cpus} txome \
             > T2Tv2_gencode_transcripts.fa.gz
         '''
         }

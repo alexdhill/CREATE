@@ -106,7 +106,7 @@ if (params.reference)
         params.version = 39
         if (params.version < 1)
         {
-            println("--version: ${params.version}");
+            log.error("--version: ${params.version}");
             throw new IllegalArgumentException('Gencode version must be at least 1')
         }
     } else if (params.genome=="T2T")
@@ -114,20 +114,20 @@ if (params.reference)
         params.version = -1
         if (params.version!=-1)
         {
-            println("--version: ${params.version}");
+            log.error("--version: ${params.version}");
             throw new IllegalArgumentException('Gencode version cannot be specified for T2T genome')
         }
     }
     else if (params.genome!="T2T")
     {
-        println("--genome: ${params.genome}");
+        log.error("--genome: ${params.genome}");
         throw new IllegalArgumentException('Genome must be either "HG38" or "T2T"')
     }
     index = new ArrayList(Arrays.asList(params.index.split(',')))
     index.retainAll(['short','long','single_cell','discover'])
     if (index.size()!=params.index.split(',').size())
     {
-        println("--index: ${params.index}");
+        log.error("--index: ${params.index}");
         throw new IllegalArgumentException('index must be one or more of: short, long, single_cell')
     }
 }
@@ -146,12 +146,12 @@ else if (params.quant)
             params.chemistry = "chromiumV3"
             if (params.barcodes=='')
             {
-                println("--barcodes: ${params.barcodes}");
+                log.error("--barcodes: ${params.barcodes}");
                 throw new IllegalArgumentException('Barcode list must be specified')
             }
             if (!["chromiumV3","chromium","dropseq"].contains(params.chemistry))
             {
-                println("--chemistry: ${params.chemistry}");
+                log.error("--chemistry: ${params.chemistry}");
                 throw new IllegalArgumentException('Chemistry must be one of: chromiumV3, chromium, dropseq')
             }
         }
@@ -163,7 +163,7 @@ else if (params.quant)
         params.discovery = false
         if (params.dcs=='')
         {
-            println("--dcs: ${params.dcs}");
+            log.error("--dcs: ${params.dcs}");
             throw new IllegalArgumentException('DCS/RCS sequence file must be specified')
         }
     }
@@ -173,22 +173,22 @@ else if (params.quant)
     }
     else
     {
-        println("--library: ${params.library}");
+        log.error("--library: ${params.library}");
         throw new IllegalArgumentException('Library type must be either "paired_end", "single_end", "nanopore", or "single_cell"')
     }
     if (params.samples=='')
     {
-        println("--samples: ${params.samples}");
+        log.error("--samples: ${params.samples}");
         throw new IllegalArgumentException('Input sample directory must be specified')
     }
     if (params.metadata=='')
     {
-        println("--metadata: ${params.metadata}");
+        log.error("--metadata: ${params.metadata}");
         throw new IllegalArgumentException('Sample metadata file must be specified')
     }
     if (params.ref=='')
     {
-        println("--ref: ${params.ref}");
+        log.error("--ref: ${params.ref}");
         throw new IllegalArgumentException('CREATE reference directory must be specified')
     }
 }
@@ -197,27 +197,27 @@ else if (params.discover)
     params.ref = ''
     if (params.ref=='')
     {
-        println("--ref: ${params.ref}");
+        log.error("--ref: ${params.ref}");
         throw new IllegalArgumentException('CREATE reference directory must be specified')
     }
     params.dcs = ''
     if (params.dcs=='')
     {
-        println("--dcs: ${params.dcs}");
+        log.error("--dcs: ${params.dcs}");
         throw new IllegalArgumentException('DCS/RCS sequence file must be specified')
     }
     params.long_reads = ''
     params.lr_pattern = '*.fastq.gz'
     if (params.long_reads=='')
     {
-        println("--long_reads: ${params.long_reads}");
+        log.error("--long_reads: ${params.long_reads}");
         throw new IllegalArgumentException('Long reads must be specified')
     }
     params.paired_reads = ''
     params.pr_pattern = '*_R{1,2}_*.fastq.gz'
     if (params.paired_reads=='')
     {
-        println("--paired_reads: ${params.paired_reads}");
+        log.error("--paired_reads: ${params.paired_reads}");
         throw new IllegalArgumentException('Paired reads must be specified')
     }
     params.prefixes = ''
@@ -229,18 +229,18 @@ else
 }
 if (params.reference && params.quant)
 {
-    println("--quant: ${params.quant}");
-    println("--reference: ${params.reference}");
+    log.error("--quant: ${params.quant}");
+    log.error("--reference: ${params.reference}");
     throw new IllegalArgumentException('CREATE-seq mode must be specified either "--quant" XOR "--reference"')
 }
 if (!['OFF','INFO','DEBUG'].contains(params.log))
 {
-    println("--log: ${params.log}");
+    log.error("--log: ${params.log}");
     throw new IllegalArgumentException('Log level must be one of: OFF, INFO, DEBUG')
 }
 if (params.outdir=='')
 {
-    println("--outdir: ${params.outdir}");
+    log.error("--outdir: ${params.outdir}");
     throw new IllegalArgumentException('Output directory must be specified')
 }
 
@@ -249,12 +249,12 @@ if (params.exec=="local")
 {
     if (params.threads<0)
     {
-        println("--threads: ${params.threads}");
+        log.error("--threads: ${params.threads}");
         throw new IllegalArgumentException('Maximum number of threads must be at least 0')
     }
     if (params.memory<0)
     {
-        println("--memory: ${params.memory}");
+        log.error("--memory: ${params.memory}");
         throw new IllegalArgumentException('Memory must be at least 0 GB')
     }
     if (params.scratch!=false)
@@ -285,7 +285,7 @@ else if (params.exec=="slurm")
 }
 else
 {
-    println("--exec: ${params.exec}");
+    log.error("--exec: ${params.exec}");
     throw new IllegalArgumentException('Execution mode must be either "local" or "slurm"')
 }
 if (!['docker','conda'].contains(params.container))

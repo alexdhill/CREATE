@@ -13,7 +13,7 @@
  * licensor will not be liable to you for any damages arising out of these terms or the use or
  * nature of the software, under any kind of legal claim.
  */
-
+import groovy.util.logging.Slf4j
 
 include { download_reference } from '../../modules/bash/download_reference/download_reference.nf'
 include { download_gencode_transcripts } from '../../modules/bash/download_gencode_transcripts/download_gencode_transcripts.nf'
@@ -34,10 +34,23 @@ include { DISCOVER } from '../../subworkflow/reference/discover/discover.nf'
 
 workflow REFERENCE
 {
-    download_gencode_annotation()
-    download_gencode_transcripts()
-    download_repeat_regions()
     download_reference() // get reference genome
+    download_gencode_annotation()
+    download_repeat_regions()
+    if (params.genome!="T2T")
+    {
+        log.info("Non-T2T genome detected. Downloading txome")
+        Channel.from(["", ""])
+        | download_gencode_transcripts
+    } else {
+        log.info("T2T genome detected. Generating txome")
+        download_gencode_annotation.out
+        | combine(download_reference.out)
+        | download_gencode_transcripts
+    }
+
+    log.info("Starting main logic...")
+    download_reference.out
     | combine(download_repeat_regions.out) // [genome.fa, repeats.bed]
     | (download_repeat_annotation & make_repeat_transcripts)
     | concat // repeats.gtf, repeats.fa
