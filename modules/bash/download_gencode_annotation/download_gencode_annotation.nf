@@ -24,7 +24,7 @@ process download_gencode_annotation
         memory '1.GB'
     }
     output:
-        path("!{params.genome}v!{params.genome=='T2T'?'2':params.version}_gencode_annotation.gtf.gz")
+        path("${params.genome}v${params.genome=='T2T'?'2':params.version}_gencode_annotation.gtf.gz")
     shell:
         if (params.isoquant)
         {

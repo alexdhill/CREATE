@@ -17,7 +17,7 @@
 
 process minimap2_align_dcs
 {
-    publishDir "${params.outdir}/filtered", mode: 'copy', overwrite: params.force, enable: params.keep
+    publishDir "${params.outdir}/filtered", mode: 'copy', overwrite: params.force, enabled: params.keep
     if (params.manage_resources)
     {
         cpus 8

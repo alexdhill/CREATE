@@ -17,14 +17,14 @@
 
 process download_reference
 {
-    publishDir "${params.outdir}", mode: 'copy', enable: params.keep, overwrite: params.force
+    publishDir "${params.outdir}", mode: 'copy', enabled: params.keep, overwrite: params.force
     if (params.manage_resources)
     {
         cpus 1
         memory '1.GB'
     }
     output:
-        path("!{params.genome}v!{params.genome=='T2T'?'2':params.version}_genome.fa.gz")
+        path("${params.genome}v${params.genome=='T2T'?'2':params.version}_genome.fa.gz")
     shell:
         if (params.genome=="T2T")
         {

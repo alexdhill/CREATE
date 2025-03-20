@@ -17,7 +17,7 @@
 
 process flair_collapse
 {
-    publishDir "${params.outdir}/isoforms", mode: 'copy', overwrite: params.force, enable: params.keep
+    publishDir "${params.outdir}/isoforms", mode: 'copy', overwrite: params.force, enabled: params.keep
     if (params.manage_resources)
     {
         cpus 8
