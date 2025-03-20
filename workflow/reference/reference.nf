@@ -40,7 +40,7 @@ workflow REFERENCE
     if (params.genome!="T2T")
     {
         log.info("Non-T2T genome detected. Downloading txome")
-        Channel.from(["", ""])
+        Channel.from(["null.fa", "null.crt"])
         | download_gencode_transcripts
     } else {
         log.info("T2T genome detected. Generating txome")
