@@ -51,7 +51,7 @@ process flair_correct
                 --genome !{reference}/*_genome.fa.gz \
                 --query !{regions} \
                 --gtf annotation.gtf \
-                --threads 8 \
+                --threads !{task.cpus} \
                 --output !{sample}
         '''
 }
