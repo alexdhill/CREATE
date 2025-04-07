@@ -2,18 +2,18 @@ profiles
 {
     hpc
     {
-    process
+        process
         {
             // Ref
             withName: "download_gencode_annotation"
             {
                 queue = "short"
-                time = '5m'
+                time = '30m'
             }
             withName: "download_gencode_transcripts"
             {
                 queue = "short"
-                time = '5m'
+                time = '30m'
             }
             withName: "download_reference"
             {

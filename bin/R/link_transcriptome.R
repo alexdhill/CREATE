@@ -40,13 +40,9 @@ link_transcriptome <- function(annotation, transcripts, index) {
 }
 
 build_txdb <- function(bfc, annotation) {
-    txdb <- txdbmaker::makeTxDbFromGFF(
-        annotation,
-        dataSource = "CREATE",
-        organism = "Homo sapiens"
-    )
+    txdb <- txdbmaker::makeTxDbFromGFF(annotation, format="gtf", dataSource="CREATE", organism="Homo sapiens")
     saveDb(txdb, bfcnew(bfc, rname = annotation, ext = ".sqlite"))
-}
+} 
 
 main <- function() {
     parser <- ArgumentParser()

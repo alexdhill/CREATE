@@ -20,8 +20,8 @@ process download_gencode_annotation
     publishDir "${params.outdir}/", mode: 'copy', enabled: params.keep, overwrite: params.force
     if (params.manage_resources)
     {
-        cpus 1
-        memory '1.GB'
+        cpus 4
+        memory '8.GB'
     }
     output:
         path("${params.genome}v${params.genome=='T2T'?'2':params.version}_gencode_annotation.gtf.gz")
@@ -48,12 +48,25 @@ process download_gencode_annotation
                 set -x
             fi
 
-            wget -qO- https://ftp.ensembl.org/pub/rapid-release/species/Homo_sapiens/GCA_009914755.4/ensembl/geneset/2022_07/Homo_sapiens-GCA_009914755.4-2022_07-genes.gtf.gz \
-            | gzip -cd \
-            | sed -E '/^#/!s/^/chr/' \
-            | sed 's/"; transcript_version "/./' \
-            | gzip --best \
+            wget -qO- 'https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/annotation/chm13.draft_v2.0.gene_annotation.gff3' \
+            | sed \
+                -e's/;/"; /g' \
+                -e's/=/ "/g' \
+            | grep -v 'StringTie' \
+            | grep -v 'gene_biotype unknown' \
+            | grep -v "^#" \
+            | grep -vP '\\t(CDS|start_codon|stop_codon|intron)\\t' \
+            | python3 !{projectDir}/bin/python/reduce_gff3.py \
+            | pigz -cp !{task.cpus} \
             > T2Tv2_gencode_annotation.gtf.gz
+            
+            #> unsorted.gff3
+            #gffread unsorted.gff3 -To unsorted.gtf
+            #python3 !{projectDir}/bin/python/correct_flair_annotation.py unsorted.gtf \
+            #> unsorted_genes.gtf
+            #gtfsort -i unsorted_genes.gtf -o sorted.gtf
+            #pigz --best -cp !{task.cpus} sorted.gtf \
+            #> T2Tv2_gencode_annotation.gtf.gz
         '''
         }
         else
@@ -72,7 +85,7 @@ process download_gencode_annotation
             wget -qO- ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_!{params.version}/gencode.v!{params.version}.annotation.gtf.gz \
             | gzip -cd \
             | sed 's/|/ /g' \
-            | gzip --best \
+            | pigz --best -cp !{task.cpus} \
             > HG38v!{params.version}_gencode_annotation.gtf.gz
         '''
         }
