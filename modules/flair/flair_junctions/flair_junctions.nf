@@ -17,7 +17,7 @@
 
 process flair_junctions
 {
-    publishDir "${params.outdir}/ranges/junctions", mode: 'copy', overwrite: params.force, enable: params.keep
+    publishDir "${params.outdir}/ranges/junctions", mode: 'copy', overwrite: params.force, enabled: params.keep
     if (params.manage_resources)
     {
         cpus 8

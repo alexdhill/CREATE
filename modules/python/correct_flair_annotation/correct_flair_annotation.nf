@@ -17,7 +17,7 @@
 
 process correct_flair_annotation
 {
-    publishDir "${params.dump}/", mode: 'copy', enable: params.dump!='', overwrite: params.force
+    publishDir "${params.dump}/", mode: 'copy', enabled: params.dump!='', overwrite: params.force
     if (params.manage_resources)
     {
         cpus 1
