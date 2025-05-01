@@ -15,37 +15,32 @@
  */
 
 
-process gather_ftp
+process prefetch
 {
     if (params.manage_resources)
     {
         cpus 1
-        memory '1.GB'
+        memory '2.GB'
     }
-    executor = "local"
+    errorStrategy "finish"
+    maxRetries 10
     input:
-        path(acc)
+        val(acc)
     output:
-        path("samples.url")
+        tuple(
+            val("${acc}"),
+            path("${acc}")
+        )
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Collecting FTP links..."
+                echo "Downloading accession..."
                 echo "Sample: !{acc}"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 
-            for sra in `xargs < !{acc}`; do
-                until `ffq --ftp ${sra} >> samples.json`; do
-                    echo "Failed at ${sra}, retrying in 5s..."
-                    sleep 5
-                done
-            done
-
-            jq '.[] | "\\(.accession),\\(.url),\\(.md5)"' samples.json \
-            | sed 's/"//g' \
-            > samples.url
+            prefetch !{acc} --force ALL --max-size u --output-directory !{acc}
         '''
 }

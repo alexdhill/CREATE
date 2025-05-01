@@ -87,6 +87,22 @@ process
         queue = "short"
         time = "1h"
     }
+    withName: "gather_ftp"
+    {
+        queue = "short"
+        time = '1h'
+    }
+    withName: "prefetch"
+    {
+        queue = "short"
+        time = '1h'
+    }
+    withName: "fasterq_dump_paired"
+    {
+        queue = "short"
+        time = '1h'
+    }
+
     withName: "count_reads_pe"
     {
         queue = "short"

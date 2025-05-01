@@ -29,6 +29,27 @@ RUN apt-get update -y \
     && tar -xzf v${FFQ_VER}.tar.gz \
     && python3 -m pip install -e ffq-${FFQ_VER}
 
+## BUILD SRA
+FROM ubuntu:22.04 AS SRA
+ENV SRA_VER 3.2.1
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        build-essential cmake \
+        wget ca-certificates \
+        unzip \
+    && wget -q "https://github.com/ncbi/ncbi-vdb/archive/refs/tags/${SRA_VER}.zip" \
+    && unzip ${SRA_VER}.zip \
+    && rm ${SRA_VER}.zip \
+    && wget -q "https://github.com/ncbi/sra-tools/archive/refs/tags/${SRA_VER}.zip" \
+    && unzip ${SRA_VER}.zip \
+    && rm ${SRA_VER}.zip \
+    && cd ncbi-vdb-${SRA_VER} \
+    && ./configure \
+    && make -j8 install \
+    && cd ../sra-tools-${SRA_VER} \
+    && ./configure \
+    && make -j8 install
+
 
 ## BUILD SAMTOOLS
 FROM ubuntu:22.04 as SAMTOOLS
@@ -333,6 +354,7 @@ RUN apt-get update \
 ## Build Final
 FROM ubuntu:22.04 as app
 COPY --from=FFQ /ffq-0.3.1 /ffq
+COPY --from=SRA /usr/local/ncbi/sra-tools/bin/* /usr/local/bin/
 COPY --from=SAMTOOLS /usr/local/bin/samtools /usr/local/bin/samtools
 COPY --from=BEDTOOLS /usr/local/bin/bedtools /usr/local/bin/bedtools
 COPY --from=GFFREAD /gffread/gffread /usr/local/bin/gffread
@@ -352,6 +374,7 @@ COPY --from=SEQTK /usr/local/bin/seqtk /usr/local/bin/seqtk
 COPY --from=FLAIR /flair-* /usr/local/bin/flair
 ENV DEBIAN_FRONTEND noninteractive
 ENV FFQ_VER 0.3.1
+ENV SRA_VER 3.2.1
 ENV SAMTOOLS_VER 1.19
 ENV BEDTOOLS_VER 2.31.0
 ENV FASTQC_VER 0.12.1
