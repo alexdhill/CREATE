@@ -60,7 +60,7 @@ process flair_collapse
                 --stringent \
                 --check_splice \
                 --generate_map \
-                --threads 8 \
+                --threads !{task.cpus} \
                 --output novel
         '''
 }

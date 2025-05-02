@@ -51,7 +51,7 @@ process flair_align
             flair align \
                 --genome !{reference}/*_genome.fa.gz \
                 --reads !{read} \
-                --threads 8 \
+                --threads !{task.cpus} \
                 --output !{sample}
         '''
 }
