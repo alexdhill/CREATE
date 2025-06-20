@@ -14,7 +14,7 @@
 
 suppressPackageStartupMessages({
     library(argparse)
-    library(tidyverse)
+    library(tidyr)
     library(dplyr)
     library(purrr)
     library(stringr)
@@ -207,11 +207,16 @@ compile_quants <- function(quants, tx2g, reference, metadata) {
     saveHDF5SummarizedExperiment(gene_quants, dir = "counts", replace = TRUE)
 }
 
-compile_af <- function(quants, tx2g) {
+compile_af <- function(quants, tx2g, metadata) {
     suppressPackageStartupMessages({
         library(fishpond)
         library(SingleCellExperiment)
     })
+
+    message("Reading metadata...")
+    meta = readr::read_csv(metadata, col_names=FALSE) %>%
+        magrittr::set_colnames(c("sample", "condition"))
+    head(meta)
 
     message("Importing quantifications...")
     gene_quants <- quants %>%
@@ -223,7 +228,10 @@ compile_af <- function(quants, tx2g) {
                 assays(raw),
                 colData = colData(raw) %>%
                     as.data.frame() %>%
-                    mutate(sample = quant),
+                    mutate(
+                        sample = quant,
+                        condition = meta[meta$sample==quant]$condition
+                    ),
                 rowData = rowData(raw) %>%
                     as.data.frame() %>%
                     left_join(tx2g, by = c("gene_ids" = "gene_id"), multiple = "any"),
