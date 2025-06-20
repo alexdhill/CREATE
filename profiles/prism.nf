@@ -127,6 +127,24 @@ profiles
                 time = '1h'
             }
 
+            withName: "alevin_align"
+            {
+               queue = 'medium'
+               time = '12h'
+            }
+
+            withName: "alevin_collate"
+            {
+               queue = 'medium'
+               time = '12h'
+            }
+
+            withName: 'alevin_quant'
+            {
+              queue = 'medium'
+              time = '12h'
+            }
+
             withName: "salmon_quant_paired"
             {
                 queue = "medium"
