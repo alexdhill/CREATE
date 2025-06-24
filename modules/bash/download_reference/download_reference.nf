@@ -17,7 +17,7 @@
 
 process download_reference
 {
-    publishDir "${params.outdir}", mode: 'copy', enable: params.keep, overwrite: params.force
+    publishDir "${params.outdir}", mode: 'copy', enabled: params.keep, overwrite: params.force
     if (params.manage_resources)
     {
         cpus 1
