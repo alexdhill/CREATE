@@ -156,7 +156,7 @@ read_map <- function(reference_dir, class=TRUE)
         return()
 }
 
-compile_quants <- function(quants, tx2g, reference, metadata) {
+compile_quants <- function(quants, tx2g, reference, metadata, transcripts) {
     message("Matching quantifications to the metadata sheet...")
     conditions = read_csv(metadata, col_names=c("prefix", "condition"), progress=F, show_col_types=F)
     samples <- quants %>%
@@ -182,6 +182,9 @@ compile_quants <- function(quants, tx2g, reference, metadata) {
 
     message("Compiling quantifications...")
     transcript_quants <- tximeta::tximeta(coldata = samples, type = "salmon", skipMeta = FALSE)
+    if (transcripts) {
+        saveHDF5SummarizedExperiment(transcript_quants, dir = "tx_counts", replace = TRUE)
+    }
 
     message("Loading TxDb...")
     txdb <- bfcinfo(bfc) %>%
@@ -270,6 +273,11 @@ main <- function() {
         action = "store_true", default = FALSE, required = FALSE,
         help = "The split gene experiment for splintr"
     )
+    parser$add_argument(
+        "-t", "--transcripts",
+        action = "store_true", default = FALSE, required = FALSE,
+        help = "Export a transcript-level quantification"
+    )
     args <- parser$parse_args()
 
     tx2g <- read_map(args$reference)
@@ -277,7 +285,7 @@ main <- function() {
     if (args$splintr) {
         compile_af(args$quants, tx2g, args$metadata)
     } else {
-        compile_quants(args$quants, tx2g, args$reference, args$metadata)
+       compile_quants(args$quants, tx2g, args$reference, args$metadata, args$transcripts)
     }
 }
 main()
