@@ -198,10 +198,9 @@ compile_quants <- function(quants, tx2g, reference, metadata) {
         as.data.frame() %>%
         left_join(tx2g, multiple = "any", by = "gene_id")
     
-    message("Adding normalized counts")
-    assays(gene_quants)$normalized = DESeqDataSet(gene_quants, design=~1) %>%
-        estimateSizeFactors() %>%
-        counts(normalize=TRUE)
+    message("Adding normalized counts...")
+    gene_quants = DESeqDataSet(gene_quants, design=~1) %>%
+        estimateSizeFactors()
 
     message("Saving gene quantifications...")
     saveHDF5SummarizedExperiment(gene_quants, dir = "counts", replace = TRUE)
