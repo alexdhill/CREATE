@@ -59,6 +59,7 @@ options:
                       NOTE: the reference provided must contain a compatible index
         --pattern     File pattern for input samples
         --metadata    An unnamed, two-column CSV file of samples,condition
+        --parameters  A JSON file of arguments for individual tools
 
     --discover
         --ref          CREATE reference directory [REQUIRED]
@@ -96,6 +97,7 @@ params.memory = 0
 params.force = false
 params.quant = false
 params.reference = false
+params.discovery = false
 if (params.reference)
 {
     params.genome = ''

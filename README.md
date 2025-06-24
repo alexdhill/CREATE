@@ -148,6 +148,7 @@ nextflow run alexdhill/CREATE --discover \
  - `--metadata`: path to a comma-separated file matching sample names and their condition in that order. Sample names are determined by the pattern used to select the files. For paired reads, the default uses the full sample name *until* _R{1,2} [ONLY used with `--quant`]
  - `--njobs`: the maximum number of jobs to spawn in parallel [ONLY used with `--exec slurm`]
  - `--outdir`: path to the output directory to save all results
+ - `--parameters`: path to a JSON file of flags for each process in the pipeline. Must follow the structure '{ "tool": { "flag1": "value" } }'. All tools are lower case, use 'true' for flags which take no arguments. NOTE: Must use the long version of flags (i.e. `--threads` instead of `-t`) [BETA]
  - `--pattern`: the pattern used to match the desired samples from the `--samples` directory [ONLY used with `--quant`]
  - `--paired_reads`: the directory to search for the paired-end samples [ONLY used with `--discover`]
  - `--pe_pattern`: the glob pattern to use to select the desired reads from the paired-end reads directory [ONLY used with `--discover`]
@@ -179,6 +180,7 @@ nextflow run alexdhill/CREATE --discover \
 - [X] Flesh out README
 - [ ] ~~Add profile selection to nextflow config~~ Add read-based resource requirements to processes
 - [X] Add accession list support to automate downloads [feature-samplesheet]
+- [X] Add support for customizing flags for each process [feature-tool-parameters]
 - [ ] Add semi-intelligent prefix parsing for compilation [feature-metadata]
 - [ ] Add variance-stabilized normalized counts to output assays [feature-metadata]
 - [ ] Add alignment mode [feature-align]
