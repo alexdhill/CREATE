@@ -57,8 +57,11 @@ options:
         --ref         CREATE reference directory [REQUIRED]
         --library     Library type [paired_end,nanopore,single_cell] [REQUIRED]
                       NOTE: the reference provided must contain a compatible index
+        --metadata    A *named*, two-column CSV file of samples,..conditions.. [REQUIRED]
+                      NOTE: the first column must contain sample names/prefixes
         --pattern     File pattern for input samples
-        --metadata    An unnamed, two-column CSV file of samples,condition
+        --export_transcripts
+                      Export transcript quantifications in addition to counts [default=false]
 
     --discover
         --ref          CREATE reference directory [REQUIRED]
@@ -137,6 +140,7 @@ else if (params.quant)
     params.ref = ''
     params.library = 'paired_end'
     params.metadata = ''
+    params.export_transcripts = false
     if (['paired_end','single_cell'].contains(params.library))
     {
         params.pattern = '*_R{1,2}_*.fastq.gz'

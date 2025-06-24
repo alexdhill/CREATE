@@ -158,7 +158,8 @@ read_map <- function(reference_dir, class=TRUE)
 
 compile_quants <- function(quants, tx2g, reference, metadata, transcripts) {
     message("Matching quantifications to the metadata sheet...")
-    conditions = read_csv(metadata, col_names=c("prefix", "condition"), progress=F, show_col_types=F)
+    conditions = read_csv(metadata, progress=F, show_col_types=F)
+    colnames(conditions)[1] <- "prefix"
     samples <- quants %>%
         list.files(full.names = TRUE) %>%
         lapply(function(path) {
@@ -216,9 +217,8 @@ compile_af <- function(quants, tx2g, metadata) {
     })
 
     message("Reading metadata...")
-    meta = readr::read_csv(metadata, col_names=FALSE) %>%
-        magrittr::set_colnames(c("sample", "condition"))
-    head(meta)
+    conditions = readr::read_csv(metadata, progress=FALSE, show_col_types=FALSE)
+    colnames(conditions)[1] <- "prefix"
 
     message("Importing quantifications...")
     gene_quants <- quants %>%
@@ -230,10 +230,14 @@ compile_af <- function(quants, tx2g, metadata) {
                 assays(raw),
                 colData = colData(raw) %>%
                     as.data.frame() %>%
-                    mutate(
-                        sample = quant,
-                        condition = meta[meta$sample==quant]$condition
-                    ),
+                    mutate(sample=quant) %>%
+                    apply(X=conditions, MARGIN=1, FUN=function(row, dat) {
+                        dat %>%
+                            mutate(prefix=unlist(lapply(sample, function(s){substr(s, 1, nchar(row[["prefix"]]))}))) %>%
+                            inner_join(as.data.frame(t(row)), by="prefix", relationship="one-to-one") %>%
+                            dplyr::select(-c("prefix"))
+                    }, .) %>%
+                    do.call(rbind, .),
                 rowData = rowData(raw) %>%
                     as.data.frame() %>%
                     left_join(tx2g, by = c("gene_ids" = "gene_id"), multiple = "any"),
