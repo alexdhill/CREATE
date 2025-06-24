@@ -52,6 +52,8 @@ process minimap2_align
             params="$(jq '.minimap2' !{parameters})"
             if [[ "${params}" == "null" ]]; then
                 params=""
+            else
+                params="$(jq '.minimap2 | to_entries | .[] | "--\\(.key)=\\(.value)"' flags.json | xargs | sed 's/=true//g')"
             fi
 
             minimap2 -ax splice \

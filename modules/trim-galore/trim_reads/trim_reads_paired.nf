@@ -55,6 +55,8 @@ process trim_reads_paired
             params=$(jq '."trim-galore"' !{parameters})
             if [[ "${params}" == "null" ]]; then
                 params="-l 75 --2color 20"
+            else
+                params="$(jq '."trim-galore" | to_entries | .[] | "--\\(.key)=\\(.value)"' flags.json | xargs | sed 's/=true//g')"
             fi
 
             trim_galore --paired --gzip  !{read_1} !{read_2} \

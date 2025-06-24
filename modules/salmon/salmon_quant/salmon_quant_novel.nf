@@ -52,6 +52,8 @@ process salmon_quant_novel
             params="$(jq '.salmon' !{parameters})"
             if [[ "${params}" == "null" ]]; then
                 params=""
+            else
+                params="$(jq '.salmon | to_entries | .[] | "--\\(.key)=\\(.value)"' flags.json | xargs | sed 's/=true//g')"
             fi
 
             salmon quant --libType A -1 !{read_1} -2 !{read_2} \
