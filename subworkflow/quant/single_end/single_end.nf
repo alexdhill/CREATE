@@ -21,7 +21,6 @@ include { count_reads_se } from "../../../modules/bash/count_reads/count_reads_s
 include { trim_reads_single } from "../../../modules/trim-galore/trim_reads/trim_reads_single.nf"
 include { salmon_quant_single } from "../../../modules/salmon/salmon_quant/salmon_quant_single.nf"
 include { compile_quantifications } from "../../../modules/R/compile_quantifications/compile_quantifications.nf"
-include { run_analysis } from "../../../modules/R/run_analysis/run_analysis.nf"
 
 workflow SINGLE_END
 {
@@ -57,6 +56,5 @@ workflow SINGLE_END
             | combine(reference)
             | combine(metadata)
             | compile_quantifications
-            | run_analysis
         }
 }

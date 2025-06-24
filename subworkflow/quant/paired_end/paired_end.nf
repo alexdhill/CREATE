@@ -23,7 +23,6 @@ include { count_reads_pe } from "../../../modules/bash/count_reads/count_reads_p
 include { trim_reads_paired } from "../../../modules/trim-galore/trim_reads/trim_reads_paired.nf"
 include { salmon_quant_paired } from "../../../modules/salmon/salmon_quant/salmon_quant_paired.nf"
 include { compile_quantifications } from "../../../modules/R/compile_quantifications/compile_quantifications.nf"
-include { run_analysis } from "../../../modules/R/run_analysis/run_analysis.nf"
 
 workflow PAIRED_END
 {
@@ -61,6 +60,5 @@ workflow PAIRED_END
             | combine(reference)
             | combine(metadata)
             | compile_quantifications
-            | run_analysis
         }
 }

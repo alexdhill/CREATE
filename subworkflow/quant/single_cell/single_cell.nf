@@ -21,7 +21,6 @@ include { alevin_align } from "../../../modules/salmon/alevin_align/alevin_align
 include { alevin_collate } from "../../../modules/salmon/alevin_collate/alevin_collate.nf"
 include { alevin_quantify } from "../../../modules/salmon/alevin_quantify/alevin_quantify.nf"
 include { compile_quantifications } from "../../../modules/R/compile_quantifications/compile_quantifications.nf"
-include { run_analysis } from "../../../modules/R/run_analysis/run_analysis.nf"
 
 workflow SINGLE_CELL
 {

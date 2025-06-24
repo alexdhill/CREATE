@@ -23,7 +23,6 @@ include { trim_reads_nanopore } from "../../../modules/nanoplot/trim_reads/trim_
 include { minimap2_align } from "../../../modules/minimap2/minimap2_align/minimap2_align.nf"
 include { salmon_quant_nanopore } from "../../../modules/salmon/salmon_quant/salmon_quant_nanopore.nf"
 include { compile_quantifications } from "../../../modules/R/compile_quantifications/compile_quantifications.nf"
-include { run_analysis } from "../../../modules/R/run_analysis/run_analysis.nf"
 
 workflow NANOPORE
 {
@@ -64,6 +63,5 @@ workflow NANOPORE
             | combine(reference)
             | combine(metadata)
             | compile_quantifications
-            | run_analysis
         }
 }
