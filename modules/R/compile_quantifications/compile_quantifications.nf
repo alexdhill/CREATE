@@ -30,7 +30,7 @@ process compile_quantifications
             path(metadata)
         )
     output:
-        path("counts/")
+        path("*counts/")
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
