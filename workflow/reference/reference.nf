@@ -33,7 +33,7 @@ include { LONG } from '../../subworkflow/reference/long/long.nf'
 include { SINGLE_CELL } from '../../subworkflow/reference/single_cell/single_cell.nf'
 include { DISCOVER } from '../../subworkflow/reference/discover/discover.nf'
 
-NOENT = projectDir+'/assets/NULL'
+noent = projectDir+'/assets/NULL'
 
 workflow REFERENCE
 {
@@ -48,16 +48,16 @@ workflow REFERENCE
     // Get gene annotation and transcriptome
     if (params.isoquant) {
         log.info("Using provided annotation")
-        reference
-        | combine(Channel.fromPath(params.isoquant))
+        Channel.fromPath(params.isoquant)
+        | combine(reference)
         | generate_transcriptome
         | set{transcriptome}
 
         annotation = Channel.fromPath(params.isoquant)
     } else {
         log.info("Getting annotation")
-        reference
-        | combine(download_gencode_annotation())
+        download_gencode_annotation()
+        | combine(reference)
         | download_gencode_transcripts
         | set{transcriptome}
 
