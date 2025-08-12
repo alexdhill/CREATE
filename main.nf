@@ -146,12 +146,23 @@ else if (params.quant)
         params.pattern = '*_R{1,2}_*.fastq.gz'
         if (params.library=="single_cell")
         {
-            params.barcodes = ''
             params.chemistry = "chromiumV3"
+            if (params.chemistry=='chromiumV3')
+            {
+                params.barcodes = projectDir+'/assets/3M-february-2018.txt'
+            }
+            else if (params.chemistry=='chromium')
+            {
+                params.barcodes = projectDir+'/assets/737K-august-2016.txt'
+            }
+            else
+            {
+                params.barcodes = ''
+            }
             if (params.barcodes=='')
             {
                 log.error("--barcodes: ${params.barcodes}");
-                throw new IllegalArgumentException('Barcode list must be specified')
+                throw new IllegalArgumentException('Barcode list must be specified for DropSeq')
             }
             if (!["chromiumV3","chromium","dropseq"].contains(params.chemistry))
             {
@@ -163,7 +174,7 @@ else if (params.quant)
     else if (params.library=='nanopore')
     {
         params.pattern = '*.fastq.gz'
-        params.dcs = ""
+        params.dcs = projectDir+'/assets/dcs.fa'
         params.discovery = false
         if (params.dcs=='')
         {

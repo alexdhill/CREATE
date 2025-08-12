@@ -33,7 +33,7 @@ include { LONG } from '../../subworkflow/reference/long/long.nf'
 include { SINGLE_CELL } from '../../subworkflow/reference/single_cell/single_cell.nf'
 include { DISCOVER } from '../../subworkflow/reference/discover/discover.nf'
 
-NOENT = projectDir+'/NULL'
+NOENT = projectDir+'/assets/NULL'
 
 workflow REFERENCE
 {
