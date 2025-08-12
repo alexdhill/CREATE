@@ -33,7 +33,7 @@ include { LONG } from '../../subworkflow/reference/long/long.nf'
 include { SINGLE_CELL } from '../../subworkflow/reference/single_cell/single_cell.nf'
 include { DISCOVER } from '../../subworkflow/reference/discover/discover.nf'
 
-NOENT = Channel.fromPath(projectDir+'/NULL')
+NOENT = projectDir+'/NULL'
 
 workflow REFERENCE
 {
