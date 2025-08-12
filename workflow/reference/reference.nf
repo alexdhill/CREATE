@@ -45,34 +45,24 @@ workflow REFERENCE
     download_repeat_regions()
     | set{repeatmasker}
 
-    // Get gene annotation
+    // Get gene annotation and transcriptome
     if (params.isoquant) {
         log.info("Using provided annotation")
         reference
         | combine(Channel.fromPath(params.isoquant))
         | generate_transcriptome
-        | set{annotation}
+        | set{transcriptome}
+
+        annotation = Channel.fromPath(params.isoquant)
     } else {
-        log.info("Downloading GENCODE annotation")
+        log.info("Getting annotation")
         reference
         | combine(download_gencode_annotation())
         | download_gencode_transcripts
+        | set{transcriptome}
+
+        download_gencode_annotation.out
         | set{annotation}
-    }
-    
-    // Get gene transcriptome
-    if (params.genome!="T2T")
-    {
-        log.info("Non-T2T genome detected. Downloading txome")
-        Channel.from([NOENT, NOENT])
-        | download_gencode_transcripts
-        | set{transcriptome}
-    } else {
-        log.info("T2T genome detected. Generating txome")
-        annotation
-        | combine(reference)
-        | download_gencode_transcripts
-        | set{transcriptome}
     }
 
     log.info("Starting main logic...")
