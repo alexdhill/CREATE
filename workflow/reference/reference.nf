@@ -36,23 +36,23 @@ include { DISCOVER } from '../../subworkflow/reference/discover/discover.nf'
 workflow REFERENCE
 {
     download_reference()
-    | set(reference)
+    | set{reference}
 
     download_repeat_regions()
-    | set(repeatmasker)
+    | set{repeatmasker}
 
     if (params.isoquant) {
         log.info("Using provided annotation")
         reference
         | combine(Channel.fromPath(params.isoquant))
         | generate_transcriptome()
-        | set(annotation)
+        | set{annotation}
     } else {
         log.info("Downloading GENCODE annotation")
         reference
         | combine(download_gencode_annotation())
         | download_gencode_transcripts()
-        | set(annotation)
+        | set{annotation}
     }
     
     if (params.genome!="T2T")
@@ -60,13 +60,13 @@ workflow REFERENCE
         log.info("Non-T2T genome detected. Downloading txome")
         Channel.from(["null.fa", "null.crt"])
         | download_gencode_transcripts
-        | set(transcriptome)
+        | set{transcriptome}
     } else {
         log.info("T2T genome detected. Generating txome")
         annotation
         | combine(reference)
         | download_gencode_transcripts
-        | set(transcriptome)
+        | set{transcriptome}
     }
 
     log.info("Starting main logic...")
