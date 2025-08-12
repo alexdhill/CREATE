@@ -33,14 +33,19 @@ include { LONG } from '../../subworkflow/reference/long/long.nf'
 include { SINGLE_CELL } from '../../subworkflow/reference/single_cell/single_cell.nf'
 include { DISCOVER } from '../../subworkflow/reference/discover/discover.nf'
 
+NOENT = Channel.fromPath(projectDir+'/NULL')
+
 workflow REFERENCE
 {
+    // Get reference genome
     download_reference()
     | set{reference}
 
+    // Get RepeatMasker track
     download_repeat_regions()
     | set{repeatmasker}
 
+    // Get gene annotation
     if (params.isoquant) {
         log.info("Using provided annotation")
         reference
@@ -55,10 +60,11 @@ workflow REFERENCE
         | set{annotation}
     }
     
+    // Get gene transcriptome
     if (params.genome!="T2T")
     {
         log.info("Non-T2T genome detected. Downloading txome")
-        Channel.from(["null.fa", "null.crt"])
+        Channel.from([NOENT, NOENT])
         | download_gencode_transcripts
         | set{transcriptome}
     } else {
