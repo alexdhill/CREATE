@@ -45,13 +45,13 @@ workflow REFERENCE
         log.info("Using provided annotation")
         reference
         | combine(Channel.fromPath(params.isoquant))
-        | generate_transcriptome()
+        | generate_transcriptome
         | set{annotation}
     } else {
         log.info("Downloading GENCODE annotation")
         reference
         | combine(download_gencode_annotation())
-        | download_gencode_transcripts()
+        | download_gencode_transcripts
         | set{annotation}
     }
     
