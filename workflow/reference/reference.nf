@@ -18,6 +18,7 @@ import groovy.util.logging.Slf4j
 include { download_reference } from '../../modules/bash/download_reference/download_reference.nf'
 include { download_gencode_transcripts } from '../../modules/bash/download_gencode_transcripts/download_gencode_transcripts.nf'
 include { download_gencode_annotation } from '../../modules/bash/download_gencode_annotation/download_gencode_annotation.nf'
+include { correct_isoquant } from '../../modules/bash/correct_isoquant/correct_isoquant.nf'
 include { generate_transcriptome } from '../../modules/bash/generate_transcriptome/generate_transcriptome.nf'
 include { download_repeat_regions } from '../../modules/bash/download_repeat_regions/download_repeat_regions.nf'
 include { make_repeat_transcripts } from '../../modules/bedtools/make_repeat_transcripts/make_repeat_transcripts.nf'
@@ -49,6 +50,7 @@ workflow REFERENCE
     if (params.isoquant) {
         log.info("Using provided annotation")
         Channel.fromPath(params.isoquant)
+        | correct_isoquant
         | combine(reference)
         | generate_transcriptome
         | set{transcriptome}
