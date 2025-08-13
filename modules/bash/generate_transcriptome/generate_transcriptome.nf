@@ -33,9 +33,13 @@ process generate_transcriptome
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Generating T2Tv2 transcripts..."
+                echo "Generating transcripts..."
                 echo "Annotation: !{annotation}"
                 echo "Genome: !{genome}"
+            fi
+            version='2'
+            if [[ "!{params.genome}" == "HG38" ]]; then
+                version='!{params.version}'
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
@@ -45,6 +49,6 @@ process generate_transcriptome
             pigz -cdp !{task.cpus} !{genome} > genome
             gffread -w txome -g genome genes
             pigz -cp !{task.cpus} txome \
-            > T2Tv2_custom_transcripts.fa.gz
+            > !{params.genome}v${version}_custom_transcripts.fa.gz
         '''
 }
