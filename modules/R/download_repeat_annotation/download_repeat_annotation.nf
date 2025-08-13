@@ -86,6 +86,7 @@ $1"\\tT2T_rmsk\\texon\\t"$2"\\t"$3"\\t"$5"\\t"$6"\\t0\\tgene_id \\""$4"\\"; gene
                 --out filtered_biotyped.gtf
 
             sed 's/""/"/g' filtered_biotyped.gtf \
+            | awk 'match($0, /gene_id "([^"]+)"/, a) { print $0 " gene_name \"" a[1] "\"; " }' \
             > HG38v!{params.version}_repeat_annotation.gtf
 
             if [[ `wc -l HG38v!{params.version}_repeat_annotation.gtf` == '0' ]]; then
