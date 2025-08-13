@@ -51,11 +51,12 @@ workflow REFERENCE
         log.info("Using provided annotation")
         Channel.fromPath(params.isoquant)
         | correct_isoquant
+        | set{annotation}
+
+        annotation
         | combine(reference)
         | generate_transcriptome
         | set{transcriptome}
-
-        annotation = Channel.fromPath(params.isoquant)
     } else {
         log.info("Getting annotation")
         download_gencode_annotation()
