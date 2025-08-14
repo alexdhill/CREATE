@@ -111,64 +111,65 @@ workflow DISCOVER
         .map{sample -> [sample[2], sample[1]]}
 
     // Run FLAIR
-    count_reads_np(long_channel)
-    | combine(dcs)
-    | minimap2_align_dcs
-    | trim_reads_np
-    | combine(reference)
-    | flair_align
+    count_reads_np(long_channel) // np.fa
+    | combine(dcs) // [np.fa, dcs.fa]
+    | minimap2_align_dcs // filter.fa
+    | trim_reads_np // trim.fa
+    | combine(reference) // [trim.fa, ref]
+    | flair_align // bed12
     | join(
-        count_reads_pe(paired_channel)
-        | trim_reads_paired
-        | combine(reference)
-        | star_align_genome
-        | map{sample -> [sample[0], sample[1], sample[2]]}
-        | combine(reference)
-        | flair_junctions
-    )
-    | combine(reference)
-    | flair_correct
+        count_reads_pe(paired_channel) // [fa1, fa2]
+        | trim_reads_paired // [trim1, trim2]
+        | combine(reference) // [trim1, trim2, ref]
+        | star_align_genome // bam
+        | map{sample -> [sample[0], sample[1], sample[2]]} // [mapped, unmapped, name]
+        | combine(reference) // [mapped, unmapped, name, ref]
+        | flair_junctions // splice.bed
+    ) // [bam, splice]
+    | combine(reference) // [bed12, splice, ref]
+    | flair_correct // corrected.bed
     | map{res -> res[1]}
-    | collect
-    | split_correct_bed
+    | collect // [bed12*samples]
+    | split_correct_bed // [bed12*chromosomes]
+    | flatten // chr.bed
     | combine(
-        trim_reads_np.out
+        trim_reads_np.out // trim.fa
         | map{res -> res[2]}
-        | collect
-        | map{reads -> [reads]}
-    )
-    | combine(reference)
-    | flair_collapse
-    | collect
+        | collect // [trim.fa*samples]
+        | map{reads -> [reads]} // [[trim.fa*samples]]
+    ) // [chr.bed, [trim.fa*samples]]
+    | combine(reference) // [chr.bed, [trim.fa*samples], ref]
+    | flair_collapse // [fa, bed, gtf, map]
+    | collect // [[fa, bed, gtf, map]*samples]
     | multiMap {
         dat ->
             fastas: dat[0]
             beds: dat[1]
             gtfs: dat[2]
             maps: dat[3]
-    }
-    | combine_collapsed_bed
+    } // [[fa*samples], [bed*samples], [gtf*samples], [map*samples]]
+    | combine_collapsed_bed // [fa, bed, gtf, map]
     | map{isoforms -> isoforms[0]}
-    | correct_flair_transcripts
-    | salmon_index_novel & minimap2_index_novel
+    | correct_flair_transcripts // saves txome
+    | salmon_index_novel & minimap2_index_novel // saves indexes
 
     // Save correct output
     combine_collapsed_bed.out
     | combine(reference)
-    | make_novel_reference
+    | make_novel_reference // saves genome and map
 
     // Correct bad GTF and make TX2G map
     combine_collapsed_bed.out
     | map{res -> res[2]}
-    | correct_flair_annotation
+    | correct_flair_annotation // saves annotation
     | combine(reference)
-    | make_novel_tx2g
+    | make_novel_tx2g // saves tx2g
 
     // Use corrected files to make LinkedTxome for TXIMETA
     correct_flair_annotation.out
     | combine(correct_flair_transcripts.out)
     | combine(salmon_index_novel.out)
-    | link_transcriptome_novel
+    | link_transcriptome_novel // saves TXDB
 
     // Use final files to quantify
     trim_reads_paired.out
