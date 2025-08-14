@@ -186,6 +186,11 @@ profiles
                 queue = "short"
                 time = '30m'
             }
+            withName: "split_correct_bed"
+            {
+                queue = "medium"
+                time = '6h'
+            }
             withName: "make_novel_reference"
             {
                 queue = "short"
