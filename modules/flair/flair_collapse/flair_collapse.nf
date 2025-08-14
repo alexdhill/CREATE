@@ -47,11 +47,10 @@ process flair_collapse
 
             base=$(basename -s .split.bed !{region})
 
-            mkfifo genome annotation
-            pigz -cdp !{task.cpus} !{reference}/*genome.fa.gz > genome &
+            pigz -cdp !{task.cpus} !{reference}/*genome.fa.gz > genome
             pigz -cdp !{task.cpus} !{reference}/*_complete_annotation.gtf.gz \
             | sed -E ':a;s/((gene_id|transcript_id) "[^"]*)_/\\1%%/;ta' \
-            > annotation &
+            > annotation
             flair collapse \
                 --genome genome \
                 --query !{region} \
