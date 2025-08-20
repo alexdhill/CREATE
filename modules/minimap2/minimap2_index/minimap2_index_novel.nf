@@ -37,10 +37,10 @@ process minimap2_index_novel
                 set -x
             fi
 
-            gzip -cd !{transcripts} \
-            > transcripts.fa
-
-            minimap2 transcripts.fa \
+            mkfifo transcripts
+            pigz -cdp !{task.cpus} !{transcripts} \
+            > transcripts &
+            minimap2 transcripts \
                 -t 3 \
                 -d novel_long_index_v$(minimap2 --version | awk -F'-' '{print $1}').mmi
         '''

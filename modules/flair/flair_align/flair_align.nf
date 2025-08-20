@@ -17,7 +17,11 @@
 
 process flair_align
 {
+<<<<<<< HEAD
+    publishDir "${params.outdir}/align/nanopore/raw", mode: 'copy', overwrite: params.force, enable: params.keep
+=======
     publishDir "${params.outdir}/ranges/nanopore/raw", mode: 'copy', overwrite: params.force, enabled: params.keep
+>>>>>>> main
     if (params.manage_resources)
     {
         cpus 8
@@ -51,7 +55,7 @@ process flair_align
             flair align \
                 --genome !{reference}/*_genome.fa.gz \
                 --reads !{read} \
-                --threads 8 \
+                --threads !{task.cpus} \
                 --output !{sample}
         '''
 }

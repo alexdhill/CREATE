@@ -13,43 +13,29 @@
  * licensor will not be liable to you for any damages arising out of these terms or the use or
  * nature of the software, under any kind of legal claim.
  */
- 
 
-process trim_reads_single
+process split_correct_bed
 {
-    publishDir "${params.outdir}/reads/trimmed/", mode: 'copy', enabled: params.keep, overwrite: params.force
+    publishDir "${params.outdir}/align/chromosomes/", mode: 'copy', overwrite: params.force, enabled: params.keep
     if (params.manage_resources)
     {
-        cpus 8
+        cpus 1
+        memory '16.GB' // TODO
     }
     input:
-        tuple(
-            val(sample),
-            path(read),
-            val(nreads)
-        )
+        path(regions)
     output:
-        tuple(
-            val("${sample}"),
-            path("${sample}_trimmed.fq.gz"),
-            env(NREADS)
-        )
+        path("*.split.bed")
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Trimming single reads..."
-                echo "Sample: !{sample}"
-                echo "Read: !{read}"
+                echo "Splitting FLAIR corrected bed by chromosome"
+                echo "BEDs:\n!{regions}"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 
-            trim_galore --gzip !{read} \
-                --2colour 20 --length 75 --basename !{sample} \
-                -j 8 --output_dir .
-
-            NREADS=`pigz -cdp !{task.cpus} !{sample}_trim.fq.gz \
-            | awk 'END {print NR/4}'`
+            awk '{print > $1".split.bed"}' !{regions}
         '''
 }

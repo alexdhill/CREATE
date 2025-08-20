@@ -19,8 +19,8 @@ process count_reads_se
 {
     if (params.manage_resources)
     {
-        cpus 1
-        memory '1.GB'
+        cpus 3
+        memory '4.GB'
     }
     input:
         tuple(
@@ -44,8 +44,7 @@ process count_reads_se
                 set -x
             fi
             
-            gzip -cd !{read} \
-            | wc -l \
-            | awk '{print $1/4}'
+            pigz -cdp !{task.cpus} !{read} \
+            | awk 'END {print NR/4}'
         '''
 }

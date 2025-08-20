@@ -37,8 +37,8 @@ process correct_flair_transcripts
                 set -x
             fi
 
-            python3 !{projectDir}/bin/python/correct_flair_transcripts.py !{transcripts} \
-            | gzip -c \
+            sed -E '/^>/s/^(>[^%]+)%%([^_]+).*$/\1_\2/' !{transcripts} \
+            | pigz -cp !{task.cpus} \
             > novel_complete_transcripts.fa.gz
         '''
 }

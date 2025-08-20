@@ -17,7 +17,11 @@
 
 process flair_junctions
 {
+<<<<<<< HEAD
+    publishDir "${params.outdir}/align/junctions", mode: 'copy', overwrite: params.force, enable: params.keep
+=======
     publishDir "${params.outdir}/ranges/junctions", mode: 'copy', overwrite: params.force, enabled: params.keep
+>>>>>>> main
     if (params.manage_resources)
     {
         cpus 8
@@ -47,9 +51,10 @@ process flair_junctions
                 set -x
             fi
 
-            samtools view -hS !{alignment} > aln.sam
+            mkfifo aln.bam
+            samtools view -hb !{alignment} > aln.bam &
             junctions_from_sam \
-                -s aln.sam \
+                -s aln.bam \
                 -n !{sample}
         '''
 }

@@ -292,19 +292,36 @@ RUN apt-get update -y \
 ## BUILD FLAIR
 FROM ubuntu:22.04 as FLAIR
 ENV DEBIAN_FRONTEND noninteractive
-ENV FLAIR_VER 2.0.0
+ENV FLAIR_VER d777b30
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
+        git \
         wget \
-        unzip \
-    && wget --no-check-certificate \
-        https://github.com/BrooksLabUCSC/flair/archive/refs/tags/${FLAIR_VER}.zip \
-    && unzip ${FLAIR_VER}.zip \
-    && chmod +x flair-${FLAIR_VER}/flair.py
+    && git clone https://www.github.com/BrooksLabUCSC/FLAIR \
+    && cd FLAIR \
+    && git checkout ${FLAIR_VER}
 
 
 ## Build Final
 FROM ubuntu:22.04 as app
+COPY --from=FFQ /ffq-0.3.1 /ffq
+COPY --from=SAMTOOLS /usr/local/bin/samtools /usr/local/bin/samtools
+COPY --from=BEDTOOLS /usr/local/bin/bedtools /usr/local/bin/bedtools
+COPY --from=GFFREAD /gffread/gffread /usr/local/bin/gffread
+COPY --from=FASTQC /FastQC /usr/local/bin/FastQC
+COPY --from=MULTIQC /pandoc-*-linux/bin/* /usr/local/bin
+COPY --from=FASTP /usr/local/bin/fastp /usr/local/bin/fastp
+COPY --from=FASTP /usr/local/lib/libdeflate.* /usr/lib/
+COPY --from=FASTP /usr/lib/libisal.* /usr/lib/
+COPY --from=TRIMGALORE /TrimGalore /usr/local/bin/TrimGalore
+COPY --from=PORECHOP /Porechop-* /Porechop
+COPY --from=CHOPPER /chopper-*/target/release/chopper /usr/local/bin/chopper
+COPY --from=MINIMAP2 /minimap2*/minimap2 /usr/local/bin/minimap2
+COPY --from=SALMON /salmon*/bin/salmon /usr/local/bin/salmon
+COPY --from=ALEVIN /alevin-fry-*/target/release/alevin-fry /usr/local/bin/alevin-fry
+COPY --from=STAR /STAR*/bin/*static/* /usr/local/bin/
+COPY --from=SEQTK /usr/local/bin/seqtk /usr/local/bin/seqtk
+COPY --from=FLAIR /FLAIR /usr/local/bin/flair
 ENV DEBIAN_FRONTEND noninteractive
 ENV FFQ_VER 0.3.1
 ENV SAMTOOLS_VER 1.18
@@ -316,6 +333,7 @@ ENV MULTIQC_VER 1.19
 ENV TRIMGALORE_VER 0.6.10
 ENV CHOPPER_VER 0.9.0
 ENV MINIMAP2_VER 2.26
+ENV FLAIR_VER d777b30
 ENV SALMON_VER 1.10.1
 ENV ALEVIN_VER 0.10.0
 ENV STAR_VER 2.7.11a
@@ -405,6 +423,7 @@ RUN apt-get update -y \
         pysam \
         pandas \
         seaborn \
+        pipettor \
         cutadapt \
         biopython \
         matplotlib \

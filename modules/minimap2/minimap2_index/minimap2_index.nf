@@ -41,8 +41,9 @@ process minimap2_index
                 set -x
             fi
 
-            zcat !{transcripts} > txome.fa
-            minimap2 txome.fa \
+            mkfifo transcripts
+            pigz -cdp !{task.cpus} !{transcripts} > transcripts &
+            minimap2 transcripts \
                 -t 3 \
                 -d !{params.genome}v${version}_long_index_v$(minimap2 --version | awk -F'-' '{print $1}').mmi
         '''

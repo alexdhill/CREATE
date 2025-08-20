@@ -21,12 +21,14 @@ import java.util.Arrays
 include { count_reads_pe } from "../../modules/bash/count_reads/count_reads_pe.nf"
 include { count_reads_np } from "../../modules/bash/count_reads/count_reads_np.nf"
 include { minimap2_align_dcs } from "../../modules/minimap2/minimap2_align/minimap2_align_dcs.nf"
-include { trim_reads_nanopore } from "../../modules/nanoplot/trim_reads/trim_reads_nanopore.nf"
+include { trim_reads_np } from "../../modules/chopper/trim_reads/trim_reads_np.nf"
 include { trim_reads_paired } from "../../modules/trim-galore/trim_reads/trim_reads_paired.nf"
 include { star_align_genome } from "../../modules/star/star_align/star_align_genome.nf"
 include { flair_junctions } from "../../modules/flair/flair_junctions/flair_junctions.nf"
 include { flair_align } from "../../modules/flair/flair_align/flair_align.nf"
 include { flair_correct } from "../../modules/flair/flair_correct/flair_correct.nf"
+include { combine_collapsed_bed } from "../../modules/flair/flair_collapse/combine_collapsed_bed.nf"
+include { split_correct_bed } from "../../modules/flair/flair_collapse/split_correct_bed.nf"
 include { flair_collapse } from "../../modules/flair/flair_collapse/flair_collapse.nf"
 include { correct_flair_transcripts } from "../../modules/python/correct_flair_transcripts/correct_flair_transcripts.nf"
 include { salmon_index_novel } from "../../modules/salmon/salmon_index/salmon_index_novel.nf"
@@ -109,55 +111,78 @@ workflow DISCOVER
         .map{sample -> [sample[2], sample[1]]}
 
     // Run FLAIR
-    count_reads_np(long_channel)
-    | combine(dcs)
-    | minimap2_align_dcs
-    | trim_reads_nanopore
-    | combine(reference)
-    | flair_align
+    count_reads_np(long_channel) // np.fa
+    | combine(dcs) // [np.fa, dcs.fa]
+    | minimap2_align_dcs // filter.fa
+    | trim_reads_np // trim.fa
+    | combine(reference) // [trim.fa, ref]
+    | flair_align // bed12
     | join(
-        count_reads_pe(paired_channel)
-        | trim_reads_paired
-        | combine(reference)
-        | star_align_genome
-        | map{sample -> [sample[0], sample[1], sample[2]]}
-        | combine(reference)
-        | flair_junctions
-    )
-    | combine(reference)
-    | flair_correct
+        count_reads_pe(paired_channel) // [fa1, fa2]
+        | trim_reads_paired // [trim1, trim2]
+        | combine(reference) // [trim1, trim2, ref]
+        | star_align_genome // bam
+        | map{sample -> [sample[0], sample[1], sample[2]]} // [mapped, unmapped, name]
+        | combine(reference) // [mapped, unmapped, name, ref]
+        | flair_junctions // splice.bed
+    ) // [bam, splice]
+    | combine(reference) // [bed12, splice, ref]
+    | flair_correct // corrected.bed
     | map{res -> res[1]}
-    | collect
-    | map{beds -> [beds]}
+    | collect // [bed12*samples]
+    | split_correct_bed // [bed12*chromosomes]
+    | flatten // chr.bed
     | combine(
-        trim_reads_nanopore.out
+        trim_reads_np.out // trim.fa
         | map{res -> res[2]}
-        | collect
-        | map{reads -> [reads]}
-    )
-    | combine(reference)
-    | flair_collapse
+        | collect // [trim.fa*samples]
+        | map{reads -> [reads]} // [[trim.fa*samples]]
+    ) // [chr.bed, [trim.fa*samples]]
+    | combine(reference) // [chr.bed, [trim.fa*samples], ref]
+    | flair_collapse // [fa], [bed], [gtf], [map]
+
+    fastas = flair_collapse.out[0]
+        .collect()
+        .map{ res -> [res] }
+    beds = flair_collapse.out[1]
+        .collect()
+        .map{ res -> [res] }
+    gtfs = flair_collapse.out[2]
+        .collect()
+        .map{ res -> [res] }
+    maps = flair_collapse.out[3]
+        .collect()
+        .map{ res -> [res] }
+    
+    isoforms = fastas
+        .concat(beds)
+        .concat(gtfs)
+        .concat(maps)
+        .collect()
+
+    isoforms
+    | combine_collapsed_bed // [fa, bed, gtf, map]
     | map{isoforms -> isoforms[0]}
-    | correct_flair_transcripts
-    | salmon_index_novel & minimap2_index_novel
+    | correct_flair_transcripts // saves txome
+    | salmon_index_novel & minimap2_index_novel // saves indexes
 
     // Save correct output
-    flair_collapse.out
+    combine_collapsed_bed.out
     | combine(reference)
-    | make_novel_reference
+    | make_novel_reference // saves genome and map
 
     // Correct bad GTF and make TX2G map
-    flair_collapse.out
+    combine_collapsed_bed.out
     | map{res -> res[2]}
-    | correct_flair_annotation
+    | correct_flair_annotation // saves annotation
     | combine(reference)
-    | make_novel_tx2g
+    | make_novel_tx2g // saves tx2g
 
     // Use corrected files to make LinkedTxome for TXIMETA
     correct_flair_annotation.out
     | combine(correct_flair_transcripts.out)
     | combine(salmon_index_novel.out)
-    | link_transcriptome_novel
+    | link_transcriptome_novel // saves TXDB
 
     // Use final files to quantify
     trim_reads_paired.out

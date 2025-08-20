@@ -17,7 +17,11 @@
 
 process minimap2_align_dcs
 {
+<<<<<<< HEAD
+    publishDir "${params.outdir}/reads/filtered", mode: 'copy', overwrite: params.force, enable: params.keep
+=======
     publishDir "${params.outdir}/filtered", mode: 'copy', overwrite: params.force, enabled: params.keep
+>>>>>>> main
     if (params.manage_resources)
     {
         cpus 8
@@ -48,11 +52,11 @@ process minimap2_align_dcs
                 set -x
             fi
 
-            minimap2 -ax splice -t 8 \
+            minimap2 -ax splice -t !{task.cpus} \
                 !{control} \
                 !{read} \
             | samtools fastq -f4 - \
-            | gzip -c \
+            | pigz -cp !{task.cpus} \
             > !{sample}_filtered.fastq.gz
         '''
 }

@@ -50,15 +50,13 @@ process trim_reads_np
 
             chopper \
                 -i !{read} \
-                -q 20 \
-                -l 75 \
-                --threads 8 \
-                -o trimmed.fq \
-            | gzip \
+                -q 10 \
+                -l 50 \
+                --threads !{task.cpus} \
+            | pigz -cp !{task.cpus} \
             > !{sample}_filtered_trimmed.fq.gz
 
-            NREADS=`gzip -cd !{sample}_filtered_trimmed.fq.gz \
-            | wc -l \
-            | awk '{print $1/4}'`
+            NREADS=`pigz -cdp !{task.cpus} !{sample}_filtered_trimmed.fq.gz \
+            | awk 'END {print NR/4}'`
         '''
 }

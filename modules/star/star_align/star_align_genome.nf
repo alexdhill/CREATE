@@ -51,24 +51,24 @@ process star_align_genome
                 set -x
             fi
 
-            zcat !{read_1} > read1.fq
-            zcat !{read_2} > read2.fq
-            zcat !{reference}/*_genome.fa.gz > genome.fa
-
             STAR \
                 --genomeDir !{reference}/*discover_index*.star \
-                --readFilesIn read1.fq read2.fq \
+                --readFilesIn !{read_1} !{read_2} \
+                --sysShell "/bin/bash" \
+                --readFilesCommand "pigz -cdp $(( !{task.cpus} / 2 ))" \
                 --outFileNamePrefix !{sample}. \
                 --outSAMtype BAM SortedByCoordinate \
                 --outSAMunmapped Within \
-                --runThreadN 8
+                --runThreadN !{task.cpus}
 
             if [[ ! -e !{sample}.Aligned.sortedByCoord.out.bam ]]; then
                 echo "\033[[1;31mERR: STAR alignment failed\033[0m" 1>&2
                 exit 1
             fi
 
-            samtools view -bf4 -T genome.fa !{sample}.Aligned.sortedByCoord.out.bam > !{sample}_unmapped.bam &
-            samtools view -bF4 -T genome.fa !{sample}.Aligned.sortedByCoord.out.bam > !{sample}.bam
+            mkfifo genome1 genome2
+            pigz -cdp !{task.cpus} !{reference}/*_genome.fa.gz > genome | tee genome1 genome2 > /dev/null &
+            samtools view -hbf4 -T genome1 !{sample}.Aligned.sortedByCoord.out.bam > !{sample}_unmapped.bam &
+            samtools view -hbF4 -T genome2 !{sample}.Aligned.sortedByCoord.out.bam > !{sample}.bam
         '''
 }
