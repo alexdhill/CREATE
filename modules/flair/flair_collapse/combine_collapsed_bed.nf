@@ -16,7 +16,7 @@
 
 process combine_collapsed_bed
 {
-    publishDir "${params.dump}/", mode: 'copy', overwrite: params.force, enabled: params.dump!=''
+    // publishDir "${params.dump}/", mode: 'copy', overwrite: params.force, enabled: params.dump!=''
     if (params.manage_resources)
     {
         cpus 4
@@ -24,16 +24,18 @@ process combine_collapsed_bed
     }
     //for some reason this only works with file and not path
     input:
-        path(fastas)
-        path(beds)
-        path(gtfs)
-        path(maps)
+        tuple(
+            path(fastas),
+            path(beds),
+            path(gtfs),
+            path(maps)
+        )
     output:
         tuple(
-            path("novel_transcripts.fa.gz"),
-            path("novel_regions.bed"),
-            path("novel_annotation.gtf.gz"),
-            path("novel_readmap.txt")
+            file("novel_transcripts.fa"),
+            file("novel_regions.bed"),
+            file("novel_annotation.gtf"),
+            file("novel_readmap.txt")
         )
     shell:
         '''
@@ -43,15 +45,15 @@ process combine_collapsed_bed
                 echo "beds:\n!{beds}"
                 echo "gtfs:\n!{gtfs}"
                 echo "readmaps:\n!{maps}"
-                echo "!{params.print_novel_reference}"
+                echo "!{params.dump}"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 
-            cat !{fastas} | awk '/^>/ { f = !a[$0]++ } f' > novel_transcripts.fa &
-            cat !{beds} | awk '!seen[$0]++' > novel_regions.bed &
-            cat !{gtfs} | awk '!seen[$0]++' > novel_annotation.gtf &
+            cat !{fastas} | awk '/^>/ { f = !a[$0]++ } f' > novel_transcripts.fa
+            cat !{beds} | awk '!seen[$0]++' > novel_regions.bed
+            cat !{gtfs} | awk '!seen[$0]++' > novel_annotation.gtf
             cat !{maps} | awk '!seen[$0]++' > novel_readmap.txt
         '''
 }

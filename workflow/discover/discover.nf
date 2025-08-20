@@ -139,15 +139,28 @@ workflow DISCOVER
         | map{reads -> [reads]} // [[trim.fa*samples]]
     ) // [chr.bed, [trim.fa*samples]]
     | combine(reference) // [chr.bed, [trim.fa*samples], ref]
-    | flair_collapse // [fa, bed, gtf, map]
-    | collect // [[fa, bed, gtf, map]*samples]
-    | multiMap {
-        dat ->
-            fastas: dat[0]
-            beds: dat[1]
-            gtfs: dat[2]
-            maps: dat[3]
-    } // [[fa*samples], [bed*samples], [gtf*samples], [map*samples]]
+    | flair_collapse // [fa], [bed], [gtf], [map]
+
+    fastas = flair_collapse.out[0]
+        .collect()
+        .map{ res -> [res] }
+    beds = flair_collapse.out[1]
+        .collect()
+        .map{ res -> [res] }
+    gtfs = flair_collapse.out[2]
+        .collect()
+        .map{ res -> [res] }
+    maps = flair_collapse.out[3]
+        .collect()
+        .map{ res -> [res] }
+    
+    isoforms = fastas
+        .concat(beds)
+        .concat(gtfs)
+        .concat(maps)
+        .collect()
+
+    isoforms
     | combine_collapsed_bed // [fa, bed, gtf, map]
     | map{isoforms -> isoforms[0]}
     | correct_flair_transcripts // saves txome

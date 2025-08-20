@@ -28,12 +28,10 @@ process flair_collapse
             path(reference)
         )
     output:
-        tuple(
-            path("*.isoforms.fa"),
-            path("*.isoforms.bed"),
-            path("*.isoforms.gtf"),
-            path("*.split.isoform.read.map.txt"),
-        )
+        file("*.isoforms.fa")
+        file("*.isoforms.bed")
+        file("*.isoforms.gtf")
+        file("*.isoforms.read.map.txt")
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
@@ -62,5 +60,7 @@ process flair_collapse
                 --generate_map \
                 --threads !{task.cpus} \
                 --output $base
+
+            mv ${base}.isoform.read.map.txt ${base}.isoforms.read.map.txt
         '''
 }
