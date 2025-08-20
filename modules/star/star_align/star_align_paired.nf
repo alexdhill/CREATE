@@ -17,7 +17,7 @@
 
 process star_align_paired
 {
-    publishDir "${params.outdir}/align", mode: 'copy', enable: params.keep, overwrite: params.force
+    publishDir "${params.outdir}/align", mode: 'copy', enabled: params.keep, overwrite: params.force
     if (params.manage_resources)
     {
         cpus 8

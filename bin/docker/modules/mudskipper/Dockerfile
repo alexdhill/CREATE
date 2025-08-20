@@ -12,30 +12,24 @@
 ## licensor will not be liable to you for any damages arising out of these terms or the use or
 ## nature of the software, under any kind of legal claim.
 
-## BUILD FASTP
-FROM ubuntu:22.04 as FASTP
-ENV FASTP_VER 0.23.4
-RUN apt-get update \
+## BUILD MUDSKIPPER
+FROM ubuntu:22.04 as MUDSKIPPER
+ENV MUDSKIPPER_VER effd3fa
+RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
-        build-essential automake autogen autoconf libtool \
-        wget git ca-certificates \
-        nasm yasm cmake \
-    && git clone https://github.com/intel/isa-l.git \
-    && cd isa-l \
-    && ./autogen.sh \
-    && ./configure \
-    && make -j8 \
-    && make -j8 install \
-    && cd .. \
-    && git clone https://github.com/ebiggers/libdeflate.git \
-    && cd libdeflate \
-    && cmake -B build \
-    && cmake --build build \
-    && cmake --install build \
-    && cd .. \
-    && wget https://github.com/OpenGene/fastp/archive/refs/tags/v${FASTP_VER}.tar.gz \
-    && tar -xvf v${FASTP_VER}.tar.gz \
-    && cd fastp* \
-    && make -j8 \
-    && make -j8 install \
-    && cd ..
+        build-essential \
+        make \
+        curl \
+        unzip \
+        cmake \
+        pkg-config \
+        zlib1g-dev \
+        ca-certificates \
+    && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
+    && curl -kL \
+        https://github.com/OceanGenomics/mudskipper/archive/refs/tags/v${MUDSKIPPER_VER}.zip \
+        -o v${MUDSKIPPER_VER}.zip \
+    && unzip v${MUDSKIPPER_VER}.zip \
+    && cd mudskipper-${MUDSKIPPER_VER} \
+    && $HOME/.cargo/bin/cargo update \
+    && $HOME/.cargo/bin/cargo build --release

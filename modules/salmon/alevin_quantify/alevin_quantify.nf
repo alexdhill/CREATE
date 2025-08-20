@@ -17,7 +17,7 @@
 
 process alevin_quantify
 {
-    publishDir "${params.outdir}/quant", mode: 'copy', overwrite: params.force
+    publishDir "${params.outdir}/quant", mode: 'copy', overwrite: params.force, enabled: params.keep
     if (params.manage_resources)
     {
         cpus 8

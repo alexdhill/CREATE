@@ -15,15 +15,16 @@
 ## BUID GFFREAD
 FROM ubuntu:22.04 as GFFREAD
 ENV DEBIAN_FRONTEND noninteractive
-ENV GFFREAD_VER 0.12.1
+ENV GFFREAD_VER 0.12.7
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
         build-essential \
         make \
         wget \
+        unzip \
         git \
-    && git clone https://github.com/gpertea/gffread --recursive \
-    && cd ./gffread \
-    && make release \
-    && ls -l
+    && wget https://github.com/gpertea/gffread/archive/refs/tags/v${GFFREAD_VER}.zip \
+    && unzip v${GFFREAD_VER}.zip \
+    && cd ./gffread-${GFFREAD_VER} \
+    && make release

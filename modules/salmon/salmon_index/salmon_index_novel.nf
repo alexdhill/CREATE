@@ -17,7 +17,7 @@
 
 process salmon_index_novel
 {
-    publishDir "${params.dump}/", mode: 'copy', overwrite: params.force, enable: params.dump!=''
+    publishDir "${params.dump}/", mode: 'copy', overwrite: params.force, enabled: params.dump!=''
     if (params.manage_resources)
     {
         cpus 8

@@ -17,7 +17,7 @@
 
 process make_complete_annotation
 {
-    publishDir "${params.outdir}/", mode: 'copy', enable: params.keep, overwrite: params.force
+    publishDir "${params.outdir}/", mode: 'copy', enabled: params.keep, overwrite: params.force
     if (params.manage_resources)
     {
         cpus 1
@@ -31,7 +31,7 @@ process make_complete_annotation
             path(gencode_tx)
         )
     output:
-        path("!{params.genome}v!{params.genome=='T2T'?'2':params.version}_complete_annotation.gtf.gz")
+        path("${params.genome}v${params.genome=='T2T'?'2':params.version}_complete_annotation.gtf.gz")
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then

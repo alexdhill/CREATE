@@ -14,7 +14,7 @@
 
 suppressPackageStartupMessages({
     library(argparse)
-    library(tidyverse)
+    library(tidyr)
     library(dplyr)
     library(purrr)
     library(stringr)
@@ -122,30 +122,37 @@ summarize_genes <- function(transcript_quants, txdb) {
     return(gene_quants)
 }
 
-read_map <- function(reference_dir, class = TRUE) {
-    map <- reference_dir %>%
-        list.files(full.names = TRUE) %>%
-        str_subset("complete_map.tx2g") %>%
-        read_csv(col_names = TRUE, progress = FALSE, show_col_types = FALSE) %>%
+read_map <- function(reference_dir, class=TRUE)
+{
+    reference_dir %>% 
+        list.files(full.names=TRUE) %>%
+        stringr::str_subset("complete_map.tx2g") %>%
+        readr::read_csv(col_names=TRUE, progress=FALSE, show_col_types=FALSE) %>%
+        as.data.frame() %>%
         dplyr::select(gene_id, gene_name, gene_biotype) %>%
-        distinct() %>%
-        mutate(
-            gene_biotype = case_when(
+        dplyr::distinct() %>%
+        dplyr::mutate(
+            biotype=case_when(
                 !str_detect(gene_biotype, ",") ~ gene_biotype,
-                TRUE ~ unlist(lapply(gene_biotype, function(x) {
-                    strsplit(x, ",")[[1]][ifelse(class, 2, 1)]
-                }))
+                TRUE ~ unlist(lapply(gene_biotype, function(x){strsplit(x, ",")[[1]][ifelse(class, 2, 1)]}))
+            ),
+            biotype_class=case_when(
+                grepl(',', gene_biotype) ~ "repeat",
+                TRUE ~ "gene"
             )
         ) %>%
-        mutate(
-            gene_biotype = case_when(
-                startsWith(gene_biotype, "Mt-") | startsWith(gene_name, "Mt-") ~ "Mitochondrial",
-                gene_biotype == "protein_coding" ~ "Coding",
-                gene_biotype %in% c("lncRNA", "LINE", "SINE", "LTR", "DNA") ~ gene_biotype,
-                gene_biotype == "Simple_repeat" ~ "Microsatellite",
-                TRUE ~ "Other"
+        dplyr::mutate(
+            gene_biotype=case_when(
+                startsWith(biotype, "Mt_") | startsWith(gene_name, "MT-") ~ "Mitochondrial",
+                biotype == "protein_coding" ~ "Coding",
+                biotype %in% c("lncRNA", "miRNA", "LINE", "SINE", "LTR", "DNA") ~ biotype,
+                biotype == "Simple_repeat" ~ "Microsatellite",
+                biotype=="Satellite" ~ "Human satellite",
+                biotype_class =="gene" ~ "Other gene",
+                TRUE ~ "Other repeat"
             )
         ) %>%
+        dplyr::select(gene_id, gene_name, gene_biotype) %>%
         return()
 }
 
@@ -191,20 +198,24 @@ compile_quants <- function(quants, tx2g, reference, metadata) {
         as.data.frame() %>%
         left_join(tx2g, multiple = "any", by = "gene_id")
     
-    message("Adding normalized counts")
-    assays(gene_quants)$normalized = DESeqDataSet(gene_quants, design=~1) %>%
-        estimateSizeFactors() %>%
-        counts(normalize=TRUE)
+    message("Adding normalized counts...")
+    gene_quants = DESeqDataSet(gene_quants, design=~1) %>%
+        estimateSizeFactors()
 
     message("Saving gene quantifications...")
     saveHDF5SummarizedExperiment(gene_quants, dir = "counts", replace = TRUE)
 }
 
-compile_af <- function(quants, tx2g) {
+compile_af <- function(quants, tx2g, metadata) {
     suppressPackageStartupMessages({
         library(fishpond)
         library(SingleCellExperiment)
     })
+
+    message("Reading metadata...")
+    meta = readr::read_csv(metadata, col_names=FALSE) %>%
+        magrittr::set_colnames(c("sample", "condition"))
+    head(meta)
 
     message("Importing quantifications...")
     gene_quants <- quants %>%
@@ -216,7 +227,10 @@ compile_af <- function(quants, tx2g) {
                 assays(raw),
                 colData = colData(raw) %>%
                     as.data.frame() %>%
-                    mutate(sample = quant),
+                    mutate(
+                        sample = quant,
+                        condition = meta[meta$sample==quant]$condition
+                    ),
                 rowData = rowData(raw) %>%
                     as.data.frame() %>%
                     left_join(tx2g, by = c("gene_ids" = "gene_id"), multiple = "any"),
