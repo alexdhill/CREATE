@@ -14,7 +14,7 @@
 
 suppressPackageStartupMessages({
     library(argparse)
-    library(tidyverse)
+    library(tidyr)
     library(dplyr)
     library(purrr)
     library(stringr)
@@ -198,20 +198,24 @@ compile_quants <- function(quants, tx2g, reference, metadata) {
         as.data.frame() %>%
         left_join(tx2g, multiple = "any", by = "gene_id")
     
-    message("Adding normalized counts")
-    assays(gene_quants)$normalized = DESeqDataSet(gene_quants, design=~1) %>%
-        estimateSizeFactors() %>%
-        counts(normalize=TRUE)
+    message("Adding normalized counts...")
+    gene_quants = DESeqDataSet(gene_quants, design=~1) %>%
+        estimateSizeFactors()
 
     message("Saving gene quantifications...")
     saveHDF5SummarizedExperiment(gene_quants, dir = "counts", replace = TRUE)
 }
 
-compile_af <- function(quants, tx2g) {
+compile_af <- function(quants, tx2g, metadata) {
     suppressPackageStartupMessages({
         library(fishpond)
         library(SingleCellExperiment)
     })
+
+    message("Reading metadata...")
+    meta = readr::read_csv(metadata, col_names=FALSE) %>%
+        magrittr::set_colnames(c("sample", "condition"))
+    head(meta)
 
     message("Importing quantifications...")
     gene_quants <- quants %>%
@@ -223,7 +227,10 @@ compile_af <- function(quants, tx2g) {
                 assays(raw),
                 colData = colData(raw) %>%
                     as.data.frame() %>%
-                    mutate(sample = quant),
+                    mutate(
+                        sample = quant,
+                        condition = meta[meta$sample==quant]$condition
+                    ),
                 rowData = rowData(raw) %>%
                     as.data.frame() %>%
                     left_join(tx2g, by = c("gene_ids" = "gene_id"), multiple = "any"),

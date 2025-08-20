@@ -17,7 +17,11 @@
 
 process flair_junctions
 {
+<<<<<<< HEAD
     publishDir "${params.outdir}/align/junctions", mode: 'copy', overwrite: params.force, enable: params.keep
+=======
+    publishDir "${params.outdir}/ranges/junctions", mode: 'copy', overwrite: params.force, enabled: params.keep
+>>>>>>> main
     if (params.manage_resources)
     {
         cpus 8

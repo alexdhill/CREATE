@@ -17,11 +17,11 @@
 
 process salmon_quant_paired
 {
-    publishDir "${params.outdir}/quant/", mode: 'copy', enable: params.keep, overwrite: params.force
+    publishDir "${params.outdir}/quant/", mode: 'copy', enabled: params.keep, overwrite: params.force
     if (params.manage_resources)
     {
         cpus 8
-        memory '32.GB'
+        memory '48.GB'
         time '6h'
     }
     input:

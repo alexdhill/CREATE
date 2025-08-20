@@ -2,18 +2,18 @@ profiles
 {
     hpc
     {
-    process
+        process
         {
             // Ref
             withName: "download_gencode_annotation"
             {
                 queue = "short"
-                time = '5m'
+                time = '30m'
             }
             withName: "download_gencode_transcripts"
             {
                 queue = "short"
-                time = '5m'
+                time = '30m'
             }
             withName: "download_reference"
             {
@@ -125,6 +125,24 @@ profiles
             {
                 queue = "short"
                 time = '1h'
+            }
+
+            withName: "alevin_align"
+            {
+               queue = 'medium'
+               time = '12h'
+            }
+
+            withName: "alevin_collate"
+            {
+               queue = 'medium'
+               time = '12h'
+            }
+
+            withName: 'alevin_quant'
+            {
+              queue = 'medium'
+              time = '12h'
             }
 
             withName: "salmon_quant_paired"

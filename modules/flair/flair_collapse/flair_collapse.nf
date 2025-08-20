@@ -16,6 +16,10 @@
 
 process flair_collapse
 {
+<<<<<<< HEAD
+=======
+    publishDir "${params.outdir}/isoforms", mode: 'copy', overwrite: params.force, enabled: params.keep
+>>>>>>> main
     if (params.manage_resources)
     {
         cpus 8

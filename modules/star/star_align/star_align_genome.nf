@@ -17,7 +17,7 @@
 
 process star_align_genome
 {
-    publishDir "${params.outdir}/align/paired", mode: 'copy', enable: params.keep, overwrite: params.force
+    publishDir "${params.outdir}/align/paired", mode: 'copy', enabled: params.keep, overwrite: params.force
     if (params.manage_resources)
     {
         cpus 8

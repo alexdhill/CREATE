@@ -21,7 +21,7 @@ process salmon_index
     if (params.manage_resources)
     {
         cpus 8
-        memory '24.GB'
+        memory '48.GB'
     }
     input:
         tuple(
