@@ -58,8 +58,8 @@ options:
         --library     Library type [paired_end,nanopore,single_cell] [REQUIRED]
                       NOTE: the reference provided must contain a compatible index
         --pattern     File pattern for input samples
-        --metadata    An unnamed, two-column CSV file of samples,condition
-        --parameters  A JSON file of arguments for individual tools
+        --metadata    An unnamed, two-column CSV file of samples,condition [REQUIRED]
+        --parameters  A JSON file of arguments for individual tools [BETA]
 
     --discover
         --ref          CREATE reference directory [REQUIRED]

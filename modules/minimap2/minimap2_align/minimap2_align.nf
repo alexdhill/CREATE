@@ -57,7 +57,7 @@ process minimap2_align
             fi
 
             minimap2 -ax splice \
-                -N 100 -t 8 \
+                -N 100 -t !{task.cpus} \
                 !{reference}/*long_index*.mmi \
                 !{read} \
                 ${params} \
