@@ -31,6 +31,7 @@ workflow SINGLE_CELL
         if (params.library=="single_cell")
         {
             reference = Channel.fromPath(params.ref)
+            metadata = Channel.fromPath(params.metadata)
             barcodes = Channel.fromPath(params.barcodes)
             if (is_acc)
             {
@@ -55,6 +56,7 @@ workflow SINGLE_CELL
             | collect
             | map{quants -> [quants]}
             | combine(reference)
+            | combine(metadata)
             | compile_quantifications
         }
 }

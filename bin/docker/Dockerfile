@@ -54,7 +54,7 @@ RUN apt-get update \
 ## BUILD SAMTOOLS
 FROM ubuntu:22.04 as SAMTOOLS
 ENV DEBIAN_FRONTEND noninteractive
-ENV SAMTOOLS_VER 1.19
+ENV SAMTOOLS_VER 1.18
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
         build-essential \
@@ -67,8 +67,8 @@ RUN apt-get update -y \
         wget \
     && wget --no-check-certificate \
         https://github.com/samtools/samtools/releases/download/${SAMTOOLS_VER}/samtools-${SAMTOOLS_VER}.tar.bz2 \
-    && tar -xvf samtools-1.19.tar.bz2 \
-    && cd samtools-1.19 \ 
+    && tar -xvf samtools-${SAMTOOLS_VER}.tar.bz2 \
+    && cd samtools-${SAMTOOLS_VER} \ 
     && ./configure --prefix=/usr/local/bin/ \
     && make \
     && make install \
@@ -78,7 +78,7 @@ RUN apt-get update -y \
 ## BUILD BEDTOOLS
 FROM ubuntu:22.04 as BEDTOOLS
 ENV DEBIAN_FRONTEND noninteractive
-ENV BEDTOOLS_VER 2.31.0
+ENV BEDTOOLS_VER 2.31.1
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
         build-essential \
@@ -95,21 +95,45 @@ RUN apt-get update -y \
     && make install
 
 
-## BUID GFFREAD
+## BUILD GFFREAD
 FROM ubuntu:22.04 as GFFREAD
 ENV DEBIAN_FRONTEND noninteractive
-ENV GFFREAD_VER 0.12.1
+ENV GFFREAD_VER 0.12.7
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
         build-essential \
         make \
         wget \
+        unzip \
         git \
-    && git clone https://github.com/gpertea/gffread --recursive \
-    && cd ./gffread \
-    && make release \
-    && ls -l
+    && wget https://github.com/gpertea/gffread/archive/refs/tags/v${GFFREAD_VER}.zip \
+    && unzip v${GFFREAD_VER}.zip \
+    && cd ./gffread-${GFFREAD_VER} \
+    && make release
+
+
+## BUILD GTFSORT
+FROM ubuntu:22.04 as GTFSORT
+ENV GTFSORT_VER 0.2.2
+RUN apt-get update -y \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+        make \
+        curl \
+        unzip \
+        cmake \
+        pkg-config \
+        zlib1g-dev \
+        ca-certificates \
+    && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
+    && curl -kL https://github.com/alejandrogzi/gtfsort/archive/refs/tags/v.${GTFSORT_VER}.zip \
+        -o gtfsort-v${GTFSORT_VER}.zip \
+    && ls \
+    && unzip gtfsort-v${GTFSORT_VER}.zip \
+    && cd gtfsort-v.${GTFSORT_VER} \
+    && $HOME/.cargo/bin/cargo update \
+    && $HOME/.cargo/bin/cargo build --release
 
 
 ## BUILD FASTQC
@@ -131,7 +155,7 @@ RUN apt-get update \
 
 ## BUID MULTIQC
 FROM ubuntu:22.04 as MULTIQC
-ENV MULTIQC_VER 1.8
+ENV MULTIQC_VER 1.19
 RUN apt-get update \
     && apt-get install -y --no-install-recommends wget \
     && wget --no-check-certificate \
@@ -139,35 +163,6 @@ RUN apt-get update \
     && tar -xvf pandoc-2.7.3-linux.tar.gz \
     && apt-get -y clean && apt-get -y autoclean \
     && rm -rf /var/lib/apt/lists/*
-
-
-## BUILD FASTP
-FROM ubuntu:22.04 as FASTP
-ENV FASTP_VER 0.23.4
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        build-essential automake autogen autoconf libtool \
-        wget git ca-certificates \
-        nasm yasm cmake \
-    && git clone https://github.com/intel/isa-l.git \
-    && cd isa-l \
-    && ./autogen.sh \
-    && ./configure \
-    && make -j8 \
-    && make -j8 install \
-    && cd .. \
-    && git clone https://github.com/ebiggers/libdeflate.git \
-    && cd libdeflate \
-    && cmake -B build \
-    && cmake --build build \
-    && cmake --install build \
-    && cd .. \
-    && wget https://github.com/OpenGene/fastp/archive/refs/tags/v${FASTP_VER}.tar.gz \
-    && tar -xvf v${FASTP_VER}.tar.gz \
-    && cd fastp* \
-    && make -j8 \
-    && make -j8 install \
-    && cd ..
 
 
 ## BUILD TRIMGALORE
@@ -181,26 +176,6 @@ RUN apt-get update -y \
         -o trim_galore.tar.gz \
     && tar -xvzf trim_galore.tar.gz \
     && mv /TrimGalore-0.6.10/ /TrimGalore
-
-
-## BUILD PORECHOP
-FROM ubuntu:22.04 as PORECHOP
-ENV PORECHOP_VER 0.2.4
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        procps \
-        wget \
-        python3-pip \
-        python3-distutils \
-        python3 \
-        make \
-        g++ \
-    && apt-get autoclean && rm -rf /var/lib/apt/lists/* \
-    && pip3 install setuptools \
-    && wget -q --no-check-certificate\
-        https://github.com/rrwick/Porechop/archive/refs/tags/v${PORECHOP_VER}.tar.gz \
-    && tar -xf v${PORECHOP_VER}.tar.gz \
-    && rm v${PORECHOP_VER}.tar.gz \
-    && cd /Porechop-${PORECHOP_VER}
 
 
 ## BUILD CHOPPER
@@ -238,7 +213,7 @@ RUN apt-get update -y \
     && wget --no-check-certificate \
         https://github.com/lh3/minimap2/archive/refs/tags/v${MINIMAP2_VER}.tar.gz \
     && tar -xvf v2.26.tar.gz \
-    && cd minimap2* \
+    && cd minimap2-${MINIMAP2_VER} \
     && make
 
 
@@ -271,7 +246,6 @@ RUN apt-get update -y \
     && cmake .. \
     && make \
     && make install
-RUN ls -la /salmon*/
 
 
 ## BUILD ALEVIN
@@ -291,7 +265,7 @@ RUN apt-get update -y \
         https://github.com/COMBINE-lab/alevin-fry/archive/refs/tags/v${ALEVIN_VER}.zip \
         -o v${ALEVIN_VER}.zip \
     && unzip v${ALEVIN_VER}.zip \
-    && cd alevin-fry-* \
+    && cd alevin-fry-${ALEVIN_VER} \
     && $HOME/.cargo/bin/cargo build --release
 
 
@@ -315,7 +289,6 @@ RUN apt-get update -y \
     && tar -xvf ${STAR_VER}.tar.gz \
     && cd STAR-${STAR_VER}/source \
     && make STAR
-RUN ls -lahR /STAR*/bin/
 
 
 ## BUILD SEQTK
@@ -353,41 +326,38 @@ RUN apt-get update \
 
 ## Build Final
 FROM ubuntu:22.04 as app
-COPY --from=FFQ /ffq-0.3.1 /ffq
-COPY --from=SRA /usr/local/ncbi/sra-tools/bin/* /usr/local/bin/
-COPY --from=SAMTOOLS /usr/local/bin/samtools /usr/local/bin/samtools
-COPY --from=BEDTOOLS /usr/local/bin/bedtools /usr/local/bin/bedtools
-COPY --from=GFFREAD /gffread/gffread /usr/local/bin/gffread
-COPY --from=FASTQC /FastQC /usr/local/bin/FastQC
-COPY --from=MULTIQC /pandoc-*-linux/bin/* /usr/local/bin
-COPY --from=FASTP /usr/local/bin/fastp /usr/local/bin/fastp
-COPY --from=FASTP /usr/local/lib/libdeflate.* /usr/lib/
-COPY --from=FASTP /usr/lib/libisal.* /usr/lib/
-COPY --from=TRIMGALORE /TrimGalore /usr/local/bin/TrimGalore
-COPY --from=PORECHOP /Porechop-* /Porechop
-COPY --from=CHOPPER /chopper-*/target/release/chopper /usr/local/bin/chopper
-COPY --from=MINIMAP2 /minimap2*/minimap2 /usr/local/bin/minimap2
-COPY --from=SALMON /salmon*/bin/salmon /usr/local/bin/salmon
-COPY --from=ALEVIN /alevin-fry-*/target/release/alevin-fry /usr/local/bin/alevin-fry
-COPY --from=STAR /STAR*/bin/*static/* /usr/local/bin/
-COPY --from=SEQTK /usr/local/bin/seqtk /usr/local/bin/seqtk
-COPY --from=FLAIR /flair-* /usr/local/bin/flair
 ENV DEBIAN_FRONTEND noninteractive
 ENV FFQ_VER 0.3.1
 ENV SRA_VER 3.2.1
 ENV SAMTOOLS_VER 1.19
 ENV BEDTOOLS_VER 2.31.0
+ENV GFFREAD_VER 0.12.7
+ENV GTFSORT_VER 0.2.2
 ENV FASTQC_VER 0.12.1
-ENV MULTIQC_VER 1.8
-ENV FASTP_VER 0.20.1
+ENV MULTIQC_VER 1.19
 ENV TRIMGALORE_VER 0.6.10
-ENV PORECHOP_VER 0.2.4
 ENV CHOPPER_VER 0.9.0
 ENV MINIMAP2_VER 2.26
 ENV SALMON_VER 1.10.1
-ENV ALEVIN_VER 0.8.2
+ENV ALEVIN_VER 0.10.0
 ENV STAR_VER 2.7.11a
 ENV SEQTK_VER 1.4
+ENV R_VER 4.2.3
+COPY --from=FFQ /ffq-${FFQ_VER} /ffq
+COPY --from=SAMTOOLS /usr/local/bin/samtools /usr/local/bin/samtools
+COPY --from=BEDTOOLS /usr/local/bin/bedtools /usr/local/bin/bedtools
+COPY --from=GFFREAD /gffread-${GFFREAD_VER}/gffread /usr/local/bin/gffread
+COPY --from=GTFSORT gtfsort-v.${GTFSORT_VER}/target/release/gtfsort /usr/local/bin/gtfsort
+COPY --from=FASTQC /FastQC /usr/local/bin/FastQC
+COPY --from=MULTIQC /pandoc-*-linux/bin/* /usr/local/bin
+COPY --from=TRIMGALORE /TrimGalore /usr/local/bin/TrimGalore
+COPY --from=CHOPPER /chopper-${CHOPPER_VER}/target/release/chopper /usr/local/bin/chopper
+COPY --from=MINIMAP2 /minimap2-${MINIMAP2_VER}/minimap2 /usr/local/bin/minimap2
+COPY --from=SALMON /salmon-${SALMON_VER}/bin/salmon /usr/local/bin/salmon
+COPY --from=ALEVIN /alevin-fry-${ALEVIN_VER}/target/release/alevin-fry /usr/local/bin/alevin-fry
+COPY --from=STAR /STAR-${STAR_VER}/bin/*static/* /usr/local/bin/
+COPY --from=SEQTK /usr/local/bin/seqtk /usr/local/bin/seqtk
+COPY --from=FLAIR /flair-* /usr/local/bin/flair
 ENV LC_ALL="C.UTF-8" LANG="C.UTF-8"
 ENV PATH="$PATH:/usr/local/bin/FastQC/:/usr/local/bin/TrimGalore/:/usr/local/bin/flair/bin/:/usr/local/bin/flair/src/flair/"
 RUN apt-get update -y \
@@ -398,6 +368,7 @@ RUN apt-get update -y \
     && wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc \
         | tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc \
     && add-apt-repository ppa:openjdk-r/ppa \
+    && add-apt-repository ppa:deadsnakes/ppa \
     && add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu jammy-cran40/" \
     && add-apt-repository universe \
     && apt-get update -y \
@@ -408,9 +379,9 @@ RUN apt-get update -y \
         pigz \
         locales \
         fftw3-dev \
-        r-base-dev \
+        r-base-dev=${R_VER}-1ubuntu2 \
         gfortran-10 \
-        python3-dev \
+        python3.10-dev \
         python3-pip \
         mysql-server \
         texlive-xetex \

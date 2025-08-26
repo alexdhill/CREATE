@@ -13,7 +13,7 @@
  * licensor will not be liable to you for any damages arising out of these terms or the use or
  * nature of the software, under any kind of legal claim.
  */
- 
+
 
 process compile_quantifications
 {
@@ -26,7 +26,8 @@ process compile_quantifications
     input:
         tuple(
             path(quants),
-            path(reference)
+            path(reference),
+            path(metadata)
         )
     output:
         path("counts/")
@@ -35,6 +36,7 @@ process compile_quantifications
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
                 echo "Compiling quants to H5 SummarizedExperiment"
                 echo "Reference: !{reference}"
+                echo "Metadata: !{metadata}"
                 echo "Quants:"
                 sed 's/ /\\n/g' <<< "!{quants}"
             fi
@@ -45,12 +47,12 @@ process compile_quantifications
             fi
 
             splintr=""
-            if [ -n "!{params.get('library')}" ] && [ "!{params.library}" -eq "single_cell" ]; then
+            if [ -n "!{params.get('library')}" ] && [ "!{params.library}" == "single_cell" ]; then
                 splintr="-s"
             fi
 
             mkdir -p quants && mv !{quants} quants/
             Rscript ${verbose} !{projectDir}/bin/R/compile_quantifications.R \
-                -q quants -r !{reference} ${splintr}
+                -q quants -r !{reference} -m !{metadata} ${splintr}
         '''
 }

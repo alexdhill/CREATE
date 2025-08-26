@@ -12,21 +12,24 @@
 ## licensor will not be liable to you for any damages arising out of these terms or the use or
 ## nature of the software, under any kind of legal claim.
 
-## BUILD PORECHOP
-FROM ubuntu:22.04 as PORECHOP
-ENV PORECHOP_VER 0.2.4
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        procps \
-        wget \
-        python3-pip \
-        python3-distutils \
-        python3 \
+## BUILD GTFSORT
+FROM ubuntu:22.04 as GTFSORT
+ENV GTFSORT_VER 0.2.2
+RUN apt-get update -y \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
         make \
-        g++ \
-    && apt-get autoclean && rm -rf /var/lib/apt/lists/* \
-    && pip3 install setuptools \
-    && wget -q --no-check-certificate\
-        https://github.com/rrwick/Porechop/archive/refs/tags/v${PORECHOP_VER}.tar.gz \
-    && tar -xf v${PORECHOP_VER}.tar.gz \
-    && rm v${PORECHOP_VER}.tar.gz \
-    && cd /Porechop-${PORECHOP_VER}
+        curl \
+        unzip \
+        cmake \
+        pkg-config \
+        zlib1g-dev \
+        ca-certificates \
+    && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
+    && curl -kL https://github.com/alejandrogzi/gtfsort/archive/refs/tags/v.${GTFSORT_VER}.zip \
+        -o gtfsort-v${GTFSORT_VER}.zip \
+    && ls \
+    && unzip gtfsort-v${GTFSORT_VER}.zip \
+    && cd gtfsort-v.${GTFSORT_VER} \
+    && $HOME/.cargo/bin/cargo update \
+    && $HOME/.cargo/bin/cargo build --release

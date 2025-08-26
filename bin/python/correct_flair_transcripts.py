@@ -7,7 +7,7 @@ def main():
             if line.startswith('>'):
                 if ('range=' in line): # repeat
                     lidx = search(r"=[\+|-]", line.strip()).end()
-                    print(line.strip()[:(lidx+1)])
+                    print(line.strip()[:lidx])
                 else:
                     tx_id = '_'.join(line.strip().split('_')[:-1])
                     print(tx_id)

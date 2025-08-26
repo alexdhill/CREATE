@@ -19,23 +19,17 @@ process run_analysis
 {
     publishDir "${params.outdir}/results", mode: 'copy', overwrite: params.force
     input:
-        tuple(
-            path(counts),
-            path(metadata)
-        )
+        path(counts)
     output:
         tuple(
             path("plots/", optional: true),
             path("data/", optional: true)
         )
     shell:
-        if (params.metadata!="")
-        {
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
                 echo "Generating biotypes plots..."
                 echo "H5 Directory: !{counts}"
-                echo "Metadata: !{metadata}"
             fi
             verbose=""
             if [[ "!{params.log}" == "DEBUG" ]]; then
@@ -45,9 +39,7 @@ process run_analysis
 
             Rscript ${verbose} !{projectDir}/bin/R/run_analysis.R \
                 --helpers !{projectDir}/bin/R/create_helpers.R \
-                --samplesheet !{metadata} \
                 --quants !{counts} \
                 --output .
         '''
-        }
 }

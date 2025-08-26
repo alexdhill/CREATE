@@ -1,5 +1,5 @@
-suppressMessages({
     library(tidyr)
+suppressMessages({
     library(dplyr)
     library(magrittr)
     library(stringr)
@@ -20,54 +20,60 @@ loadQuantsH5 <- function(quants)
 
 readTranscriptMap <- function(reference_dir, class=TRUE)
 {
-    map = reference_dir %>% 
+    reference_dir %>% 
         list.files(full.names=TRUE) %>%
         str_subset("complete_map.tx2g") %>%
         read_csv(col_names=TRUE, progress=FALSE, show_col_types=FALSE) %>%
         select(gene_id, gene_name, gene_biotype) %>%
         distinct() %>%
         mutate(
-            gene_biotype=case_when(
+            biotype=case_when(
                 !str_detect(gene_biotype, ",") ~ gene_biotype,
                 TRUE ~ unlist(lapply(gene_biotype, function(x){strsplit(x, ",")[[1]][ifelse(class, 2, 1)]}))
-            )
-        )%>%
-        mutate(
-            gene_biotype=case_when(
-                startsWith(gene_biotype, "Mt-") | startsWith(gene_name, "Mt-") ~ "Mitochondrial",
-                gene_biotype == "protein_coding" ~ "Coding",
-                gene_biotype %in% c("lncRNA", "LINE", "SINE", "LTR", "DNA") ~ gene_biotype,
-                gene_biotype == "Simple_repeat" ~ "Microsatellite",
-                TRUE ~ "Other"
+            ),
+            biotype_class=case_when(
+                grepl(',', gene_biotype) ~ "repeat",
+                TRUE ~ "gene"
             )
         ) %>%
+        mutate(
+            gene_biotype=case_when(
+                startsWith(biotype, "Mt_") | startsWith(gene_name, "MT-") ~ "Mitochondrial",
+                biotype == "protein_coding" ~ "Coding",
+                biotype %in% c("lncRNA", "miRNA", "LINE", "SINE", "LTR", "DNA") ~ biotype,
+                biotype == "Simple_repeat" ~ "Microsatellite",
+                biotype=="Satellite" ~ "Human satellite",
+                biotype_class =="gene" ~ "Other gene",
+                TRUE ~ "Other repeat"
+            )
+        ) %>%
+        select(gene_id, gene_name, gene_biotype) %>%
         return()
 }
 
-runDESeq2 <- function(quants, metadata)
+runDESeq2 <- function(quants)
 {
     suppressMessages({
         library(DESeq2)
     })
 
-    valid_conditions = metadata$condition %>%
+    valid_conditions = colData(quants)$condition %>%
         unique() %>%
-        lapply(function(c){if (sum(metadata$condition==c)>2) return(c)}) %>%
+        lapply(function(c){if (sum(colData(quants)$condition==c)>2) return(c)}) %>%
         unlist()
 
     colData = colData(quants) %>%
         as.data.frame() %>%
-        mutate(sample=names, names=NULL) %>%
-        left_join(metadata, by="sample") %>%
         filter(condition %in% valid_conditions)
 
     deseq_data = quants %>%
-        assay() %>%
+        assays() %>%
+        extract2("counts") %>%
         as.data.frame() %>%
         add(0.5) %>%
         floor() %>%
-        select(all_of(colData$sample))
-    
+        select(all_of(colData$names))
+
     if (ncol(deseq_data) == 0) return(NA)
 
     deseq = DESeq2::DESeqDataSetFromMatrix(
@@ -154,12 +160,15 @@ createTheme <- function()
 
 biotype_colors = list(
     "Coding" = "#404040",
-    "lncRNA" = "#00DAE6",
-    "SINE" = "#BD4F00",
-    "LTR" = "#88D100",
-    "LINE" = "#6A0094",
-    "DNA" = "#010A80",
-    "Microsatellite" = "#A80202",
-    "Mitochondrial" = "#006B1E",
-    "Other" = "#574400"
+    "lncRNA" = "#5EFFF2",
+    "miRNA" = "#E64900",
+    "Mitochondrial" = "#327300",
+    "Microsatellite" = "#424780",
+    "SINE" = "#997800",
+    "LINE" = "#88008C",
+    "LTR" = "#7FBF4E",
+    "DNA" = "#0012D9",
+    "Human satellite" = "#005952",
+    "Other gene" = "#F2D361",
+    "Other repeat" = "#A6603F"
 )

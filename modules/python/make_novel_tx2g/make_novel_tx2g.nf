@@ -17,7 +17,7 @@
 
 process make_novel_tx2g
 {
-    publishDir "${params.dump}/", mode: 'copy', enable: params.dump!='', overwrite: params.force
+    publishDir "${params.dump}/", mode: 'copy', enabled: params.dump!='', overwrite: params.force
     if (params.manage_resources)
     {
         cpus 1

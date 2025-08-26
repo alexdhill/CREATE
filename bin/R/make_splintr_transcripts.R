@@ -28,6 +28,7 @@ make_splintr_transcripts <- function(genome, genes, version)
         gtf=file.path(genes),
         featureType=c("intron", "spliced"),
         intronType="separate",
+        joinOverlappingIntrons = TRUE,
         verbose=TRUE
     ))
     
