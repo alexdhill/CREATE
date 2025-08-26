@@ -36,7 +36,7 @@ main = function()
     message("Adding subclass biotypes...")
     biotypes = list %>%
         left_join(info, by="family", multiple="any")
-    ann$attribute = paste0(ann$attribute, " gene_biotype \"", biotypes$subclass, "\";")
+    ann$attribute = paste0(ann$attribute, " gene_type \"", biotypes$subclass, "\";")
     
     message("Structuring and writing annotation...")
     gtf = ann %>%
