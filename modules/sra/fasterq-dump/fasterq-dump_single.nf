@@ -15,7 +15,7 @@
  */
 
 
-process fasterq_dump_paired
+process fasterq_dump_single
 {
     if (params.manage_resources)
     {
@@ -32,8 +32,7 @@ process fasterq_dump_paired
     output:
         tuple(
             val("${acc}"),
-            path("${acc}_1.fastq.gz"),
-            path("${acc}_2.fastq.gz")
+            path("${acc}/*.fastq.gz")
         )
     shell:
         '''
@@ -45,16 +44,16 @@ process fasterq_dump_paired
                 set -x
             fi
 
-            fasterq-dump --split-files \
+            fasterq-dump --split-3 \
                 --skip-technical \
                 --threads !{task.cpus} \
-                --outdir . \
+                --outdir !{acc} \
                 !{sra}
 
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
                 echo "Compressing fastq files..."
 
             fi
-            find . -type f -name "*.fastq" -exec pigz -9qp "!{task.cpus}" {} +
+            find . -type f -name "*.fastq" -exec pigz -9qp ${task.cpus} {} +
         '''
 }

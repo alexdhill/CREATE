@@ -17,8 +17,6 @@ import java.nio.file.Files
 import java.nio.file.Paths
 
 
-include { gather_ftp } from "../../../modules/ffq/gather_ftp/gather_ftp.nf"
-include { download_acc } from "../../../modules/bash/download_acc/download_acc.nf"
 include { prefetch } from "../../../modules/sra/prefetch/prefetch.nf"
 include { fasterq_dump_paired } from "../../../modules/sra/fasterq-dump/fasterq-dump_paired.nf"
 include { count_reads_pe } from "../../../modules/bash/count_reads/count_reads_pe.nf"
@@ -42,8 +40,6 @@ workflow PAIRED_END
                 Channel.from(file(params.samples).readLines())
                 | prefetch
                 | fasterq_dump_paired
-                | groupTuple()
-                | map{tup -> [tup[0], tup[1][0], tup[1][1]]}
                 | set{reads}
             } else
             {

@@ -82,25 +82,15 @@ process
 
     // Quant
 
-    withName: "download_acc"
-    {
-        queue = "short"
-        time = "1h"
-    }
-    withName: "gather_ftp"
-    {
-        queue = "short"
-        time = '1h'
-    }
     withName: "prefetch"
     {
-        queue = "short"
-        time = '1h'
+        queue = "medium"
+        time = '2h'
     }
     withName: "fasterq_dump_paired"
     {
-        queue = "short"
-        time = '1h'
+        queue = "medium"
+        time = '2h'
     }
 
     withName: "count_reads_pe"
