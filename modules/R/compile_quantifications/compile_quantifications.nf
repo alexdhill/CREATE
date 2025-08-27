@@ -30,7 +30,7 @@ process compile_quantifications
             path(metadata)
         )
     output:
-        path("counts/")
+        path("*counts/")
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
@@ -51,8 +51,13 @@ process compile_quantifications
                 splintr="-s"
             fi
 
+            transcripts=""
+            if [ -n "!{params.get('export_transcripts')}" ]; then
+                transcripts="-t"
+            fi
+
             mkdir -p quants && mv !{quants} quants/
             Rscript ${verbose} !{projectDir}/bin/R/compile_quantifications.R \
-                -q quants -r !{reference} -m !{metadata} ${splintr}
+                -q quants -r !{reference} -m !{metadata} ${splintr} ${transcripts}
         '''
 }
