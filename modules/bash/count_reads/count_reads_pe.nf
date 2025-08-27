@@ -31,9 +31,7 @@ process count_reads_pe
     output:
         tuple(
             val("${sample}"),
-            path("${read_1}"),
-            path("${read_2}"),
-            env(stdout)
+            env(NREADS)
         )
     shell:
         '''
@@ -47,8 +45,7 @@ process count_reads_pe
                 set -x
             fi
             
-            gzip -cd !{read_1} \
-            | wc -l \
-            | awk '{print $1/4}'
+            NREADS=$(pigz -cdp !{task.cpus} !{read_1} \
+            | awk 'END {print NR/4}')
         '''
 }

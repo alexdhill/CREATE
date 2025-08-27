@@ -13,44 +13,48 @@
  * licensor will not be liable to you for any damages arising out of these terms or the use or
  * nature of the software, under any kind of legal claim.
  */
- 
 
-process trim_reads_single
+
+process fasterq_dump_paired
 {
-    publishDir "${params.outdir}/reads/trimmed/", mode: 'copy', enabled: params.keep, overwrite: params.force
     if (params.manage_resources)
     {
         cpus 8
+        memory '2.GB'
     }
+    errorStrategy "finish"
+    maxRetries 10
     input:
         tuple(
-            val(sample),
-            val(nreads),
-            path(read)
+            val(acc),
+            path(sra)
         )
     output:
         tuple(
-            val("${sample}"),
-            path("${sample}_trimmed.fq.gz"),
-            env(NREADS)
+            val("${acc}"),
+            path("${acc}_1.fastq.gz"),
+            path("${acc}_2.fastq.gz")
         )
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Trimming single reads..."
-                echo "Sample: !{sample}"
-                echo "Read: !{read}"
+                echo "Unencoding accession..."
+                echo "Sample: !{acc}"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 
-            trim_galore --gzip !{read} \
-                --2colour 20 --length 75 --basename !{sample} \
-                -j 8 --output_dir .
+            fasterq-dump --split-files \
+                --skip-technical \
+                --threads !{task.cpus} \
+                --outdir . \
+                !{sra}
 
-            NREADS=`gzip -cd !{sample}_trim.fq.gz \
-            | wc -l \
-            | awk '{print $1/4}'`
+            if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
+                echo "Compressing fastq files..."
+
+            fi
+            find . -type f -name "*.fastq" -exec pigz -9qp "!{task.cpus}" {} +
         '''
 }

@@ -15,8 +15,8 @@
  */
 
 
-include { gather_ftp } from "../../../modules/ffq/gather_ftp/gather_ftp.nf"
-include { download_acc } from "../../../modules/bash/download_acc/download_acc.nf"
+include { prefetch } from "../../../modules/sra/prefetch/prefetch.nf"
+include { fasterq_dump_paired } from "../../../modules/sra/fasterq-dump/fasterq-dump_paired.nf"
 include { alevin_align } from "../../../modules/salmon/alevin_align/alevin_align.nf"
 include { alevin_collate } from "../../../modules/salmon/alevin_collate/alevin_collate.nf"
 include { alevin_quantify } from "../../../modules/salmon/alevin_quantify/alevin_quantify.nf"
@@ -37,12 +37,8 @@ workflow SINGLE_CELL
             {
                 log.info("Downloading reads before running...")
                 Channel.fromPath(params.samples)
-                | gather_ftp
-                | splitCsv(header: ['acc', 'ftp', 'md5'])
-                | map{row -> ["${row.acc}", "${row.ftp}", "${row.md5}"]}
-                | download_acc
-                | groupTuple()
-                | map{tup -> [tup[0], tup[1][0], tup[1][1]]}
+                | prefetch
+                | fasterq_dump_paired
                 | set{reads}
             } else
             {

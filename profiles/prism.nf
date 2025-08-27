@@ -121,10 +121,31 @@ profiles
                 time = '1h'
             }
 
-            withName: "filter_fastq"
+            withName: "prefetch"
+            {
+                queue = "medium"
+                time = '2h'
+            }
+            withName: "fasterq_dump_paired"
+            {
+                queue = "medium"
+                time = '2h'
+            }
+
+            withName: "count_reads_pe"
             {
                 queue = "short"
                 time = '1h'
+            }
+            withName: "count_reads_se"
+            {
+                queue = "short"
+                time = '10m'
+            }
+            withName: "count_reads_np"
+            {
+                queue = "short"
+                time = '10m'
             }
 
             withName: "alevin_align"
