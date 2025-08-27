@@ -58,7 +58,8 @@ options:
         --library     Library type [paired_end,nanopore,single_cell] [REQUIRED]
                       NOTE: the reference provided must contain a compatible index
         --pattern     File pattern for input samples
-        --metadata    An unnamed, two-column CSV file of samples,condition
+        --metadata    An unnamed, two-column CSV file of samples,condition [REQUIRED]
+        --parameters  A JSON file of arguments for individual tools [BETA]
 
     --discover
         --ref          CREATE reference directory [REQUIRED]
@@ -96,6 +97,7 @@ params.memory = 0
 params.force = false
 params.quant = false
 params.reference = false
+params.discovery = false
 if (params.reference)
 {
     params.genome = ''
@@ -137,6 +139,7 @@ else if (params.quant)
     params.ref = ''
     params.library = 'paired_end'
     params.metadata = ''
+    params.parameters = ""
     if (['paired_end','single_cell'].contains(params.library))
     {
         params.pattern = '*_R{1,2}_*.fastq.gz'

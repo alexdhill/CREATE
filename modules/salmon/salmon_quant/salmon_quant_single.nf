@@ -29,7 +29,8 @@ process salmon_quant_single
             val(sample),
             path(read),
             val(nreads),
-            path(reference)
+            path(reference),
+            path(parameters)
         )
     output:
         path("${sample}/")
@@ -41,14 +42,22 @@ process salmon_quant_single
                 echo "Read: !{read}"
                 echo "n Reads: !{nreads}"
                 echo "Reference: !{reference}"
+                echo "User parameters: $(jq '.salmon' | parameters)"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
+            params="$(jq '.salmon' !{parameters})"
+            if [[ "${params}" == "null" ]]; then
+                params=""
+            else
+                params="$(jq '.salmon | to_entries | .[] | "--\\(.key)=\\(.value)"' flags.json | xargs | sed 's/=true//g')"
+            fi
 
             salmon quant --libType A -r !{read} \
                 -i !{reference}/*.sidx -p 8 --output !{sample} \
-                --seqBias --gcBias --validateMappings --recoverOrphans --rangeFactorizationBins 4
+                --seqBias --gcBias --validateMappings --recoverOrphans --rangeFactorizationBins 4 \
+                --writeUnmappedNames ${params}
             
             if [[ ! -e !{sample}/quant.sf ]]; then
                 echo "\033[[1;31mERR: Salmon quantification failed\033[0m" 1>&2

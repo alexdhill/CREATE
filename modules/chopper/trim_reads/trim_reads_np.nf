@@ -28,7 +28,8 @@ process trim_reads_np
         tuple(
             val(sample),
             val(nreads),
-            path(read)
+            path(read),
+            path(parameters)
         )
     output:
         tuple(
@@ -43,17 +44,22 @@ process trim_reads_np
                 echo "Sample: !{sample}"
                 echo "Read: !{read}"
                 echo "n Reads: !{nreads}"
+                echo "User parameters: $(jq '.chopper' !{parameters})"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
+            params="$(jq '.chopper' !{parameters})"
+            if [[ "${params}" == "null" ]]; then
+                params=""
+            fi
 
             chopper \
                 -i !{read} \
-                -q 20 \
-                -l 75 \
-                --threads 8 \
+                -q 20 -l 75 \
+                --threads !{task.cpus} \
                 -o trimmed.fq \
+                ${params} \
             | gzip \
             > !{sample}_filtered_trimmed.fq.gz
 

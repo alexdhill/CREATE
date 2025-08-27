@@ -31,6 +31,7 @@ workflow SINGLE_END
         if (params.library=="single_end")
         {
             reference = Channel.fromPath(params.ref)
+            parameters = Channel.fromPath(params.parameters)
             metadata = Channel.fromPath(params.metadata)
             if (is_acc)
             {
@@ -50,8 +51,10 @@ workflow SINGLE_END
             | concat(reads)
             | groupTuple()
             | map{ res -> [res[0], res[1][0], res[1][1]] }
+            | combine(parameters)
             | trim_reads_single
             | combine(reference)
+            | combine(parameters)
             | salmon_quant_single
             | collect
             | map{quants -> [quants]}

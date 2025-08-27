@@ -33,6 +33,7 @@ workflow PAIRED_END
         if (params.library=="paired_end")
         {
             reference = Channel.fromPath(params.ref)
+            parameters = Channel.fromPath(params.parameters)
             metadata = Channel.fromPath(params.metadata)
             if (is_acc)
             {
@@ -53,8 +54,10 @@ workflow PAIRED_END
             | concat(reads)
             | groupTuple(by:0) // [sample, [nreads, read1], [read2]]
             | map { res -> [res[0], res[1][0], res[1][1], res[2][0]] }
+            | combine(parameters)
             | trim_reads_paired
             | combine(reference)
+            | combine(parameters)
             | salmon_quant_paired
             | collect
             | map{quants -> [quants]}
