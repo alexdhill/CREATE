@@ -1,7 +1,8 @@
 def read_ann(path):
     with open(path, 'r') as f:
         for line in f:
-            if 'novel' in line:
+            transcript_id = [attr.split('"')[1].strip() for attr in line.strip().split('\t')[-1].split(';') if attr.strip().startswith("transcript_id")][0]
+            if '.nnic' == transcript_id[-5:]:
                 gene_id = [attr.split('"')[1].strip() for attr in line.strip().split('\t')[-1].split(';') if attr.strip().startswith("gene_id")][0]
                 line = line.strip() + " gene_name \"{}\"; gene_type \"novel\";".format(gene_id)
             yield line.strip()
