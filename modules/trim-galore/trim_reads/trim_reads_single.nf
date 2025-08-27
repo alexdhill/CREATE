@@ -25,8 +25,8 @@ process trim_reads_single
     input:
         tuple(
             val(sample),
-            path(read),
             val(nreads),
+            path(read),
             path(parameters)
         )
     output:

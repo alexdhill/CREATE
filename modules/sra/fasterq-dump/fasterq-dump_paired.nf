@@ -15,35 +15,46 @@
  */
 
 
-process count_reads_np
+process fasterq_dump_paired
 {
     if (params.manage_resources)
     {
-        cpus 1
-        memory '1.GB'
+        cpus 8
+        memory '2.GB'
     }
+    errorStrategy "finish"
+    maxRetries 10
     input:
         tuple(
-            val(sample),
-            path(read)
+            val(acc),
+            path(sra)
         )
     output:
         tuple(
-            val("${sample}"),
-            env(NREADS)
+            val("${acc}"),
+            path("${acc}_1.fastq.gz"),
+            path("${acc}_2.fastq.gz")
         )
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Counting reads..."
-                echo "Sample: !{sample}"
-                echo "Read: !{read}"
+                echo "Unencoding accession..."
+                echo "Sample: !{acc}"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
-            
-            NREADS=$(pigz -cdp !{task.cpus} !{read} \
-            | awk 'END {print NR/4}')
+
+            fasterq-dump --split-files \
+                --skip-technical \
+                --threads !{task.cpus} \
+                --outdir . \
+                !{sra}
+
+            if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
+                echo "Compressing fastq files..."
+
+            fi
+            find . -type f -name "*.fastq" -exec pigz -9qp "!{task.cpus}" {} +
         '''
 }

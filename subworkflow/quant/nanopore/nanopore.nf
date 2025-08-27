@@ -15,8 +15,6 @@
  */
 
 
-include { gather_ftp } from "../../../modules/ffq/gather_ftp/gather_ftp.nf"
-include { download_acc } from "../../../modules/bash/download_acc/download_acc.nf"
 include { count_reads_np } from "../../../modules/bash/count_reads/count_reads_np.nf"
 include { minimap2_align_dcs } from "../../../modules/minimap2/minimap2_align/minimap2_align_dcs.nf"
 include { trim_reads_nanopore } from "../../../modules/nanoplot/trim_reads/trim_reads_nanopore.nf"
@@ -38,13 +36,8 @@ workflow NANOPORE
             metadata = Channel.fromPath(params.metadata)
             if (is_acc)
             {
-                log.info("Downloading reads before running...")
-                Channel.fromPath(params.samples)
-                | gather_ftp
-                | splitCsv(header: ['acc', 'ftp', 'md5'])
-                | map{row -> ["${row.acc}", "${row.ftp}", "${row.md5}"]}
-                | download_acc
-                | set{reads}
+                log.error("Nanopore data cannot be hosted from SRA. Exiting")
+                error(2)
             } else
             {
                 reads = Channel.fromPath(params.samples+"/"+params.pattern)
@@ -53,6 +46,9 @@ workflow NANOPORE
 
             reads
             | count_reads_np
+            | concat(reads)
+            | groupTuple()
+            | map{ res -> [res[0], res[1][0], res[1][1]] }
             | combine(dcs)
             | minimap2_align_dcs
             | trim_reads_nanopore

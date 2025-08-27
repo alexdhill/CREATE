@@ -27,9 +27,9 @@ process trim_reads_paired
     input:
         tuple(
             val(sample),
+            val(nreads),
             path(read_1),
             path(read_2),
-            val(nreads),
             path(parameters)
         )
     output:
@@ -65,7 +65,6 @@ process trim_reads_paired
                 ${params}
 
             NREADS=`gzip -cd !{sample}_val_1.fq.gz \
-            | wc -l \
-            | awk '{print $1/4}'`
+            | awk 'END {print NR/4}'`
         '''
 }
