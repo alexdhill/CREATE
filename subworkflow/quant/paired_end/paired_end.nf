@@ -49,7 +49,10 @@ workflow PAIRED_END
             }
 
             reads
-            | count_reads_pe
+            | count_reads_pe // [sample, nreads]
+            | concat(reads)
+            | groupTuple(by:0) // [sample, [nreads, read1], [read2]]
+            | map { res -> [res[0], res[1][0], res[1][1], res[2][0]] }
             | trim_reads_paired
             | combine(reference)
             | salmon_quant_paired
@@ -58,6 +61,5 @@ workflow PAIRED_END
             | combine(reference)
             | combine(metadata)
             | compile_quantifications
-            | run_analysis
         }
 }

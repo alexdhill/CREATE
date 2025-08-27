@@ -47,6 +47,9 @@ workflow SINGLE_END
 
             reads
             | count_reads_se
+            | concat(reads)
+            | groupTuple()
+            | map{ res -> [res[0], res[1][0], res[1][1]] }
             | trim_reads_single
             | combine(reference)
             | salmon_quant_single

@@ -45,6 +45,9 @@ workflow NANOPORE
 
             reads
             | count_reads_np
+            | concat(reads)
+            | groupTuple()
+            | map{ res -> [res[0], res[1][0], res[1][1]] }
             | combine(dcs)
             | minimap2_align_dcs
             | trim_reads_nanopore
