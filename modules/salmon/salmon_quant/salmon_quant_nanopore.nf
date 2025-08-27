@@ -29,7 +29,8 @@ process salmon_quant_nanopore
             val(sample),
             val(nreads),
             path(bam),
-            path(reference)
+            path(reference),
+            path(parameters)
         )
     output:
         path("${sample}/")
@@ -40,14 +41,22 @@ process salmon_quant_nanopore
                 echo "Sample: !{sample} (!{nreads} reads)"
                 echo "BAM: !{bam}"
                 echo "Reference: !{reference}"
+                echo "User parameters: $(jq '.salmon' !{parameters})"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
+            fi
+            params="$(jq '.salmon' !{parameters})"
+            if [[ "${params}" == "null" ]]; then
+                params=""
+            else
+                params="$(jq '.salmon | to_entries | .[] | "--\\(.key)=\\(.value)"' flags.json | xargs | sed 's/=true//g')"
             fi
 
             salmon quant --libType U --ont -a !{bam} \
                 -p 8 --noLengthCorrection --noErrorModel \
                 -t !{reference}/*complete_transcripts.fa.gz --output !{sample} \
+                ${params}
 
             if [[ ! -e !{sample}/quant.sf ]]; then
                 echo "\033[1;31mERR: Salmon quantification failed\033[0m" 1>&2

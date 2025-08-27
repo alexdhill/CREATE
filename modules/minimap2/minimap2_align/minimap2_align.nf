@@ -28,7 +28,8 @@ process minimap2_align
             val(sample),
             val(nreads),
             path(read),
-            path(reference)
+            path(reference),
+            path(parameters)
         )
     output:
         tuple(
@@ -42,15 +43,24 @@ process minimap2_align
                 echo "Aligning to Minimap2 Index"
                 echo "Sample: !{sample}"
                 echo "Read: !{read} (!{nreads} reads)"
+                echo "Reference: !{reference}"
+                echo "User parameters: $(jq '.minimap2' !{parameters})"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
+            params="$(jq '.minimap2' !{parameters})"
+            if [[ "${params}" == "null" ]]; then
+                params=""
+            else
+                params="$(jq '.minimap2 | to_entries | .[] | "--\\(.key)=\\(.value)"' flags.json | xargs | sed 's/=true//g')"
+            fi
 
             minimap2 -ax splice \
-                -N 100 -t 8 \
+                -N 100 -t !{task.cpus} \
                 !{reference}/*long_index*.mmi \
                 !{read} \
+                ${params} \
             | samtools view -bS - \
             > !{sample}.bam
         '''

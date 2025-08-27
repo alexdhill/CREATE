@@ -27,9 +27,10 @@ process trim_reads_paired
     input:
         tuple(
             val(sample),
+            val(nreads),
             path(read_1),
             path(read_2),
-            val(nreads)
+            path(parameters)
         )
     output:
         tuple(
@@ -46,17 +47,24 @@ process trim_reads_paired
                 echo "Read 1: !{read_1}"
                 echo "Read 2: !{read_2}"
                 echo "n Reads: !{nreads}"
+                echo "User parameters: $(jq '."trim-galore"' !{parameters})"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
+            params=$(jq '."trim-galore"' !{parameters})
+            if [[ "${params}" == "null" ]]; then
+                params="-l 75 --2color 20"
+            else
+                params="$(jq '."trim-galore" | to_entries | .[] | "--\\(.key)=\\(.value)"' flags.json | xargs | sed 's/=true//g')"
+            fi
 
             trim_galore --paired --gzip  !{read_1} !{read_2} \
-                --2colour 20 --length 75 --basename !{sample} \
-                -j !{task.cpus} --output_dir .
+                --basename !{sample} \
+                -j !{task.cpus} --output_dir . \
+                ${params}
 
             NREADS=`gzip -cd !{sample}_val_1.fq.gz \
-            | wc -l \
-            | awk '{print $1/4}'`
+            | awk 'END {print NR/4}'`
         '''
 }

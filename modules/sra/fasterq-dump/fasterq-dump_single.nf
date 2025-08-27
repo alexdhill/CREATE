@@ -15,43 +15,45 @@
  */
 
 
-process download_acc
+process fasterq_dump_single
 {
     if (params.manage_resources)
     {
-        cpus 1
-        memory '1.GB'
+        cpus 8
+        memory '2.GB'
     }
-    errorStrategy "retry"
+    errorStrategy "finish"
     maxRetries 10
     input:
         tuple(
-            val("acc"),
-            val("file"),
-            val("md5")
+            val(acc),
+            path(sra)
         )
     output:
         tuple(
             val("${acc}"),
-            path("*.fastq.gz")
+            path("${acc}/*.fastq.gz")
         )
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Downloading reads..."
+                echo "Unencoding accession..."
                 echo "Sample: !{acc}"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 
-            md5sum=""
-            until [[ "!{md5}" == "${md5sum}" ]]; do
-                until `wget !{file}`; do
-                    echo "Download failed... retrying in 5s"
-                    sleep 5
-                done
-                md5sum="$(md5sum $(basename !{file}) | awk '{print $1}')"
-            done
+            fasterq-dump --split-3 \
+                --skip-technical \
+                --threads !{task.cpus} \
+                --outdir !{acc} \
+                !{sra}
+
+            if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
+                echo "Compressing fastq files..."
+
+            fi
+            find . -type f -name "*.fastq" -exec pigz -9qp ${task.cpus} {} +
         '''
 }

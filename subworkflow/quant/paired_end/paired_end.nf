@@ -17,8 +17,8 @@ import java.nio.file.Files
 import java.nio.file.Paths
 
 
-include { gather_ftp } from "../../../modules/ffq/gather_ftp/gather_ftp.nf"
-include { download_acc } from "../../../modules/bash/download_acc/download_acc.nf"
+include { prefetch } from "../../../modules/sra/prefetch/prefetch.nf"
+include { fasterq_dump_paired } from "../../../modules/sra/fasterq-dump/fasterq-dump_paired.nf"
 include { count_reads_pe } from "../../../modules/bash/count_reads/count_reads_pe.nf"
 include { trim_reads_paired } from "../../../modules/trim-galore/trim_reads/trim_reads_paired.nf"
 include { salmon_quant_paired } from "../../../modules/salmon/salmon_quant/salmon_quant_paired.nf"
@@ -32,28 +32,31 @@ workflow PAIRED_END
         if (params.library=="paired_end")
         {
             reference = Channel.fromPath(params.ref)
+            parameters = Channel.fromPath(params.parameters)
             metadata = Channel.fromPath(params.metadata)
             if (is_acc)
             {
                 log.info("Downloading reads before running...")
-                Channel.fromPath(params.samples)
-                | gather_ftp
-                | splitCsv(header: ['acc', 'ftp', 'md5'])
-                | map{row -> ["${row.acc}", "${row.ftp}", "${row.md5}"]}
-                | download_acc
-                | groupTuple()
-                | map{tup -> [tup[0], tup[1][0], tup[1][1]]}
+                Channel.from(file(params.samples).readLines())
+                | prefetch
+                | fasterq_dump_paired
                 | set{reads}
             } else
             {
+                log.info("Parsing reads from file...")
                 reads = Channel.fromFilePairs(params.samples+"/"+params.pattern)
                     .map{sample -> [sample[0], sample[1][0], sample[1][1]]}
             }
 
             reads
-            | count_reads_pe
+            | count_reads_pe // [sample, nreads]
+            | concat(reads)
+            | groupTuple(by:0) // [sample, [nreads, read1], [read2]]
+            | map { res -> [res[0], res[1][0], res[1][1], res[2][0]] }
+            | combine(parameters)
             | trim_reads_paired
             | combine(reference)
+            | combine(parameters)
             | salmon_quant_paired
             | collect
             | map{quants -> [quants]}

@@ -25,8 +25,9 @@ process trim_reads_single
     input:
         tuple(
             val(sample),
+            val(nreads),
             path(read),
-            val(nreads)
+            path(parameters)
         )
     output:
         tuple(
@@ -40,14 +41,23 @@ process trim_reads_single
                 echo "Trimming single reads..."
                 echo "Sample: !{sample}"
                 echo "Read: !{read}"
+                echo "n Reads: !{nreads}"
+                echo "User parameters: $(jq '."trim-galore"' !{parameters})"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
+            params=$(jq '."trim-galore"' !{parameters})
+            if [[ "${params}" == "null" ]]; then
+                params="-l 75 --2color 20"
+            else
+                params="$(jq '."trim-galore" | to_entries | .[] | "--\\(.key)=\\(.value)"' flags.json | xargs | sed 's/=true//g')"
+            fi
 
             trim_galore --gzip !{read} \
-                --2colour 20 --length 75 --basename !{sample} \
-                -j 8 --output_dir .
+                --basename !{sample} \
+                -j 8 --output_dir . \
+                ${params}
 
             NREADS=`gzip -cd !{sample}_trim.fq.gz \
             | wc -l \

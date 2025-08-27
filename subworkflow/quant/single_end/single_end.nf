@@ -15,8 +15,8 @@
  */
 
 
-include { gather_ftp } from "../../../modules/ffq/gather_ftp/gather_ftp.nf"
-include { download_acc } from "../../../modules/bash/download_acc/download_acc.nf"
+include { prefetch } from "../../../modules/sra/prefetch/prefetch.nf"
+include { fasterq_dump_single } from "../../../modules/sra/fasterq-dump/fasterq-dump_single.nf"
 include { count_reads_se } from "../../../modules/bash/count_reads/count_reads_se.nf"
 include { trim_reads_single } from "../../../modules/trim-galore/trim_reads/trim_reads_single.nf"
 include { salmon_quant_single } from "../../../modules/salmon/salmon_quant/salmon_quant_single.nf"
@@ -30,15 +30,14 @@ workflow SINGLE_END
         if (params.library=="single_end")
         {
             reference = Channel.fromPath(params.ref)
+            parameters = Channel.fromPath(params.parameters)
             metadata = Channel.fromPath(params.metadata)
             if (is_acc)
             {
                 log.info("Downloading reads before running...")
-                Channel.fromPath(params.samples)
-                | gather_ftp
-                | splitCsv(header: ['acc', 'ftp', 'md5'])
-                | map{row -> ["${row.acc}", "${row.ftp}", "${row.md5}"]}
-                | download_acc
+                Channel.fromPath(file(params.samples).readLines())
+                | prefetch
+                | fasterq_dump_single
                 | set{reads}
             } else
             {
@@ -48,8 +47,13 @@ workflow SINGLE_END
 
             reads
             | count_reads_se
+            | concat(reads)
+            | groupTuple()
+            | map{ res -> [res[0], res[1][0], res[1][1]] }
+            | combine(parameters)
             | trim_reads_single
             | combine(reference)
+            | combine(parameters)
             | salmon_quant_single
             | collect
             | map{quants -> [quants]}

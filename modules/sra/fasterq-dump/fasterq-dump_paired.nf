@@ -13,45 +13,48 @@
  * licensor will not be liable to you for any damages arising out of these terms or the use or
  * nature of the software, under any kind of legal claim.
  */
- 
 
-process flair_correct
+
+process fasterq_dump_paired
 {
-    publishDir "${params.outdir}/align/nanopore/corrected", mode: 'copy', overwrite: params.force, enabled: params.keep
     if (params.manage_resources)
     {
         cpus 8
-        memory '64.GB' // TODO
+        memory '2.GB'
     }
+    errorStrategy "finish"
+    maxRetries 10
     input:
         tuple(
-            val(sample),
-            val(nreads),
-            path(regions),
-            path(junctions),
-            path(reference)
+            val(acc),
+            path(sra)
         )
     output:
         tuple(
-            val("${sample}"),
-            path("${sample}_all_corrected.bed")
+            val("${acc}"),
+            path("${acc}_1.fastq.gz"),
+            path("${acc}_2.fastq.gz")
         )
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Running FLAIR correction"
-                echo "Alignment: !{regions}"
+                echo "Unencoding accession..."
+                echo "Sample: !{acc}"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 
-            gzip -cd !{reference}/*_complete_annotation.gtf.gz > annotation.gtf
-            flair correct \
-                --genome !{reference}/*_genome.fa.gz \
-                --query !{regions} \
-                --gtf annotation.gtf \
+            fasterq-dump --split-files \
+                --skip-technical \
                 --threads !{task.cpus} \
-                --output !{sample}
+                --outdir . \
+                !{sra}
+
+            if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
+                echo "Compressing fastq files..."
+
+            fi
+            find . -type f -name "*.fastq" -exec pigz -9qp "!{task.cpus}" {} +
         '''
 }

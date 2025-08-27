@@ -130,29 +130,7 @@ read_map <- function(reference_dir, class=TRUE)
         readr::read_csv(col_names=TRUE, progress=FALSE, show_col_types=FALSE) %>%
         as.data.frame() %>%
         dplyr::select(gene_id, gene_name, gene_biotype) %>%
-        dplyr::distinct() %>%
-        dplyr::mutate(
-            biotype=case_when(
-                !str_detect(gene_biotype, ",") ~ gene_biotype,
-                TRUE ~ unlist(lapply(gene_biotype, function(x){strsplit(x, ",")[[1]][ifelse(class, 2, 1)]}))
-            ),
-            biotype_class=case_when(
-                grepl(',', gene_biotype) ~ "repeat",
-                TRUE ~ "gene"
-            )
-        ) %>%
-        dplyr::mutate(
-            gene_biotype=case_when(
-                startsWith(biotype, "Mt_") | startsWith(gene_name, "MT-") ~ "Mitochondrial",
-                biotype == "protein_coding" ~ "Coding",
-                biotype %in% c("lncRNA", "miRNA", "LINE", "SINE", "LTR", "DNA") ~ biotype,
-                biotype == "Simple_repeat" ~ "Microsatellite",
-                biotype=="Satellite" ~ "Human satellite",
-                biotype_class =="gene" ~ "Other gene",
-                TRUE ~ "Other repeat"
-            )
-        ) %>%
-        dplyr::select(gene_id, gene_name, gene_biotype) %>%
+        distinct() %>%
         return()
 }
 

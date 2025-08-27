@@ -91,6 +91,7 @@ workflow DISCOVER
     }
 
     reference = Channel.fromPath(params.ref)
+    parameters = Channel.fromPath(params.parameters)
     dcs = Channel.fromPath(params.dcs)
     prefixes = Channel.from(prefix_list)
 
@@ -112,11 +113,13 @@ workflow DISCOVER
     count_reads_np(long_channel)
     | combine(dcs)
     | minimap2_align_dcs
+    | combine(parameters)
     | trim_reads_nanopore
     | combine(reference)
     | flair_align
     | join(
         count_reads_pe(paired_channel)
+        | combine(parameters)
         | trim_reads_paired
         | combine(reference)
         | star_align_genome
@@ -162,6 +165,7 @@ workflow DISCOVER
     // Use final files to quantify
     trim_reads_paired.out
     | combine(salmon_index_novel.out)
+    | combine(parameters)
     | salmon_quant_novel
     | collect
     | map{quants -> [quants]}
