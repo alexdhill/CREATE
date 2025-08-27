@@ -42,57 +42,58 @@ Usage: nextflow run alexdhill/CREATE [--quant/--reference/--discover] [options]
     discover          Discover novel isoforms [BETA]
 
 options:
-    Globals (used in all modes):
-        --help        Print this help message
-        --container   Containerization method [docker(default),conda]
-        --outdir      Output directory [REQUIRED]
-        --log         Log level [OFF(default),INFO,DEBUG]
-        --exec        Executor mode [local(default),slurm]
-        --force       Overwrite existing files [default=false]
-        --keep        Keep intermediate files [default=false]
-        --limits      Add sample-based resources limits when running locally [default=false]
-        --clean       Clean up working directory (breaks `-resume`!) [default=false]
+    Globals:
+        --help                  Print this help message
+        --container             Containerization method [docker(default),conda] TODO!
+        --outdir                Output directory [REQUIRED]
+        --log                   Log level [OFF(default),INFO,DEBUG]
+        --exec                  Executor mode [local(default),slurm]
+        --force                 Overwrite existing files [default=false]
+        --keep                  Keep intermediate files [default=false]
+        --limits                Add sample-based resources limits when running locally [default=false]
+        --clean                 Clean up working directory (breaks `-resume`!) [default=false]
 
     --reference
-        --genome      Genome assembly [HG38,T2T] [REQUIRED]
-        --version     Gencode version [HG38 only] [default=39]
-        --index       Desired index [short,long,single_cell] [default=short]
-        --isoquant    Novel isoform annotation [BETA]
+        --genome                Genome assembly [HG38,T2T] [REQUIRED]
+        --version               Gencode version [HG38 only] [default=39]
+        --index                 Desired index [short,long,single_cell] [default=short]
+        --isoquant              Novel isoform annotation [BETA]
 
     --quant
-        --samples     Input samples directory [REQUIRED]
-        --ref         CREATE reference directory [REQUIRED]
-        --library     Library type [paired_end,nanopore,single_cell] [REQUIRED]
-                      NOTE: the reference provided must contain a compatible index
-        --pattern     File pattern for input samples
-        --metadata    An unnamed, two-column CSV file of samples,condition [REQUIRED]
-        --parameters  A JSON file of parameters to use for each process [BETA]
-        
-
+        --samples               Input samples directory [REQUIRED]
+        --ref                   CREATE reference directory [REQUIRED]
+        --library               Library type [paired_end,nanopore,single_cell] [REQUIRED]
+                                NOTE: the reference provided must contain a compatible index
+        --metadata              A *named*, two-column CSV file of samples,..conditions.. [REQUIRED]
+                                NOTE: the first column must contain sample names/prefixes
+        --pattern               File pattern for input samples
+        --metadata              An unnamed, two-column CSV file of samples,condition [REQUIRED]
+        --export_transcripts    Export transcript quantifications in addition to counts [default=false]
+        --parameters            A JSON file of arguments for individual tools [BETA]
 
     --discover
-        --ref          CREATE reference directory [REQUIRED]
-        --dcs          The DNA/RNA control sequence fasta file [REQUIRED]
-        --prefixes     A list of file prefixes for the paired long-short reads [REQUIRED]
-        --long_reads   The directory of the long-read sequences [REQUIRED]
-        --paired_reads The directory of the paired-end sequences [REQUIRED]
-        --lr_pattern   The pattern for the long-read files [default='*.fastq.gz']
-        --pe_pattern   The pattern for the paired-end files [default='*_R{1,2}_*.fastq.gz']
-        --dump         Save a 'novel' CREATE reference [default=false]
+        --ref                   CREATE reference directory [REQUIRED]
+        --dcs                   The DNA/RNA control sequence fasta file [REQUIRED]
+        --prefixes              A list of file prefixes for the paired long-short reads [REQUIRED]
+        --long_reads            The directory of the long-read sequences [REQUIRED]
+        --paired_reads          The directory of the paired-end sequences [REQUIRED]
+        --lr_pattern            The pattern for the long-read files [default='*.fastq.gz']
+        --pr_pattern            The pattern for the paired-end files [default='*_R{1,2}_*.fastq.gz']
+        --dump                  Location to save the 'novel' CREATE reference [default=false]
 
     Subworkflow-specific options:
         [--exec local]
-            --threads     Maximum number of threads to allocate TODO!
-            --memory      Maximum memory to allocate TODO!
+            --threads           Maximum number of threads to allocate TODO!
+            --memory            Maximum memory to allocate TODO!
         [--exec slurm]
-            --njobs       Maximum number of jobs to run concurrently [default=15]
-            --scratch     Scratch directory for temporary files [default=false]
-            --account     The user account to submit jobs
+            --njobs             Maximum number of jobs to run concurrently [default=15]
+            --scratch           Scratch directory for temporary files [default=false]
+            --account           The user account to submit jobs
         [--quant --library single_cell]
-            --barcodes    A list (txt) of all barcodes used in the experiment [REQUIRED]
-            --chemistry   The single-cell chemistry used [dropseq,chromium,chromiumV3(default)]
+            --barcodes          A list (txt) of all barcodes used in the experiment [REQUIRED]
+            --chemistry         The single-cell chemistry used [dropseq,chromium,chromiumV3(default)]
         [--quant --library nanopore]
-            --dcs         File with the DCS/RCS sequence used (for removal) [REQUIRED]
+            --dcs               File with the DCS/RCS sequence used (for removal) [REQUIRED]
 ```
 
 Global arguments are used in all modes to control how nextflow runs `CREATE`. For each individual mode, there are certain arguments that are reuquired for input data. Nested arguments shown above show what arguments are allowed (or required) depending on the running mode.
