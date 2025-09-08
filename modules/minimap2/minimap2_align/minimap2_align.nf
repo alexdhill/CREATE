@@ -49,11 +49,10 @@ process minimap2_align
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
-            params="$(jq '.minimap2' !{parameters})"
-            if [[ "${params}" == "null" ]]; then
-                params=""
-            else
-                params="$(jq '.minimap2 | to_entries | .[] | "--\\(.key)=\\(.value)"' flags.json | xargs | sed 's/=true//g')"
+
+            params=""
+            if [[ "${parameters}" != "NULL" ]]; then
+                params="$(jq '.minimap2 | to_entries | .[] | "\\(.key)=\\(.value)"' flags.json | xargs | sed 's/=true//g')"
             fi
 
             minimap2 -ax splice \

@@ -47,16 +47,15 @@ process trim_reads_paired
                 echo "Read 1: !{read_1}"
                 echo "Read 2: !{read_2}"
                 echo "n Reads: !{nreads}"
-                echo "User parameters: $(jq '."trim-galore"' !{parameters})"
+                echo "User parameters: !{parameters}"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
-            params=$(jq '."trim-galore"' !{parameters})
-            if [[ "${params}" == "null" ]]; then
-                params="-l 75 --2color 20"
-            else
-                params="$(jq '."trim-galore" | to_entries | .[] | "--\\(.key)=\\(.value)"' flags.json | xargs | sed 's/=true//g')"
+            
+            params="-l 75 --2color 20"
+            if [[ "${parameters}" != "NULL" ]]; then
+                params="$(jq '."trim-galore" | to_entries | .[] | "\\(.key)=\\(.value)"' flags.json | xargs | sed 's/=true//g')"
             fi
 
             trim_galore --paired --gzip  !{read_1} !{read_2} \
