@@ -83,12 +83,24 @@ profiles
                 time = '30m'
             }
 
+
             // Quant
-            withName: "download_acc"
+            withName: "prefetch"
             {
-                queue = "short"
-                time = "1h"
+                queue = "medium"
+                time = '2h'
             }
+            withName: "fasterq_dump_paired"
+            {
+                queue = "medium"
+                time = '2h'
+            }
+            withName: "fasterq_dump_single"
+            {
+                queue = "medium"
+                time = '2h'
+            }
+
             withName: "count_reads_pe"
             {
                 queue = "short"
@@ -123,53 +135,24 @@ profiles
             }
             withName: "trim_reads_nanopore"
             {
-                queue = "short"
-                time = '1h'
-            }
-
-            withName: "prefetch"
-            {
                 queue = "medium"
-                time = '2h'
-            }
-            withName: "fasterq_dump_paired"
-            {
-                queue = "medium"
-                time = '2h'
+                time = '6h'
             }
 
-            withName: "count_reads_pe"
+            withName: 'minimap2_align'
             {
-                queue = "short"
-                time = '1h'
+                queue = 'medium'
+                time = '12h'
             }
-            withName: "count_reads_se"
-            {
-                queue = "short"
-                time = '10m'
-            }
-            withName: "count_reads_np"
-            {
-                queue = "short"
-                time = '10m'
-            }
-
             withName: "alevin_align"
             {
                queue = 'medium'
                time = '12h'
             }
-
             withName: "alevin_collate"
             {
                queue = 'medium'
                time = '12h'
-            }
-
-            withName: 'alevin_quant'
-            {
-              queue = 'medium'
-              time = '12h'
             }
 
             withName: "salmon_quant_paired"
@@ -187,13 +170,17 @@ profiles
                 queue = "medium"
                 time = '6h'
             }
+            withName: 'alevin_quant'
+            {
+              queue = 'medium'
+              time = '12h'
+            }
 
             withName: "compile_quantifications"
             {
                 queue = "medium"
                 time = '3h'
             }
-
             withName: "run_analysis"
             {
                 queue = "medium"
