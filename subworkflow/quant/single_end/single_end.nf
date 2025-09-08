@@ -30,8 +30,10 @@ workflow SINGLE_END
         if (params.library=="single_end")
         {
             reference = Channel.fromPath(params.ref)
-            parameters = Channel.fromPath(params.parameters)
             metadata = Channel.fromPath(params.metadata)
+            if (params.parameters) parameters = Channel.fromPath(params.parameters)
+            else parameters = Channel.fromPath(projectDir + "/assets/NULL")
+            
             if (is_acc)
             {
                 log.info("Downloading reads before running...")

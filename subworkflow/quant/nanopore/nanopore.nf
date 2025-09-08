@@ -31,8 +31,10 @@ workflow NANOPORE
         {
             reference = Channel.fromPath(params.ref)
             dcs = Channel.fromPath(params.dcs)
-            parameters = Channel.fromPath(params.parameters)
             metadata = Channel.fromPath(params.metadata)
+            if (params.parameters) parameters = Channel.fromPath(params.parameters)
+            else parameters = Channel.fromPath(projectDir + "/assets/NULL")
+
             if (is_acc)
             {
                 log.error("Nanopore data cannot be hosted from SRA. Exiting")
