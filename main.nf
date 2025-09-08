@@ -142,11 +142,8 @@ else if (params.quant)
     params.ref = ''
     params.library = 'paired_end'
     params.metadata = ''
-<<<<<<< HEAD
     params.export_transcripts = false
-=======
     params.parameters = ""
->>>>>>> main
     if (['paired_end','single_cell'].contains(params.library))
     {
         params.pattern = '*_R{1,2}_*.fastq.gz'
