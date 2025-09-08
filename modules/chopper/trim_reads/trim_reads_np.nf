@@ -57,7 +57,6 @@ process trim_reads_np
 
             chopper \
                 -i !{read} \
-                -q 20 -l 75 \
                 --threads !{task.cpus} \
                 -o trimmed.fq \
                 ${params} \
