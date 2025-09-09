@@ -19,7 +19,7 @@ include { prefetch } from "../../../modules/sra/prefetch/prefetch.nf"
 include { fasterq_dump_paired } from "../../../modules/sra/fasterq-dump/fasterq-dump_paired.nf"
 include { alevin_align } from "../../../modules/salmon/alevin_align/alevin_align.nf"
 include { alevin_collate } from "../../../modules/salmon/alevin_collate/alevin_collate.nf"
-include { alevin_quantify } from "../../../modules/salmon/alevin_quantify/alevin_quantify.nf"
+include { alevin_quant } from "../../../modules/salmon/alevin_quant/alevin_quant.nf"
 include { compile_quantifications } from "../../../modules/R/compile_quantifications/compile_quantifications.nf"
 
 workflow SINGLE_CELL
@@ -51,7 +51,7 @@ workflow SINGLE_CELL
             | combine(barcodes)
             | alevin_collate
             | combine(reference)
-            | alevin_quantify
+            | alevin_quant
             | collect
             | map{quants -> [quants]}
             | combine(reference)

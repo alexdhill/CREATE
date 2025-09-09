@@ -15,7 +15,7 @@
  */
  
 
-process alevin_quantify
+process alevin_quant
 {
     publishDir "${params.outdir}/quant", mode: 'copy', overwrite: params.force, enabled: params.keep
     if (params.manage_resources)
