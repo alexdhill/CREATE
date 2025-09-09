@@ -1,0 +1,21 @@
+name: CREATE-alevin
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - time
+  - pigz
+  - python==3.10.13
+  - pip
+  - tqdm
+  - ncls
+  - rpy2
+  - mappy
+  - numpy
+  - pysam
+  - pandas
+  - seaborn
+  - cutadapt
+  - biopython
+  - matplotlib
+  - pybedtools

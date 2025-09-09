@@ -25,10 +25,18 @@ RUN apt-get update -y \
         pkg-config \
         zlib1g-dev \
         ca-certificates \
+        time \
+        pigz \
     && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
     && curl -kL \
         https://github.com/wdecoster/chopper/archive/refs/tags/v${CHOPPER_VER}.zip \
         -o v${CHOPPER_VER}.zip \
     && unzip v${CHOPPER_VER}.zip \
     && cd chopper-${CHOPPER_VER} \
-    && $HOME/.cargo/bin/cargo build --release
+    && $HOME/.cargo/bin/cargo build --release \
+    && apt-get -y clean && apt-get -y autoclean \
+    && rm -rf /var/lib/apt/lists/*
+ENV HOME="/home"
+RUN chmod -R 777 /home
+ENV TIME="\n\nres memory (KB)     %M\ntime (HH:mm:ss)     %E"
+ENTRYPOINT ["/usr/bin/time"]

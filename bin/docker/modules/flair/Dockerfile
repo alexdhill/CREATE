@@ -79,6 +79,8 @@ COPY --from=MINIMAP2 /minimap2*/minimap2 /usr/local/bin/minimap2
 ENV FLAIR_VER 2.0.0
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
+        time \
+        pigz \
         wget \
         unzip \
         gpg-agent \
@@ -128,5 +130,11 @@ RUN apt-get update \
     "
 RUN wget --no-check-certificate \
         https://github.com/BrooksLabUCSC/flair/archive/master.zip \
-    && unzip master.zip
+    && unzip master.zip \
+    && apt-get -y clean && apt-get -y autoclean \
+    && rm -rf /var/lib/apt/lists/*
 ENV PATH=$PATH:/flair-master/bin
+ENV HOME="/home"
+RUN chmod -R 777 /home
+ENV TIME="\n\nres memory (KB)     %M\ntime (HH:mm:ss)     %E"
+ENTRYPOINT ["/usr/bin/time"]

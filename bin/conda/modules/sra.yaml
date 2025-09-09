@@ -1,0 +1,8 @@
+name: CREATE-sra
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - time
+  - pigz
+  - sra-tools=3.2.1

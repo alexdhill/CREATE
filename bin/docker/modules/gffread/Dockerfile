@@ -18,6 +18,8 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV GFFREAD_VER 0.12.7
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
+        time \
+        pigz \
         ca-certificates \
         build-essential \
         make \
@@ -27,4 +29,10 @@ RUN apt-get update -y \
     && wget https://github.com/gpertea/gffread/archive/refs/tags/v${GFFREAD_VER}.zip \
     && unzip v${GFFREAD_VER}.zip \
     && cd ./gffread-${GFFREAD_VER} \
-    && make release
+    && make release \
+    && apt-get -y clean && apt-get -y autoclean \
+    && rm -rf /var/lib/apt/lists/*
+ENV HOME="/home"
+RUN chmod -R 777 /home
+ENV TIME="\n\nres memory (KB)     %M\ntime (HH:mm:ss)     %E"
+ENTRYPOINT ["/usr/bin/time"]

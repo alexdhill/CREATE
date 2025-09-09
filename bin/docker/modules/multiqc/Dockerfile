@@ -16,9 +16,18 @@
 FROM ubuntu:22.04 as MULTIQC
 ENV MULTIQC_VER 1.8
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends wget \
+    && apt-get install -y --no-install-recommends 
+        time \
+        pigz \
+        wget \
     && wget --no-check-certificate \
         https://github.com/jgm/pandoc/releases/download/2.7.3/pandoc-2.7.3-linux.tar.gz \
     && tar -xvf pandoc-2.7.3-linux.tar.gz \
     && apt-get -y clean && apt-get -y autoclean \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get -y clean && apt-get -y autoclean \
     && rm -rf /var/lib/apt/lists/*
+ENV HOME="/home"
+RUN chmod -R 777 /home
+ENV TIME="\n\nres memory (KB)     %M\ntime (HH:mm:ss)     %E"
+ENTRYPOINT ["/usr/bin/time"]

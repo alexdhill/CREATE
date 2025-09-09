@@ -1,0 +1,8 @@
+name: CREATE-chopper
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - time
+  - pigz
+  - chopper=0.9.0

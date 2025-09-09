@@ -13,21 +13,6 @@
 ## nature of the software, under any kind of legal claim.
 
 
-## BUILD FFQ
-FROM ubuntu:22.04 AS FFQ
-ENV DEBIAN_FRONTEND noninteractive
-ENV FFQ_VER 0.3.1
-RUN apt-get update -y \
-    && apt-get install -y --no-install-recommends \
-        build-essential \
-        make \
-        wget \
-        python3 \
-        python3-pip \
-    && wget --no-check-certificate \
-        https://github.com/pachterlab/ffq/archive/refs/tags/v${FFQ_VER}.tar.gz \
-    && tar -xzf v${FFQ_VER}.tar.gz \
-    && python3 -m pip install -e ffq-${FFQ_VER}
 
 ## BUILD SRA
 FROM ubuntu:22.04 AS SRA
@@ -269,6 +254,27 @@ RUN apt-get update -y \
     && $HOME/.cargo/bin/cargo build --release
 
 
+## BUILD OARFISH
+FROM ubuntu:22.04 as OARFISH
+ENV DEBIAN_FRONTEND noninteractive
+ENV OARFISH_VER 0.9.0
+RUN apt-get update -y \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+        make \
+        cmake \
+        curl \
+        ca-certificates \
+        unzip \
+    && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
+    && curl -kL \
+        https://github.com/COMBINE-lab/oarfish/archive/refs/tags/v${OARFISH_VER}.zip \
+        -o v${OARFISH_VER}.zip \
+    && unzip v${OARFISH_VER}.zip \
+    && cd oarfish-${OARFISH_VER} \
+    && $HOME/.cargo/bin/cargo build --release
+
+
 ## BUILD STAR
 FROM ubuntu:22.04 as STAR
 ENV DEBIAN_FRONTEND noninteractive
@@ -291,25 +297,6 @@ RUN apt-get update -y \
     && make STAR
 
 
-## BUILD SEQTK
-FROM ubuntu:22.04 as SEQTK
-ENV DEBIAN_FRONTEND noninteractive
-ENV SEQTK_VER 1.4
-RUN apt-get update -y \
-    && apt-get install -y --no-install-recommends \
-        build-essential \
-        make \
-        wget \
-        unzip \
-        libz-dev \
-    && wget --no-check-certificate \
-        https://github.com/lh3/seqtk/archive/refs/tags/v${SEQTK_VER}.zip \
-    && unzip v${SEQTK_VER}.zip \
-    && cd seqtk-${SEQTK_VER} \
-    && make \
-    && cp seqtk /usr/local/bin
-
-
 ## BUILD FLAIR
 FROM ubuntu:22.04 as FLAIR
 ENV DEBIAN_FRONTEND noninteractive
@@ -327,7 +314,6 @@ RUN apt-get update \
 ## Build Final
 FROM ubuntu:22.04 as app
 ENV DEBIAN_FRONTEND noninteractive
-ENV FFQ_VER 0.3.1
 ENV SRA_VER 3.2.1
 ENV SAMTOOLS_VER 1.19
 ENV BEDTOOLS_VER 2.31.0
@@ -339,11 +325,10 @@ ENV TRIMGALORE_VER 0.6.10
 ENV CHOPPER_VER 0.9.0
 ENV MINIMAP2_VER 2.26
 ENV SALMON_VER 1.10.1
+ENV OARFISH_VER 0.9.0
 ENV ALEVIN_VER 0.10.0
 ENV STAR_VER 2.7.11a
-ENV SEQTK_VER 1.4
-ENV R_VER 4.2.3
-COPY --from=FFQ /ffq-${FFQ_VER} /ffq
+ENV R_VER 4.5
 COPY --from=SAMTOOLS /usr/local/bin/samtools /usr/local/bin/samtools
 COPY --from=BEDTOOLS /usr/local/bin/bedtools /usr/local/bin/bedtools
 COPY --from=GFFREAD /gffread-${GFFREAD_VER}/gffread /usr/local/bin/gffread
@@ -354,9 +339,9 @@ COPY --from=TRIMGALORE /TrimGalore /usr/local/bin/TrimGalore
 COPY --from=CHOPPER /chopper-${CHOPPER_VER}/target/release/chopper /usr/local/bin/chopper
 COPY --from=MINIMAP2 /minimap2-${MINIMAP2_VER}/minimap2 /usr/local/bin/minimap2
 COPY --from=SALMON /salmon-${SALMON_VER}/bin/salmon /usr/local/bin/salmon
+COPY --from=OARFISH /oarfish-${OARFISH_VER}/target/release/oarfish /usr/local/bin/oarfish
 COPY --from=ALEVIN /alevin-fry-${ALEVIN_VER}/target/release/alevin-fry /usr/local/bin/alevin-fry
 COPY --from=STAR /STAR-${STAR_VER}/bin/*static/* /usr/local/bin/
-COPY --from=SEQTK /usr/local/bin/seqtk /usr/local/bin/seqtk
 COPY --from=FLAIR /flair-* /usr/local/bin/flair
 ENV LC_ALL="C.UTF-8" LANG="C.UTF-8"
 ENV PATH="$PATH:/usr/local/bin/FastQC/:/usr/local/bin/TrimGalore/:/usr/local/bin/flair/bin/:/usr/local/bin/flair/src/flair/"

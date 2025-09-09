@@ -1,0 +1,8 @@
+name: CREATE-bedtools
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - time
+  - pigz
+  - bedtools=2.31.0

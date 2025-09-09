@@ -18,8 +18,16 @@ ENV TRIMGALORE_VER 0.6.10
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
         curl \
+        time \
+        pigz \
         ca-certificates \
     && curl -fsSL https://github.com/FelixKrueger/TrimGalore/archive/0.6.10.tar.gz \
         -o trim_galore.tar.gz \
     && tar xvzf trim_galore.tar.gz \
-    && mv /TrimGalore-0.6.10/ /TrimGalore
+    && mv /TrimGalore-0.6.10/ /TrimGalore \
+    && apt-get -y clean && apt-get -y autoclean \
+    && rm -rf /var/lib/apt/lists/*
+ENV HOME="/home"
+RUN chmod -R 777 /home
+ENV TIME="\n\nres memory (KB)     %M\ntime (HH:mm:ss)     %E"
+ENTRYPOINT ["/usr/bin/time"]

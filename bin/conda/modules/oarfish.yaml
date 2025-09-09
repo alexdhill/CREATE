@@ -1,0 +1,8 @@
+name: CREATE-oarfish
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - time
+  - pigz
+  - oarfish=0.9.0

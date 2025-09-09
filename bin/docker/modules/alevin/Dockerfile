@@ -18,6 +18,8 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV ALEVIN_VER 0.10.0
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
+        time \
+        pigz \
         build-essential \
         make \
         cmake \
@@ -30,4 +32,10 @@ RUN apt-get update -y \
         -o v${ALEVIN_VER}.zip \
     && unzip v${ALEVIN_VER}.zip \
     && cd alevin-fry-* \
-    && $HOME/.cargo/bin/cargo build --release
+    && $HOME/.cargo/bin/cargo build --release \
+    && apt-get -y clean && apt-get -y autoclean \
+    && rm -rf /var/lib/apt/lists/*
+ENV HOME="/home"
+RUN chmod -R 777 /home
+ENV TIME="\n\nres memory (KB)     %M\ntime (HH:mm:ss)     %E"
+ENTRYPOINT ["/usr/bin/time"]

@@ -1,0 +1,8 @@
+name: CREATE-gffread
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - time
+  - pigz
+  - gffread=0.12.1

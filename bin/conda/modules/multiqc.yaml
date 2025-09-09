@@ -1,0 +1,8 @@
+name: CREATE-multiqc
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - time
+  - pigz
+  - multiqc=1.12

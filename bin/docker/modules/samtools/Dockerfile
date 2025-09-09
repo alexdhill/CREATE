@@ -18,6 +18,8 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV SAMTOOLS_VER 1.19
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
+        time \
+        pigz \
         build-essential \
         make \
         zlib1g-dev \
@@ -33,4 +35,10 @@ RUN apt-get update -y \
     && ./configure --prefix=/usr/local/bin/ \
     && make \
     && make install \
-    && cp samtools /usr/local/bin/
+    && cp samtools /usr/local/bin/ \
+    && apt-get -y clean && apt-get -y autoclean \
+    && rm -rf /var/lib/apt/lists/*
+ENV HOME="/home"
+RUN chmod -R 777 /home
+ENV TIME="\n\nres memory (KB)     %M\ntime (HH:mm:ss)     %E"
+ENTRYPOINT ["/usr/bin/time"]

@@ -20,6 +20,8 @@ RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
         build-essential \
         make \
+        time \
+        pigz \
         wget \
         zlib1g-dev \
         libbz2-dev \
@@ -31,5 +33,10 @@ RUN apt-get update -y \
         https://github.com/alexdobin/STAR/archive/refs/tags/${STAR_VER}.tar.gz \
     && tar -xvf ${STAR_VER}.tar.gz \
     && cd STAR-${STAR_VER}/source \
-    && make STAR
-RUN ls -lahR /STAR*/bin/
+    && make STAR \
+    && apt-get -y clean && apt-get -y autoclean \
+    && rm -rf /var/lib/apt/lists/*
+ENV HOME="/home"
+RUN chmod -R 777 /home
+ENV TIME="\n\nres memory (KB)     %M\ntime (HH:mm:ss)     %E"
+ENTRYPOINT ["/usr/bin/time"]

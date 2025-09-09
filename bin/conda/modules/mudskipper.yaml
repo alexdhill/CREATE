@@ -1,0 +1,8 @@
+name: CREATE-mudskipper
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - time
+  - pigz
+  - mudskipper

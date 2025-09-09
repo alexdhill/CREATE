@@ -17,6 +17,8 @@ FROM ubuntu:22.04 as FASTQC
 ENV FASTQC_VER 0.12.1
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
+        time \
+        pigz \
         unzip \
         wget \
         perl \
@@ -26,4 +28,10 @@ RUN apt-get update \
         https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v${FASTQC_VER}.zip \
     && unzip fastqc_v${FASTQC_VER}.zip \
     && rm fastqc_v${FASTQC_VER}.zip \
-    && chmod +x FastQC/fastqc
+    && chmod +x FastQC/fastqc \
+    && apt-get -y clean && apt-get -y autoclean \
+    && rm -rf /var/lib/apt/lists/*
+ENV HOME="/home"
+RUN chmod -R 777 /home
+ENV TIME="\n\nres memory (KB)     %M\ntime (HH:mm:ss)     %E"
+ENTRYPOINT ["/usr/bin/time"]

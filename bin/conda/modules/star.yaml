@@ -1,0 +1,8 @@
+name: CREATE-star
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - time
+  - pigz
+  - star=2.7.11a

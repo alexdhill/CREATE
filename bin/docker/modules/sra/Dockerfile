@@ -20,6 +20,8 @@ RUN apt-get update \
         build-essential cmake \
         wget ca-certificates \
         unzip \
+        time \
+        pigz \
     && wget -q "https://github.com/ncbi/ncbi-vdb/archive/refs/tags/${SRA_VER}.zip" \
     && unzip ${SRA_VER}.zip \
     && rm ${SRA_VER}.zip \
@@ -31,4 +33,10 @@ RUN apt-get update \
     && make -j8 install \
     && cd ../sra-tools-${SRA_VER} \
     && ./configure \
-    && make -j8 install
+    && make -j8 install \
+    && apt-get -y clean && apt-get -y autoclean \
+    && rm -rf /var/lib/apt/lists/*
+ENV HOME="/home"
+RUN chmod -R 777 /home
+ENV TIME="\n\nres memory (KB)     %M\ntime (HH:mm:ss)     %E"
+ENTRYPOINT ["/usr/bin/time"]

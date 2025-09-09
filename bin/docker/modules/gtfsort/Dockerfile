@@ -17,6 +17,8 @@ FROM ubuntu:22.04 as GTFSORT
 ENV GTFSORT_VER 0.2.2
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
+        time \
+        pigz \
         build-essential \
         make \
         curl \
@@ -32,4 +34,10 @@ RUN apt-get update -y \
     && unzip gtfsort-v${GTFSORT_VER}.zip \
     && cd gtfsort-v.${GTFSORT_VER} \
     && $HOME/.cargo/bin/cargo update \
-    && $HOME/.cargo/bin/cargo build --release
+    && $HOME/.cargo/bin/cargo build --release \
+    && apt-get -y clean && apt-get -y autoclean \
+    && rm -rf /var/lib/apt/lists/*
+ENV HOME="/home"
+RUN chmod -R 777 /home
+ENV TIME="\n\nres memory (KB)     %M\ntime (HH:mm:ss)     %E"
+ENTRYPOINT ["/usr/bin/time"]

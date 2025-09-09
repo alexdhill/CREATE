@@ -1,0 +1,8 @@
+name: CREATE-alevin
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - time
+  - pigz
+  - alevin-fry=0.10.0

@@ -17,6 +17,8 @@ FROM ubuntu:22.04 as MUDSKIPPER
 ENV MUDSKIPPER_VER effd3fa
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
+        time \
+        pigz \
         build-essential \
         make \
         curl \
@@ -27,9 +29,16 @@ RUN apt-get update -y \
         ca-certificates \
     && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
     && curl -kL \
-        https://github.com/OceanGenomics/mudskipper/archive/refs/tags/v${MUDSKIPPER_VER}.zip \
-        -o v${MUDSKIPPER_VER}.zip \
-    && unzip v${MUDSKIPPER_VER}.zip \
-    && cd mudskipper-${MUDSKIPPER_VER} \
+        https://github.com/OceanGenomics/mudskipper/archive/${MUDSKIPPER_VER}.zip \
+        -o ${MUDSKIPPER_VER}.zip \
+    && unzip ${MUDSKIPPER_VER}.zip \
+    && cd mudskipper-${MUDSKIPPER_VER}* \
+    && echo 'console = "0.16"' >> Cargo.toml \
     && $HOME/.cargo/bin/cargo update \
-    && $HOME/.cargo/bin/cargo build --release
+    && $HOME/.cargo/bin/cargo build --release \
+    && apt-get -y clean && apt-get -y autoclean \
+    && rm -rf /var/lib/apt/lists/*
+ENV HOME="/home"
+RUN chmod -R 777 /home
+ENV TIME="\n\nres memory (KB)     %M\ntime (HH:mm:ss)     %E"
+ENTRYPOINT ["/usr/bin/time"]

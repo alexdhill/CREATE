@@ -12,37 +12,37 @@
 ## licensor will not be liable to you for any damages arising out of these terms or the use or
 ## nature of the software, under any kind of legal claim.
 
-## BUILD SALMON
-FROM ubuntu:22.04 as SALMON
+## BUILD PYTHON
+FROM ubuntu:22.04 as PYTHON
+ENV PYTHON_VER 3.10
 ENV DEBIAN_FRONTEND noninteractive
-ENV SALMON_VER 1.10.1
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
+        wget \
         time \
         pigz \
-        make \
-        wget \
-        curl \
-        unzip \
-        cmake \
-        libgff-dev \
-        libtbb-dev \
-        zlib1g-dev \
-        libbz2-dev \
-        liblzma-dev \
-        build-essential \
         ca-certificates \
-        libboost-all-dev \
-        libcurl4-openssl-dev \
-    && wget --no-check-certificate \
-        https://github.com/COMBINE-lab/salmon/archive/refs/tags/v${SALMON_VER}.tar.gz \
-    && tar -xvf v${SALMON_VER}.tar.gz \
-    && cd salmon-${SALMON_VER} \
-    && mkdir build \
-    && cd build \
-    && cmake .. \
-    && make \
-    && make install \
+        python${PYTHON_VER}-dev \
+        python3-pip \
+    && python3 -m pip install --no-cache-dir --upgrade pip \
+    && python3 -m pip install --no-cache-dir patchelf \
+    && python3 -m pip install --no-binary :all --no-cache-dir \
+        "multiqc==$MULTIQC_VER" \
+    && python3 -m pip install \
+        tqdm \
+        ncls \
+        rpy2 \
+        mappy \
+        numpy \
+        pysam \
+        pandas \
+        seaborn \
+        cutadapt \
+        biopython \
+        matplotlib \
+        pybedtools \
+        fasta_digest \
+    && python3 -m pip install -e /ffq \
     && apt-get -y clean && apt-get -y autoclean \
     && rm -rf /var/lib/apt/lists/*
 ENV HOME="/home"

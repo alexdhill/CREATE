@@ -1,0 +1,8 @@
+name: CREATE-flair
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - time
+  - pigz
+  - flair=2.0.0

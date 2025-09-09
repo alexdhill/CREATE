@@ -24,9 +24,17 @@ RUN apt-get update -y \
         liblzma-dev \
         wget \
         python3 \
+        time \
+        pigz \
     && wget --no-check-certificate -q \
         https://github.com/arq5x/bedtools2/archive/refs/tags/v${BEDTOOLS_VER}.tar.gz \
     && tar -xzf v${BEDTOOLS_VER}.tar.gz \
     && cd bedtools2-${BEDTOOLS_VER} \
     && make \
-    && make install
+    && make install \
+    && apt-get -y clean && apt-get -y autoclean \
+    && rm -rf /var/lib/apt/lists/*
+ENV HOME="/home"
+RUN chmod -R 777 /home
+ENV TIME="\n\nres memory (KB)     %M\ntime (HH:mm:ss)     %E"
+ENTRYPOINT ["/usr/bin/time"]

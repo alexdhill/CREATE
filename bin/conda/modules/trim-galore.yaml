@@ -1,0 +1,8 @@
+name: CREATE-trim-galore
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - time
+  - pigz
+  - trim-galore=0.6.10
