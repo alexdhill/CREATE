@@ -18,6 +18,8 @@
 process trim_reads_paired
 {
     publishDir "${params.outdir}/reads/trimmed", mode: 'copy', enabled: params.keep, overwrite: params.force
+    container 'alexdhill/create:trim-galore-0.6.10'
+    conda projectDir+'/bin/conda/modules/trim-galore.yaml'
     if (params.manage_resources)
     {
         cpus 8

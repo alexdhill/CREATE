@@ -18,6 +18,8 @@
 process alevin_align
 {
     publishDir "${params.outdir}/", mode: 'copy', enabled: params.keep, overwrite: params.force
+    container 'alexdhill/create:alevin-0.10.0'
+    conda projectDir+'/bin/conda/modules/alevin.yaml'
     if (params.manage_resources) {
         cpus 8
     }

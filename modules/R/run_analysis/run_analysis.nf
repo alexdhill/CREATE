@@ -18,6 +18,8 @@
 process run_analysis
 {
     publishDir "${params.outdir}/results", mode: 'copy', overwrite: params.force
+    container 'alexdhill/create:r-4.5'
+    conda projectDir+'/bin/conda/modules/r.yaml'
     input:
         path(counts)
     output:

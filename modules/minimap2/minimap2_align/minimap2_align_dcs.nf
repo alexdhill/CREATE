@@ -18,6 +18,8 @@
 process minimap2_align_dcs
 {
     publishDir "${params.outdir}/filtered", mode: 'copy', overwrite: params.force, enabled: params.keep
+    container 'alexdhill/create:minimap2-2.26'
+    conda projectDir+'/bin/conda/modules/minimap2.yaml'
     if (params.manage_resources)
     {
         cpus 8

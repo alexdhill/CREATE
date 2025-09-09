@@ -18,6 +18,15 @@
 process download_gencode_transcripts
 {
     publishDir "${params.outdir}/", mode: 'copy', enabled: params.keep, overwrite: params.force
+    if (params.genome=="T2T")
+    {
+        container 'alexdhill/create:gffread-0.12.7'
+        conda projectDir+'/bin/conda/modules/gffread.yaml'
+    } else
+    {
+        container 'alexdhill/create:bash-22.04'
+        conda projectDir+'/bin/conda/modules/bash.yaml'
+    }
     if (params.manage_resources)
     {
         cpus 4

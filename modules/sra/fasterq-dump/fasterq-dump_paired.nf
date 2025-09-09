@@ -17,6 +17,8 @@
 
 process fasterq_dump_paired
 {
+    container 'alexdhill/create:sra-3.2.1'
+    conda projectDir+'/bin/conda/modules/sra.yaml'
     if (params.manage_resources)
     {
         cpus 8

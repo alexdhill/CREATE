@@ -18,6 +18,8 @@
 process link_transcriptome
 {
     publishDir "${params.outdir}", mode: 'copy', overwrite: params.force
+    container 'alexdhill/create:r-4.5'
+    conda projectDir+'/bin/conda/modules/r.yaml'
     if (params.manage_resources)
     {
         cpus 1

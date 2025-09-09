@@ -18,6 +18,8 @@
 process make_database
 {
     publishDir "${params.outdir}", mode: 'copy', overwrite: params.force
+    container 'alexdhill/create:r-4.5'
+    conda projectDir+'/bin/conda/modules/r.yaml'
     input:
         tuple(
             path(annotation),

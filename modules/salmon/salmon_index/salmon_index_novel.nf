@@ -18,6 +18,8 @@
 process salmon_index_novel
 {
     publishDir "${params.dump}/", mode: 'copy', overwrite: params.force, enabled: params.dump!=''
+    container 'alexdhill/create:salmon-1.10.1'
+    conda projectDir+'/bin/conda/modules/salmon.yaml'
     if (params.manage_resources)
     {
         cpus 8

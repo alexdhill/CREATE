@@ -18,6 +18,8 @@
 process make_splintr_transcripts
 {
     publishDir "${params.outdir}/", mode: 'copy', enabled: params.keep, overwrite: params.force
+    container 'alexdhill/create:r-4.5'
+    conda projectDir+'/bin/conda/modules/r.yaml'
     if (params.manage_resources)
     {
         cpus 1

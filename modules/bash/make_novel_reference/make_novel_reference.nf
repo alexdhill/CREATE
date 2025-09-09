@@ -18,6 +18,8 @@
 process make_novel_reference
 {
     publishDir "${params.dump}/", mode: 'copy', enable: params.dump!='', overwrite: params.force
+    container 'alexdhill/create:bash-22.04'
+    conda projectDir+'/bin/conda/modules/bash.yaml'
     if (params.manage_resources)
     {
         cpus 1

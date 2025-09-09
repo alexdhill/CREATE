@@ -18,6 +18,8 @@
 process flair_correct
 {
     publishDir "${params.outdir}/align/nanopore/corrected", mode: 'copy', overwrite: params.force, enabled: params.keep
+    container 'alexdhill/create:flair-2.0.0'
+    conda projectDir+'/bin/conda/modules/flair.yaml'
     if (params.manage_resources)
     {
         cpus 8

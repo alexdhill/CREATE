@@ -18,6 +18,8 @@
 process alevin_quant
 {
     publishDir "${params.outdir}/quant", mode: 'copy', overwrite: params.force, enabled: params.keep
+    container 'alexdhill/create:alevin-0.10.0'
+    conda projectDir+'/bin/conda/modules/alevin.yaml'
     if (params.manage_resources)
     {
         cpus 8

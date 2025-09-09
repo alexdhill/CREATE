@@ -17,6 +17,8 @@
 
 process correct_isoquant
 {
+    container 'alexdhill/create:python-3.10'
+    conda projectDir+'/bin/conda/modules/python.yaml'
     if (params.manage_resources)
     {
         cpus 1

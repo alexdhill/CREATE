@@ -18,6 +18,15 @@
 process download_gencode_annotation
 {
     publishDir "${params.outdir}/", mode: 'copy', enabled: params.keep, overwrite: params.force
+    if (params.genome=="T2T")
+    {
+        container 'alexdhill/create:python-3.10'
+        conda projectDir+'/bin/conda/modules/python.yaml'
+    } else
+    {
+        container 'alexdhill/create:bash-22.04'
+        conda projectDir+'/bin/conda/modules/bash.yaml'
+    }
     if (params.manage_resources)
     {
         cpus 4
@@ -28,14 +37,14 @@ process download_gencode_annotation
     shell:
         if (params.isoquant)
         {
-            '''
+        '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
                 echo "Preparing isquant annotation..."
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 echo "Isoquant: !{params.isoquant}"
             fi
-            '''
+        '''
         }
         else if (params.genome=="T2T")
         {
@@ -59,14 +68,6 @@ process download_gencode_annotation
             | python3 !{projectDir}/bin/python/reduce_gff3.py \
             | pigz -cp !{task.cpus} \
             > T2Tv2_gencode_annotation.gtf.gz
-            
-            #> unsorted.gff3
-            #gffread unsorted.gff3 -To unsorted.gtf
-            #python3 !{projectDir}/bin/python/correct_flair_annotation.py unsorted.gtf \
-            #> unsorted_genes.gtf
-            #gtfsort -i unsorted_genes.gtf -o sorted.gtf
-            #pigz --best -cp !{task.cpus} sorted.gtf \
-            #> T2Tv2_gencode_annotation.gtf.gz
         '''
         }
         else

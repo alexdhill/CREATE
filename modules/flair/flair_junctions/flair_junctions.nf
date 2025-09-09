@@ -18,6 +18,8 @@
 process flair_junctions
 {
     publishDir "${params.outdir}/ranges/junctions", mode: 'copy', overwrite: params.force, enabled: params.keep
+    container 'alexdhill/create:flair-2.0.0'
+    conda projectDir+'/bin/conda/modules/flair.yaml'
     if (params.manage_resources)
     {
         cpus 8

@@ -18,6 +18,8 @@
 process star_align_genome
 {
     publishDir "${params.outdir}/align/paired", mode: 'copy', enabled: params.keep, overwrite: params.force
+    container 'alexdhill/create:star-2.7.11a'
+    conda projectDir+'/bin/conda/modules/star.yaml'
     if (params.manage_resources)
     {
         cpus 8

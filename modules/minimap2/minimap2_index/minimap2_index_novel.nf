@@ -18,6 +18,8 @@
 process minimap2_index_novel
 {
     publishDir "${params.dump}/", mode: 'copy', overwrite: params.force, enabled: params.dump!=''
+    container 'alexdhill/create:minimap2-2.26'
+    conda projectDir+'/bin/conda/modules/minimap2.yaml'
     if (params.manage_resources)
     {
         cpus 3

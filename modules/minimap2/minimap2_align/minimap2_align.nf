@@ -13,11 +13,13 @@
  * licensor will not be liable to you for any damages arising out of these terms or the use or
  * nature of the software, under any kind of legal claim.
  */
- 
+
 
 process minimap2_align
 {
     publishDir "${params.outdir}/align", mode: 'copy', overwrite: params.force, enabled: params.keep
+    container 'alexdhill/create:minimap2-2.26'
+    conda projectDir+'/bin/conda/modules/minimap2.yaml'
     if (params.manage_resources)
     {
         cpus 8
@@ -35,7 +37,7 @@ process minimap2_align
         tuple(
             val("${sample}"),
             val("${nreads}"),
-            path("${sample}.bam")
+            path("${sample}.sorted.bam")
         )
     shell:
         '''
@@ -50,17 +52,20 @@ process minimap2_align
                 set -x
             fi
 
-            params=""
-            if [[ "${parameters}" != "NULL" ]]; then
+            params="--eqx -N 10000"
+            if [[ "!{parameters}" != "NULL" ]]; then
                 params="$(jq '.minimap2 | to_entries | .[] | "\\(.key)=\\(.value)"' flags.json | xargs | sed 's/=true//g')"
             fi
 
             minimap2 -ax map-ont \
-                -N 100 -t !{task.cpus} \
+                ${params} \
+                -t !{task.cpus} \
                 !{reference}/*long_index*.mmi \
                 !{read} \
-                ${params} \
             | samtools view -bS - \
             > !{sample}.bam
+
+            samtools sort -@ !{task.cpus} !{sample}.bam \
+            > !{sample}.sorted.bam
         '''
 }

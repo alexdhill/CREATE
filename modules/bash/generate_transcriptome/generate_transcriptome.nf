@@ -18,6 +18,8 @@
 process generate_transcriptome
 {
     publishDir "${params.outdir}/", mode: 'copy', enabled: params.keep, overwrite: params.force
+    container 'alexdhill/create:gffread-0.12.7'
+    conda projectDir+'/bin/conda/modules/gffread.yaml'
     if (params.manage_resources)
     {
         cpus 4

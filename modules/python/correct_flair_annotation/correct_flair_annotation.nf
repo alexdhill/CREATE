@@ -18,6 +18,8 @@
 process correct_flair_annotation
 {
     publishDir "${params.dump}/", mode: 'copy', enabled: params.dump!='', overwrite: params.force
+    container 'alexdhill/create:python-3.10'
+    conda projectDir+'/bin/conda/modules/python.yaml'
     if (params.manage_resources)
     {
         cpus 1

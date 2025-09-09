@@ -18,6 +18,8 @@
 process make_repeat_transcripts
 {
     publishDir "${params.outdir}/", mode: 'copy', enabled: params.keep, overwrite: params.force
+    container 'alexdhill/create:bedtools-2.31.0'
+    conda projectDir+'/bin/conda/modules/bedtools.yaml'
     input:
         tuple(
             path(reference),

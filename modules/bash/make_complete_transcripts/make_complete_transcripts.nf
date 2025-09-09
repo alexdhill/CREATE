@@ -18,6 +18,8 @@
 process make_complete_transcripts
 {
     publishDir "${params.outdir}/", mode: 'copy', enabled: params.keep, overwrite: params.force
+    container 'alexdhill/create:bash-22.04'
+    conda projectDir+'/bin/conda/modules/bash.yaml'
     if (params.manage_resources)
     {
         cpus 1

@@ -18,6 +18,8 @@
 process salmon_quant_nanopore
 {
     publishDir "${params.outdir}/quant/", mode: 'copy', enabled: params.keep, overwrite: params.force
+    container 'alexdhill/create:salmon-1.10.1'
+    conda projectDir+'/bin/conda/modules/salmon.yaml'
     if (params.manage_resources)
     {
         cpus 8

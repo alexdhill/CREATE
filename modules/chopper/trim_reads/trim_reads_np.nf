@@ -19,6 +19,8 @@
 process trim_reads_np
 {
     publishDir "${params.outdir}/reads/trimmed/", mode: 'copy', enable: params.keep, overwrite: params.force
+    container 'alexdhill/create:chopper-0.9.0'
+    conda projectDir+'/bin/conda/modules/chopper.yaml'
     if (params.manage_resources)
     {
         cpus 8
