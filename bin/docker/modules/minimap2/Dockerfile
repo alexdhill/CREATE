@@ -55,6 +55,7 @@ RUN apt-get update -y \
     && tar -xvf v2.26.tar.gz \
     && cd minimap2* \
     && make \
+    && cp minimap2 /usr/local/bin/ \
     && apt-get -y clean && apt-get -y autoclean \
     && rm -rf /var/lib/apt/lists/*
 ENV HOME="/home"

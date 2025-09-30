@@ -14,16 +14,38 @@
 
 ## BUILD R
 FROM ubuntu:22.04 as R
-ENV R_VER 4.5
+ENV R_VER 4.5.1
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
+        jq \
         wget \
         time \
         pigz \
         ca-certificates \
-        r-base-dev=${R_VER}-1ubuntu2 \
-    Rscript -e \
+        software-properties-common \
+        build-essential \
+        gcc g++ gfortran \
+        libreadline-dev libx11-dev libxt-dev libpng-dev libjpeg-dev libcairo2-dev libxml2-dev \
+        libssl-dev libcurl4-openssl-dev libbz2-dev liblzma-dev zlib1g-dev libpcre2-dev libhdf5-dev \
+        libboost-all-dev libopenblas-dev liblapack-dev \
+        texlive texlive-fonts-extra texlive-latex-extra texlive-latex-recommended tzdata \
+    && wget "https://cloud.r-project.org/src/base/R-4/R-${R_VER}.tar.gz" \
+    && tar -xzf R-${R_VER}.tar.gz \
+    && cd R-${R_VER} \
+    && ./configure --prefix=/usr/local \
+        --enable-R-shlib --with-blas --with-lapack \
+        --enable-memory-profiling \
+    && make -j8 \
+    && make install
+RUN echo """\
+local({\n\
+  r <- getOption(\"repos\")\n\
+  r[\"CRAN\"] <- \"https://cloud.r-project.org\"\n\
+  options(repos = r)\n\
+})\
+""" >> /usr/local/lib/R/etc/Rprofile.site
+RUN Rscript -e \
        "install.packages(c( \
             'devtools', \
             'tidyr', \
@@ -67,41 +89,45 @@ RUN apt-get update -y \
        install.packages( \
            'BiocManager', \
            repos='http://cran.us.r-project.org' \
-       ); \
+       );"
+    RUN Rscript -e \
+       "BiocManager::install(version = '3.22', ask=FALSE); \
        BiocManager::install(c( \
-           'tidyverse', \
-           'biocLite', \
-           'BiocIO', \
-           'Biostrings', \
-           'GenomicFeatures', \
-           'SummarizedExperiment', \
-           'SingleCellExperiment', \
-           'HDF5Array', \
-           'DESeq2', \
-           'tximeta', \
-           'tximport', \
-           'eisaR', \
-           'pcaMethods', \
-           'multtest', \
-           'metap', \
-           'scp', \
-           'scater', \
-           'scuttle', \
-           'scran', \
-           'scRNAseq', \
-           'fishpond', \
-           'velociraptor', \
-           'BSgenome', \
-           'DECIPHER', \
-           'DRIMSeq', \
+            'tidyverse', \
+            'biocLite', \
+            'BiocIO', \
+            'Biostrings', \
+            'GenomicFeatures', \
+            'SummarizedExperiment', \
+            'SingleCellExperiment', \
+            'HDF5Array', \
+            'Seqinfo', \
+            'DESeq2', \
+            'tximport', \
+            'eisaR', \
+            'pcaMethods', \
+            'multtest', \
+            'metap', \
+            'scp', \
+            'scater', \
+            'scuttle', \
+            'scran', \
+            'scRNAseq', \
+            'fishpond', \
+            'velociraptor', \
+            'BSgenome', \
+            'DECIPHER', \
+            'DRIMSeq', \
             'stageR' \
-       )); \
-       remotes::install_github('satijalab/seurat'); \
+       ));"
+RUN Rscript -e \
+       "remotes::install_github('satijalab/seurat'); \
        remotes::install_github('satijalab/seurat-wrappers'); \
        remotes::install_github('mojaveazure/seurat-disk'); \
+       remotes::install_github('thelovelab/tximeta@devel'); \
        remotes::install_github('stuart-lab/signac'); \
-       remotes::install_github('velocyto-team/velocyto.R');" \
-    && apt-get -y clean && apt-get -y autoclean \
+       remotes::install_github('velocyto-team/velocyto.R');"
+RUN apt-get -y clean && apt-get -y autoclean \
     && rm -rf /var/lib/apt/lists/*
 ENV HOME="/home"
 RUN chmod -R 777 /home

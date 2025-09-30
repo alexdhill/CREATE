@@ -19,6 +19,7 @@ RUN apt-get update -y \
     && unzip v${OARFISH_VER}.zip \
     && cd oarfish-${OARFISH_VER} \
     && $HOME/.cargo/bin/cargo build --release \
+    && cp target/release/oarfish /usr/local/bin/ \
     && apt-get -y clean && apt-get -y autoclean \
     && rm -rf /var/lib/apt/lists/*
 ENV HOME="/home"
