@@ -4,9 +4,10 @@ channels:
   - conda-forge
   - r
 dependencies:
+  - jq
   - time
   - pigz
-  - r-base>=4.5
+  - r-base == 4.5.1
   - r-devtools
   - r-tidyr
   - r-dplyr
