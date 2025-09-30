@@ -134,36 +134,14 @@ read_map <- function(reference_dir, class=TRUE)
         return()
 }
 
-compile_quants <- function(quants, tx2g, reference, metadata, transcripts) {
+compile_quants <- function(quants, reference, metadata, transcripts, seqs) {
     message("Matching quantifications to the metadata sheet...")
     conditions = read_csv(metadata, progress=F, show_col_types=F)
     colnames(conditions)[1] <- "prefix"
-    samples <- quants %>%
-        list.files(full.names = TRUE) %>%
-        lapply(function(path) {
-            quant <- file.path(path, "quant.sf")
-            sample <- basename(path)
-            name_list <- lst("files" = quant, "names" = sample)
-        }) %>%
-        bind_rows() %>%
-        as.data.frame() %>%
-        apply(X=conditions, MARGIN=1, FUN=function(row, quant) {
-            quant %>%
-                mutate(prefix=unlist(lapply(names, function(s){substr(s, 1, nchar(row[["prefix"]]))}))) %>%
-                inner_join(as.data.frame(t(row)), by="prefix", relationship="one-to-one") %>%
-                dplyr::select(-c("prefix"))
-        }, .) %>%
-        do.call(rbind, .)
 
     cache <- paste0(reference, "/.bfccache")
     bfc <- BiocFileCache(cache)
     setTximetaBFC(cache)
-
-    message("Compiling quantifications...")
-    transcript_quants <- tximeta::tximeta(coldata = samples, type = "salmon", skipMeta = FALSE)
-    if (transcripts) {
-        saveHDF5SummarizedExperiment(transcript_quants, dir = "tx_counts", replace = TRUE)
-    }
 
     message("Loading TxDb...")
     txdb <- bfcinfo(bfc) %>%
@@ -174,63 +152,59 @@ compile_quants <- function(quants, tx2g, reference, metadata, transcripts) {
         pull() %>%
         loadDb()
 
-    message("Summarizing genes...")
-    gene_quants <- summarize_genes(transcript_quants, txdb)
-    rowData(gene_quants) <- rowData(gene_quants) %>%
-        as.data.frame() %>%
-        left_join(tx2g, multiple = "any", by = "gene_id")
-    
-    message("Adding normalized counts...")
-    gene_quants = DESeqDataSet(gene_quants, design=~1) %>%
-        estimateSizeFactors()
+    message("Loading biotypes...")
+    biotypes <- read_map(reference)
 
-    message("Saving gene quantifications...")
-    saveHDF5SummarizedExperiment(gene_quants, dir = "counts", replace = TRUE)
-}
-
-compile_af <- function(quants, tx2g, metadata) {
-    suppressPackageStartupMessages({
-        library(fishpond)
-        library(SingleCellExperiment)
-    })
-
-    message("Reading metadata...")
-    conditions = readr::read_csv(metadata, progress=FALSE, show_col_types=FALSE)
-    colnames(conditions)[1] <- "prefix"
-
-    message("Importing quantifications...")
-    gene_quants <- quants %>%
+    message("Compiling quantifications...")
+    message("...reading quant files")
+    libraries = list("short"="salmon", "long"="oarfish", "single-cell"="alevin")
+    type = libraries[[seqs]]
+    samples <- quants %>%
         list.files(full.names = TRUE) %>%
-        lapply(function(quant) {
-            message(paste0("Loading ", basename(quant), "..."))
-            raw <- loadFry(quant, outputFormat = "scRNA")
-            counts <- SingleCellExperiment(
-                assays(raw),
-                colData = colData(raw) %>%
-                    as.data.frame() %>%
-                    mutate(sample=quant) %>%
-                    apply(X=conditions, MARGIN=1, FUN=function(row, dat) {
-                        dat %>%
-                            mutate(prefix=unlist(lapply(sample, function(s){substr(s, 1, nchar(row[["prefix"]]))}))) %>%
-                            inner_join(as.data.frame(t(row)), by="prefix", relationship="one-to-one") %>%
-                            dplyr::select(-c("prefix"))
-                    }, .) %>%
-                    do.call(rbind, .),
-                rowData = rowData(raw) %>%
-                    as.data.frame() %>%
-                    left_join(tx2g, by = c("gene_ids" = "gene_id"), multiple = "any"),
-                metadata = metadata(raw),
-                checkDimnames = TRUE
+        lapply(function(path) {
+            quant <- ifelse(seqs == "short",
+                file.path(path, "quant.sf"),
+                file.path(path, paste0(basename(path), ".quant"))
             )
-            return(counts)
+            sample <- basename(path)
+            name_list <- lst("files" = quant, "names" = sample)
         }) %>%
-        do.call(args = ., what = "cbind")
-    message("Chunking and storing data...")
-    saveHDF5SummarizedExperiment(
-        gene_quants,
-        dir = "counts",
-        replace = TRUE, chunkdim = c(1e4, 1e4)
-    )
+        bind_rows() %>%
+        as.data.frame() %>%
+        apply(X=conditions, MARGIN=1, FUN=function(row, sample) {
+            sample %>%
+                mutate(prefix=unlist(lapply(names, function(s){substr(s, 1, nchar(row[['prefix']]))}))) %>%
+                inner_join(as.data.frame(t(row)), by="prefix", relationship="one-to-one") %>%
+                dplyr::select(-c("prefix"))
+        }, .) %>%
+        do.call(rbind, .)
+
+    if (seqs == 'single-cell') {
+        message("...gathering gene quantifications")
+        quants <- tximeta::tximeta(samples$files, type = type, dropInfReps = TRUE, skipMeta = FALSE)
+        rowData(quants) <- rowData(quants) %>%
+            as.data.frame() %>%
+            left_join(biotypes, multiple = "any", by = "gene_id")
+        message("...saving gene quantifications")
+        saveHDF5SummarizedExperiment(quants, dir = "counts", replace = TRUE, as.sparse = TRUE, chunkdim = c(5000, ncol(quants)))
+    } else {
+        message("...gathering transcript quantifications")
+        quants <- tximeta::tximeta(samples$files, type = type, dropInfReps = TRUE, txOut = TRUE, skipMeta = FALSE)
+        if (transcripts) {
+            message("...saving transcript quantifications")
+            saveHDF5SummarizedExperiment(quants, dir = "tx_counts", replace = TRUE)
+        }
+
+        message("Summarizing genes...")
+        gene_quants <- summarize_genes(quants, txdb)
+        rowData(gene_quants) <- rowData(gene_quants) %>%
+            as.data.frame() %>%
+            left_join(biotypes, multiple = "any", by = "gene_id")
+
+        message("...saving gene quantifications")
+        saveHDF5SummarizedExperiment(gene_quants, dir = "counts", replace = TRUE)
+    }
+    message("Done")
 }
 
 main <- function() {
@@ -251,9 +225,9 @@ main <- function() {
         help = "The metadata samplesheet with prefixes and conditions"
     )
     parser$add_argument(
-        "-s", "--splintr",
-        action = "store_true", default = FALSE, required = FALSE,
-        help = "The split gene experiment for splintr"
+        "-s", "--seqs",
+        action = "store", default = 'short', required = FALSE,
+        help = "The sequence type (short/long/single-cell)"
     )
     parser$add_argument(
         "-t", "--transcripts",
@@ -262,12 +236,6 @@ main <- function() {
     )
     args <- parser$parse_args()
 
-    tx2g <- read_map(args$reference)
-
-    if (args$splintr) {
-        compile_af(args$quants, tx2g, args$metadata)
-    } else {
-       compile_quants(args$quants, tx2g, args$reference, args$metadata, args$transcripts)
-    }
+    compile_quants(args$quants, args$reference, args$metadata, args$transcripts, args$seqs)
 }
 main()
