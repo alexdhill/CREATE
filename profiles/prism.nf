@@ -165,7 +165,7 @@ profiles
                 queue = "medium"
                 time = '6h'
             }
-            withName: "salmon_quant_nanopore"
+            withName: "oarfish_quant"
             {
                 queue = "medium"
                 time = '6h'
