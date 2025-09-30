@@ -17,9 +17,9 @@
 
 include { count_reads_np } from "../../../modules/bash/count_reads/count_reads_np.nf"
 include { minimap2_align_dcs } from "../../../modules/minimap2/minimap2_align/minimap2_align_dcs.nf"
-include { trim_reads_nanopore } from "../../../modules/nanoplot/trim_reads/trim_reads_nanopore.nf"
+include { trim_reads_nanopore } from "../../../modules/chopper/trim_reads/trim_reads_nanopore.nf"
 include { minimap2_align } from "../../../modules/minimap2/minimap2_align/minimap2_align.nf"
-include { salmon_quant_nanopore } from "../../../modules/salmon/salmon_quant/salmon_quant_nanopore.nf"
+include { oarfish_quant } from "../../../modules/salmon/oarfish_quant/oarfish_quant.nf"
 include { compile_quantifications } from "../../../modules/R/compile_quantifications/compile_quantifications.nf"
 
 workflow NANOPORE
@@ -52,13 +52,14 @@ workflow NANOPORE
             | map{ res -> [res[0], res[1][0], res[1][1]] }
             | combine(dcs)
             | minimap2_align_dcs
+            | combine(parameters)
             | trim_reads_nanopore
             | combine(reference)
             | combine(parameters)
             | minimap2_align
             | combine(reference)
             | combine(parameters)
-            | salmon_quant_nanopore
+            | oarfish_quant
             | collect
             | map{quants -> [quants]}
             | combine(reference)
