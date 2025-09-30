@@ -37,7 +37,7 @@ process minimap2_align
         tuple(
             val("${sample}"),
             val("${nreads}"),
-            path("${sample}.sorted.bam")
+            path("${sample}.name_sorted.bam")
         )
     shell:
         '''
@@ -54,18 +54,16 @@ process minimap2_align
 
             params="--eqx -N 10000"
             if [[ "!{parameters}" != "NULL" ]]; then
-                params="$(jq '.minimap2 | to_entries | .[] | "\\(.key)=\\(.value)"' flags.json | xargs | sed 's/=true//g')"
+                params="$(jq '.minimap2 | to_entries | .[] | "\\(.key)=\\(.value)"' !{parameters} | xargs | sed 's/=true//g')"
             fi
 
-            minimap2 -ax map-ont \
+            minimap2 -ax sr \
                 ${params} \
                 -t !{task.cpus} \
                 !{reference}/*long_index*.mmi \
                 !{read} \
-            | samtools view -bS - \
-            > !{sample}.bam
-
-            samtools sort -@ !{task.cpus} !{sample}.bam \
-            > !{sample}.sorted.bam
+            | samtools view -u - \
+            | samtools sort -n -@ !{task.cpus} - \
+            > !{sample}.name_sorted.bam
         '''
 }

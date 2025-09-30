@@ -18,7 +18,7 @@
 process compile_quantifications
 {
     publishDir "${params.outdir}/", mode: 'copy', overwrite: params.force
-    container 'alexdhill/create:r-4.5'
+    container 'alexdhill/create:r-4.5.1'
     conda projectDir+'/bin/conda/modules/r.yaml'
     if (params.manage_resources)
     {
@@ -48,18 +48,20 @@ process compile_quantifications
                 set -x
             fi
 
-            splintr=""
+            seqs="short"
             if [ -n "!{params.get('library')}" ] && [ "!{params.library}" == "single_cell" ]; then
-                splintr="-s"
+                seqs="-s single-cell"
+            elif [ -n "!{params.get('library')}" ] && [ "!{params.library}" == "nanopore" ]; then
+                seqs="-s long"
             fi
 
             transcripts=""
-            if [ -n "!{params.get('export_transcripts')}" ]; then
+            if [ -n "!{params.get('export_transcripts')}" ] && [ "!{params.export_transcripts}" == "true" ]; then
                 transcripts="-t"
             fi
 
             mkdir -p quants && mv !{quants} quants/
             Rscript ${verbose} !{projectDir}/bin/R/compile_quantifications.R \
-                -q quants -r !{reference} -m !{metadata} ${splintr} ${transcripts}
+                -q quants -r !{reference} -m !{metadata} ${transcripts} ${seqs}
         '''
 }

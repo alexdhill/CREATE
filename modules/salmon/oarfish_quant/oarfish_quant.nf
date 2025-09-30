@@ -50,11 +50,11 @@ process oarfish_quant
             fi
 
             params="--filter-group no-filters --model-coverage"
-            if [[ "${parameters}" != "NULL" ]]; then
-                params="$(jq '.oarfish | to_entries | .[] | "--\\(.key)=\\(.value)"' flags.json | xargs | sed 's/=true//g')"
+            if [[ "!{parameters}" != "NULL" ]]; then
+                params="$(jq '.oarfish | to_entries | .[] | "--\\(.key)=\\(.value)"' !{parameters} | xargs | sed 's/=true//g')"
             fi
 
-            oarfish quant \
+            oarfish \
                 ${params} \
                 -a !{bam} \
                 -j !{task.cpus} \
@@ -65,12 +65,15 @@ process oarfish_quant
                 exit 1
             fi
 
+            # tximeta **only** supports mapped (not aligned) quants
+            sed -ri 's/bam_digest/annotated_transcripts_digest/' !{sample}/!{sample}.meta_info.json
+
             grep 'SeqHash' !{reference}/*complete_digest/info.json \
             | awk '{print $2}' \
             | sed -r 's/[\",]//g' \
             | xargs -I'%' \
                 sed -ri \
-                    's/\"sha256_seqs\": \"[a-zA-Z0-9]+\"/\"sha256_seqs\": \"%\"/' \
+                    's/\"sha256_seqs\": null/\"sha256_seqs\": \"%\"/' \
                     !{sample}/!{sample}.meta_info.json
 
             grep 'NameHash' !{reference}/*complete_digest/info.json \
@@ -78,7 +81,7 @@ process oarfish_quant
             | sed -r 's/[\",]//g' \
             | xargs -I'%' \
                 sed -ri \
-                    's/\"sha256_names\": null/\"sha256_names\": \"%\"/' \
+                    's/\"sha256_names\": \"[a-zA-Z0-9]+\"/\"sha256_names\": \"%\"/' \
                     !{sample}/!{sample}.meta_info.json
         '''
 }

@@ -17,7 +17,7 @@
 
 process minimap2_align_dcs
 {
-    publishDir "${params.outdir}/filtered", mode: 'copy', overwrite: params.force, enabled: params.keep
+    publishDir "${params.outdir}/reads/filtered", mode: 'copy', overwrite: params.force, enabled: params.keep
     container 'alexdhill/create:minimap2-2.26'
     conda projectDir+'/bin/conda/modules/minimap2.yaml'
     if (params.manage_resources)
@@ -50,7 +50,7 @@ process minimap2_align_dcs
                 set -x
             fi
 
-            minimap2 -ax splice -t 8 \
+            minimap2 -ax sr -t 8 \
                 !{control} \
                 !{read} \
             | samtools fastq -f4 - \

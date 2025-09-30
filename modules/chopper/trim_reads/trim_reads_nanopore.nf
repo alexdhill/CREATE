@@ -16,7 +16,7 @@
  */
  
 
-process trim_reads_np
+process trim_reads_nanopore
 {
     publishDir "${params.outdir}/reads/trimmed/", mode: 'copy', enable: params.keep, overwrite: params.force
     container 'alexdhill/create:chopper-0.9.0'
@@ -54,7 +54,7 @@ process trim_reads_np
 
             params="-l 50 -q 10"
             if [[ "${params}" == "null" ]]; then
-                params="$(jq '.chopper | to_entries | .[] | "\\(.key)=\\(.value)"' flags.json | xargs | sed 's/=true//g')"
+                params="$(jq '.chopper | to_entries | .[] | "\\(.key)=\\(.value)"' !{parameters} | xargs | sed 's/=true//g')"
             fi
 
             chopper \
