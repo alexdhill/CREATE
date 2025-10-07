@@ -60,7 +60,6 @@ process trim_reads_nanopore
             chopper \
                 -i !{read} \
                 --threads !{task.cpus} \
-                -o trimmed.fq \
                 ${params} \
             | gzip \
             > !{sample}_filtered_trimmed.fq.gz
