@@ -32,7 +32,7 @@ process compile_quantifications
             path(metadata)
         )
     output:
-        path("*counts/")
+        path("counts/")
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
@@ -48,7 +48,7 @@ process compile_quantifications
                 set -x
             fi
 
-            seqs="short"
+            seqs="-s short"
             if [ -n "!{params.get('library')}" ] && [ "!{params.library}" == "single_cell" ]; then
                 seqs="-s single-cell"
             elif [ -n "!{params.get('library')}" ] && [ "!{params.library}" == "nanopore" ]; then

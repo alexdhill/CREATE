@@ -136,8 +136,10 @@ read_map <- function(reference_dir, class=TRUE)
 
 compile_quants <- function(quants, reference, metadata, transcripts, seqs) {
     message("Matching quantifications to the metadata sheet...")
-    conditions = read_csv(metadata, progress=F, show_col_types=F)
+    conditions = readr::read_csv(metadata, progress=F, show_col_types=F) %>%
+        dplyr::mutate(dplyr::across(dplyr::where(is.character), as.factor)) %>%
     colnames(conditions)[1] <- "prefix"
+    conditions$prefix <- as.character(conditions$prefix)
 
     cache <- paste0(reference, "/.bfccache")
     bfc <- BiocFileCache(cache)
@@ -179,20 +181,24 @@ compile_quants <- function(quants, reference, metadata, transcripts, seqs) {
         }, .) %>%
         do.call(rbind, .)
 
-    if (seqs == 'single-cell') {
+    if (seqs == 'single-cell') { ## FINISH TESTING
         message("...gathering gene quantifications")
-        quants <- tximeta::tximeta(samples$files, type = type, dropInfReps = TRUE, skipMeta = FALSE)
+        quants <- tximeta::tximeta(samples, type = type, dropInfReps = TRUE, skipMeta = FALSE)
         rowData(quants) <- rowData(quants) %>%
             as.data.frame() %>%
             left_join(biotypes, multiple = "any", by = "gene_id")
+        message("...converting to Seurat object")
+        quants <- Seurat::as.Seurat(quants, counts = "counts", data = "abundance")
         message("...saving gene quantifications")
-        saveHDF5SummarizedExperiment(quants, dir = "counts", replace = TRUE, as.sparse = TRUE, chunkdim = c(5000, ncol(quants)))
+        # saveHDF5SummarizedExperiment(quants, dir = "counts", replace = TRUE, as.sparse = TRUE, chunkdim = c(5000, ncol(quants)))
+        SeuratDisk::SaveH5Seurat(quants, filename = "counts", overwrite = TRUE, assay = "RNA", verbose = FALSE)
     } else {
         message("...gathering transcript quantifications")
-        quants <- tximeta::tximeta(samples$files, type = type, dropInfReps = TRUE, txOut = TRUE, skipMeta = FALSE)
+        quants <- tximeta::tximeta(samples, type = type, dropInfReps = TRUE, txOut = TRUE, skipMeta = FALSE)
         if (transcripts) {
+            quant_dds <- DESeq2::DESeqDataSet(quants, design = ~ 1)
             message("...saving transcript quantifications")
-            saveHDF5SummarizedExperiment(quants, dir = "tx_counts", replace = TRUE)
+            saveHDF5SummarizedExperiment(quant_dds, dir = "tx_counts", replace = TRUE)
         }
 
         message("Summarizing genes...")
@@ -200,9 +206,10 @@ compile_quants <- function(quants, reference, metadata, transcripts, seqs) {
         rowData(gene_quants) <- rowData(gene_quants) %>%
             as.data.frame() %>%
             left_join(biotypes, multiple = "any", by = "gene_id")
+        gene_dds <- DESeq2::DESeqDataSet(gene_quants, design = ~ 1)
 
         message("...saving gene quantifications")
-        saveHDF5SummarizedExperiment(gene_quants, dir = "counts", replace = TRUE)
+        saveHDF5SummarizedExperiment(gene_dds, dir = "counts", replace = TRUE)
     }
     message("Done")
 }
