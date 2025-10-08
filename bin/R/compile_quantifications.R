@@ -187,18 +187,15 @@ compile_quants <- function(quants, reference, metadata, transcripts, seqs) {
         rowData(quants) <- rowData(quants) %>%
             as.data.frame() %>%
             left_join(biotypes, multiple = "any", by = "gene_id")
-        message("...converting to Seurat object")
-        quants <- Seurat::as.Seurat(quants, counts = "counts", data = "abundance")
+
         message("...saving gene quantifications")
-        # saveHDF5SummarizedExperiment(quants, dir = "counts", replace = TRUE, as.sparse = TRUE, chunkdim = c(5000, ncol(quants)))
-        SeuratDisk::SaveH5Seurat(quants, filename = "counts", overwrite = TRUE, assay = "RNA", verbose = FALSE)
+        saveHDF5SummarizedExperiment(quants, dir = "counts", replace = TRUE, as.sparse = TRUE, chunkdim = c(5000, ncol(quants)))
     } else {
         message("...gathering transcript quantifications")
         quants <- tximeta::tximeta(samples, type = type, dropInfReps = TRUE, txOut = TRUE, skipMeta = FALSE)
         if (transcripts) {
-            quant_dds <- DESeq2::DESeqDataSet(quants, design = ~ 1)
             message("...saving transcript quantifications")
-            saveHDF5SummarizedExperiment(quant_dds, dir = "tx_counts", replace = TRUE)
+            saveHDF5SummarizedExperiment(quants, dir = "tx_counts", replace = TRUE)
         }
 
         message("Summarizing genes...")
@@ -206,10 +203,9 @@ compile_quants <- function(quants, reference, metadata, transcripts, seqs) {
         rowData(gene_quants) <- rowData(gene_quants) %>%
             as.data.frame() %>%
             left_join(biotypes, multiple = "any", by = "gene_id")
-        gene_dds <- DESeq2::DESeqDataSet(gene_quants, design = ~ 1)
 
         message("...saving gene quantifications")
-        saveHDF5SummarizedExperiment(gene_dds, dir = "counts", replace = TRUE)
+        saveHDF5SummarizedExperiment(gene_quants, dir = "counts", replace = TRUE)
     }
     message("Done")
 }
