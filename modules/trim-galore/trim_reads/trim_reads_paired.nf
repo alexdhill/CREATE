@@ -55,12 +55,12 @@ process trim_reads_paired
                 set -x
             fi
             
-            params="-l 75 --2color 20"
-            if [[ "${parameters}" != "NULL" ]]; then
+            params="--length 75 --2colour 20"
+            if [[ "!{parameters}" != "NULL" ]]; then
                 params="$(jq '."trim-galore" | to_entries | .[] | "\\(.key)=\\(.value)"' flags.json | xargs | sed 's/=true//g')"
             fi
 
-            trim_galore --paired --gzip  !{read_1} !{read_2} \
+            trim_galore --paired --gzip !{read_1} !{read_2} \
                 --basename !{sample} \
                 -j !{task.cpus} --output_dir . \
                 ${params}
