@@ -13,9 +13,6 @@
  * licensor will not be liable to you for any damages arising out of these terms or the use or
  * nature of the software, under any kind of legal claim.
  */
-import java.nio.file.Files
-import java.nio.file.Paths
-
 
 include { prefetch } from "../../../modules/sra/prefetch/prefetch.nf"
 include { fasterq_dump_paired } from "../../../modules/sra/fasterq-dump/fasterq-dump_paired.nf"
@@ -45,9 +42,10 @@ workflow PAIRED_END
                 | set{reads}
             } else
             {
-                log.info("Parsing reads from file...")
-                reads = Channel.fromFilePairs(params.samples+"/"+params.pattern)
-                    .map{sample -> [sample[0], sample[1][0], sample[1][1]]}
+                log.info("Collecting reads...")
+                Channel.fromFilePairs("${params.samples}/${params.pattern}")
+                | map{sample -> [sample[0], sample[1][0], sample[1][1]]}
+                | set{reads}
             }
 
             reads
