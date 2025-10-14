@@ -137,7 +137,7 @@ read_map <- function(reference_dir, class=TRUE)
 compile_quants <- function(quants, reference, metadata, transcripts, seqs) {
     message("Matching quantifications to the metadata sheet...")
     conditions = readr::read_csv(metadata, progress=F, show_col_types=F) %>%
-        dplyr::mutate(dplyr::across(dplyr::where(is.character), as.factor)) %>%
+        dplyr::mutate(dplyr::across(dplyr::where(is.character), as.factor))
     colnames(conditions)[1] <- "prefix"
     conditions$prefix <- as.character(conditions$prefix)
 
@@ -173,13 +173,23 @@ compile_quants <- function(quants, reference, metadata, transcripts, seqs) {
         }) %>%
         bind_rows() %>%
         as.data.frame() %>%
-        apply(X=conditions, MARGIN=1, FUN=function(row, sample) {
-            sample %>%
-                mutate(prefix=unlist(lapply(names, function(s){substr(s, 1, nchar(row[['prefix']]))}))) %>%
-                inner_join(as.data.frame(t(row)), by="prefix", relationship="one-to-one") %>%
-                dplyr::select(-c("prefix"))
-        }, .) %>%
-        do.call(rbind, .)
+        dplyr::cross_join(conditions) %>%
+        dplyr::filter(stringr::str_starts(names, fixed(prefix))) %>%
+        dplyr::group_by(prefix) %>%
+        dplyr::mutate(matches=n()) %>%
+        dplyr::ungroup() %>%
+        { if (any(samples$matches > 1)) {
+            cat("Non-unique prefixes detected:\n")
+            samples %>%
+            dplyr::filter(matches > 1) %>%
+            dplyr::pull(prefix) %>%
+            unique() %>%
+            print()
+            stop("Please ensure all prefixes are unique")
+        }; . } %>%
+        dplyr::slice(n=1, .by='prefix') %>%
+        dplyr::select(-matches) %>%
+        dplyr::mutate(names=prefix, prefix=NA)
 
     if (seqs == 'single-cell') { ## FINISH TESTING
         message("...gathering gene quantifications")

@@ -61,7 +61,7 @@ process compile_quantifications
             fi
 
             mkdir -p quants && mv !{quants} quants/
-            Rscript ${verbose} !{projectDir}/bin/R/compile_quantifications.R \
-                -q quants -r !{reference} -m !{metadata} ${transcripts} ${seqs}
+            R --no-restore --file=!{projectDir}/bin/R/compile_quantifications.R \
+                --args -q quants -r !{reference} -m !{metadata} ${seqs} ${transcripts}
         '''
 }
