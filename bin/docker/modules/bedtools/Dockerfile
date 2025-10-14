@@ -18,14 +18,15 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV BEDTOOLS_VER 2.31.0
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
-        build-essential \
-        zlib1g-dev \
-        libghc-bzlib-dev \
-        liblzma-dev \
+        jq \
         wget \
-        python3 \
         time \
         pigz \
+        python3 \
+        zlib1g-dev \
+        liblzma-dev \
+        libghc-bzlib-dev \
+        build-essential \
     && wget --no-check-certificate -q \
         https://github.com/arq5x/bedtools2/archive/refs/tags/v${BEDTOOLS_VER}.tar.gz \
     && tar -xzf v${BEDTOOLS_VER}.tar.gz \

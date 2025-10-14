@@ -17,6 +17,7 @@ FROM ubuntu:22.04 as CHOPPER
 ENV CHOPPER_VER 0.9.0
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
+        jq \
         build-essential \
         make \
         curl \

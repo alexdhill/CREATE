@@ -79,6 +79,7 @@ COPY --from=MINIMAP2 /minimap2*/minimap2 /usr/local/bin/minimap2
 ENV FLAIR_VER 2.0.0
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
+        jq \
         time \
         pigz \
         wget \

@@ -17,6 +17,7 @@ FROM ubuntu:22.04 as FASTQC
 ENV FASTQC_VER 0.12.1
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
+        jq \
         time \
         pigz \
         unzip \

@@ -18,11 +18,12 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV SEQTK_VER 1.4
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
-        build-essential \
+        jq \
         make \
         wget \
         unzip \
         libz-dev \
+        build-essential \
     && wget --no-check-certificate \
         https://github.com/lh3/seqtk/archive/refs/tags/v${SEQTK_VER}.zip \
     && unzip v${SEQTK_VER}.zip \

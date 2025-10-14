@@ -17,17 +17,26 @@ FROM ubuntu:22.04 as TRIMGALORE
 ENV TRIMGALORE_VER 0.6.10
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
+        jq \
         curl \
         time \
         pigz \
+        libisal-dev \
         ca-certificates \
-    && curl -fsSL https://github.com/FelixKrueger/TrimGalore/archive/0.6.10.tar.gz \
+        python3.10-dev \
+        python3-pip \
+    && curl -fsSL https://github.com/FelixKrueger/TrimGalore/archive/${TRIMGALORE_VER}.tar.gz \
         -o trim_galore.tar.gz \
     && tar xvzf trim_galore.tar.gz \
-    && mv /TrimGalore-0.6.10/ /TrimGalore \
+    && mv /TrimGalore-${TRIMGALORE_VER}/ /TrimGalore \
+    && cp /TrimGalore/trim_galore /usr/local/bin/ \
+    && rm /trim_galore.tar.gz \
+    && python3 -m pip install --no-cache-dir --upgrade pip \
+    && python3 -m pip install --no-cache-dir --upgrade cutadapt \
     && apt-get -y clean && apt-get -y autoclean \
     && rm -rf /var/lib/apt/lists/*
 ENV HOME="/home"
+ENV PATH="$PATH:/TrimGalore"
 RUN chmod -R 777 /home
 ENV TIME="\n\nres memory (KB)     %M\ntime (HH:mm:ss)     %E"
 ENTRYPOINT ["/usr/bin/time"]

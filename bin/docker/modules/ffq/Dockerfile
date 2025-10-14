@@ -4,6 +4,7 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV FFQ_VER 0.3.1
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
+        jq \
         time \
         pigz \
         build-essential \

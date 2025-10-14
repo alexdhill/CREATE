@@ -44,6 +44,7 @@ ENV MINIMAP2_VER 2.26
 COPY --from=SAMTOOLS /usr/local/bin/samtools /usr/local/bin/
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
+        jq \
         time \
         pigz \
         build-essential \

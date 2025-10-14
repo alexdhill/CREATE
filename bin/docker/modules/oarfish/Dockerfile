@@ -4,14 +4,15 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV OARFISH_VER 0.9.0
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
+        jq \
         time \
         pigz \
-        build-essential \
+        curl \
         make \
         cmake \
-        curl \
-        ca-certificates \
         unzip \
+        ca-certificates \
+        build-essential \
     && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
     && curl -kL \
         https://github.com/COMBINE-lab/oarfish/archive/refs/tags/v${OARFISH_VER}.zip \

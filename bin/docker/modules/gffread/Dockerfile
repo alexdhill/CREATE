@@ -18,6 +18,7 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV GFFREAD_VER 0.12.7
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
+        jq \
         time \
         pigz \
         ca-certificates \

@@ -18,6 +18,7 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV SAMTOOLS_VER 1.19
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
+        jq \
         time \
         pigz \
         build-essential \

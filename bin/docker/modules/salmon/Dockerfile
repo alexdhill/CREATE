@@ -18,6 +18,7 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV SALMON_VER 1.10.1
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
+        jq \
         time \
         pigz \
         make \
@@ -43,6 +44,7 @@ RUN apt-get update -y \
     && cmake .. \
     && make \
     && make install \
+    && cp /salmon-${SALMON_VER}/bin/salmon /usr/local/bin/ \
     && apt-get -y clean && apt-get -y autoclean \
     && rm -rf /var/lib/apt/lists/*
 ENV HOME="/home"

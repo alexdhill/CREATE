@@ -17,6 +17,7 @@ FROM ubuntu:22.04 as GTFSORT
 ENV GTFSORT_VER 0.2.2
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
+        jq \
         time \
         pigz \
         build-essential \

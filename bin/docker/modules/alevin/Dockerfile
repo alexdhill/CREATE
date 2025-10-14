@@ -18,6 +18,7 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV ALEVIN_VER 0.10.0
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
+        jq \
         time \
         pigz \
         build-essential \

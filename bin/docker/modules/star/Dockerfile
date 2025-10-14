@@ -18,17 +18,18 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV STAR_VER 2.7.11a
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
-        build-essential \
+        jq \
+        xxd \
         make \
         time \
         pigz \
         wget \
+        autoconf \
         zlib1g-dev \
         libbz2-dev \
         liblzma-dev \
         libncurses5-dev \
-        autoconf \
-        xxd \
+        build-essential \
     && wget --no-check-certificate \
         https://github.com/alexdobin/STAR/archive/refs/tags/${STAR_VER}.tar.gz \
     && tar -xvf ${STAR_VER}.tar.gz \

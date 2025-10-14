@@ -17,11 +17,13 @@ FROM ubuntu:22.04 AS SRA
 ENV SRA_VER 3.2.1
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        build-essential cmake \
-        wget ca-certificates \
-        unzip \
+        jq \
         time \
         pigz \
+        unzip \
+        cmake \
+        build-essential \
+        wget ca-certificates \
     && wget -q "https://github.com/ncbi/ncbi-vdb/archive/refs/tags/${SRA_VER}.zip" \
     && unzip ${SRA_VER}.zip \
     && rm ${SRA_VER}.zip \

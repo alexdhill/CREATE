@@ -16,7 +16,8 @@
 FROM ubuntu:22.04 as MULTIQC
 ENV MULTIQC_VER 1.8
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends 
+    && apt-get install -y --no-install-recommends \
+        jq \
         time \
         pigz \
         wget \

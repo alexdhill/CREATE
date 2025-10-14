@@ -18,11 +18,12 @@ ENV UBUNTU_VER 22.04
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
-        ca-certificates \
+        jq \
         wget \
-        mysql-server \
         time \
         pigz \
+        mysql-server \
+        ca-certificates \
     && apt-get -y clean && apt-get -y autoclean \
     && rm -rf /var/lib/apt/lists/*
 ENV HOME="/home"
