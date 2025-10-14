@@ -49,11 +49,9 @@ process salmon_quant_single
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
-            params="$(jq '.salmon' !{parameters})"
-            if [[ "${params}" == "null" ]]; then
-                params=""
-            else
-                params="$(jq '.salmon | to_entries | .[] | "--\\(.key)=\\(.value)"' flags.json | xargs | sed 's/=true//g')"
+            params="--seqBias --gcBias --writeUnmappedNames --validateMappings --recoverOrphans --rangeFactorizationBins 4"
+            if [[ "!{parameters}" != "NULL" ]]; then
+                params="$(jq '.salmon | to_entries | .[] | "\\(.key)=\\(.value)"' flags.json | xargs | sed 's/=true//g')"
             fi
 
             salmon quant --libType A -r !{read} \

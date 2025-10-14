@@ -46,15 +46,13 @@ process salmon_quant_novel
                 echo "Read 1: !{read_1}"
                 echo "Read 2: !{read_2}"
                 echo "Index: !{index}"
-                echo "User parameters: $(jq '.salmon' !{parameters})"
+                echo "User parameters: !{parameters}"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
-            params="$(jq '.salmon' !{parameters})"
-            if [[ "${params}" == "null" ]]; then
-                params=""
-            else
+            params="--seqBias --gcBias --writeUnmappedNames --validateMappings --recoverOrphans --rangeFactorizationBins 4"
+            if [[ "$!{parameters}" == "NULL" ]]; then
                 params="$(jq '.salmon | to_entries | .[] | "--\\(.key)=\\(.value)"' flags.json | xargs | sed 's/=true//g')"
             fi
 

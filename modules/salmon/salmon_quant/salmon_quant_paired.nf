@@ -45,22 +45,18 @@ process salmon_quant_paired
                 echo "Read 1: !{read_1}"
                 echo "Read 2: !{read_2}"
                 echo "Reference: !{reference}"
-                echo "User parameters: $(jq '.salmon' !{parameters})"
+                echo "User parameters: !{parameters}"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
-            params="$(jq '.salmon' !{parameters})"
-            if [[ "${params}" == "null" ]]; then
-                params=""
-            else
-                params="$(jq '.salmon | to_entries | .[] | "--\\(.key)=\\(.value)"' flags.json | xargs | sed 's/=true//g')"
+            params="--seqBias --gcBias --writeUnmappedNames --validateMappings --recoverOrphans --rangeFactorizationBins 4"
+            if [[ "!{parameters}" != "NULL" ]]; then
+                params="$(jq '.salmon | to_entries | .[] | "\\(.key)=\\(.value)"' flags.json | xargs | sed 's/=true//g')"
             fi
 
             salmon quant --libType A -1 !{read_1} -2 !{read_2} \
                 -i !{reference}/*short_index*.sidx -p 8 --output !{sample} \
-                --seqBias --gcBias --writeUnmappedNames \
-                --validateMappings --recoverOrphans --rangeFactorizationBins 4 \
                 ${params}
             
             if [[ ! -e !{sample}/quant.sf ]]; then
