@@ -18,6 +18,8 @@
 /*
  * Imports
  */
+import java.nio.file.Files
+import java.nio.file.Paths
 import groovy.util.logging.Slf4j
 // ERROR -> WARN -> DEBUG -> INFO
 
@@ -103,6 +105,10 @@ params.reference = false
 params.discovery = false
 if (params.reference)
 {
+    if (params.quant) {
+        log.error("Both --quant and --reference are specified, did you mean to use --ref?")
+        throw new IllegalArgumentException('CREATE-seq mode must be specified either "--quant" XOR "--reference"')
+    }
     params.genome = ''
     params.isoquant = false
     params.index = ''
@@ -204,7 +210,7 @@ else if (params.quant)
         log.error("--metadata: ${params.metadata}");
         throw new IllegalArgumentException('Sample metadata file must be specified')
     }
-    if (params.ref=='')
+    if (params.ref=='' || !Files.isDirectory(Paths.get(params.ref)))
     {
         log.error("--ref: ${params.ref}");
         throw new IllegalArgumentException('CREATE reference directory must be specified')
