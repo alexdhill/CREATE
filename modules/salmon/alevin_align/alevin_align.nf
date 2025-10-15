@@ -13,12 +13,12 @@
  * licensor will not be liable to you for any damages arising out of these terms or the use or
  * nature of the software, under any kind of legal claim.
  */
- 
+
 
 process alevin_align
 {
     publishDir "${params.outdir}/", mode: 'copy', enabled: params.keep, overwrite: params.force
-    container 'alexdhill/create:alevin-0.10.0'
+    container 'alexdhill/create:salmon-1.10.1'
     conda projectDir+'/bin/conda/modules/alevin.yaml'
     if (params.manage_resources) {
         cpus 8

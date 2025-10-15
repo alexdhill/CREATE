@@ -55,9 +55,8 @@ process salmon_quant_single
             fi
 
             salmon quant --libType A -r !{read} \
-                -i !{reference}/*.sidx -p 8 --output !{sample} \
-                --seqBias --gcBias --validateMappings --recoverOrphans --rangeFactorizationBins 4 \
-                --writeUnmappedNames ${params}
+                -i !{reference}/*short_index*.sidx -p 8 --output !{sample} \
+                ${params}
             
             if [[ ! -e !{sample}/quant.sf ]]; then
                 echo "\033[[1;31mERR: Salmon quantification failed\033[0m" 1>&2
