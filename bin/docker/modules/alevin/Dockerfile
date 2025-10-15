@@ -34,6 +34,9 @@ RUN apt-get update -y \
     && unzip v${ALEVIN_VER}.zip \
     && cd alevin-fry-* \
     && $HOME/.cargo/bin/cargo build --release \
+    && cp target/release/alevin-fry /usr/local/bin/alevin-fry \
+    && cd / \
+    && rm -rf alevin-fry-* v${ALEVIN_VER}.zip \
     && apt-get -y clean && apt-get -y autoclean \
     && rm -rf /var/lib/apt/lists/*
 ENV HOME="/home"
