@@ -178,7 +178,7 @@ compile_quants <- function(quants, reference, metadata, transcripts, seqs) {
         dplyr::group_by(prefix) %>%
         dplyr::mutate(matches=n()) %>%
         dplyr::ungroup() %>%
-        { if (any(samples$matches > 1)) {
+        { if (any(.$matches > 1)) {
             cat("Non-unique prefixes detected:\n")
             samples %>%
             dplyr::filter(matches > 1) %>%
@@ -187,9 +187,9 @@ compile_quants <- function(quants, reference, metadata, transcripts, seqs) {
             print()
             stop("Please ensure all prefixes are unique")
         }; . } %>%
-        dplyr::slice(n=1, .by='prefix') %>%
+        dplyr::slice(1, .by='prefix') %>%
         dplyr::select(-matches) %>%
-        dplyr::mutate(names=prefix, prefix=NA)
+        dplyr::mutate(names=prefix, prefix=NULL)
 
     if (seqs == 'single-cell') { ## FINISH TESTING
         message("...gathering gene quantifications")
