@@ -150,7 +150,7 @@ else if (params.quant)
     params.metadata = ''
     params.export_transcripts = false
     params.parameters = ""
-    if (['paired_end','single_cell'].contains(params.library))
+    if (['paired_end','single_end','single_cell'].contains(params.library))
     {
         params.pattern = '*_R{1,2}_*.fastq.gz'
         if (params.library=="single_cell")
@@ -158,11 +158,11 @@ else if (params.quant)
             params.chemistry = "chromiumV3"
             if (params.chemistry=='chromiumV3')
             {
-                params.barcodes = projectDir+'/assets/3M-february-2018.txt'
+                params.barcodes = projectDir+'/assets/3M-february-2018.txt.gz'
             }
             else if (params.chemistry=='chromium')
             {
-                params.barcodes = projectDir+'/assets/737K-august-2016.txt'
+                params.barcodes = projectDir+'/assets/737K-august-2016.txt.gz'
             }
             else
             {
@@ -210,7 +210,7 @@ else if (params.quant)
         log.error("--metadata: ${params.metadata}");
         throw new IllegalArgumentException('Sample metadata file must be specified')
     }
-    if (params.ref=='' || !Files.isDirectory(Paths.get(params.ref)))
+    if (params.ref && (params.ref=='' || !Files.isDirectory(Paths.get(params.ref))))
     {
         log.error("--ref: ${params.ref}");
         throw new IllegalArgumentException('CREATE reference directory must be specified')
