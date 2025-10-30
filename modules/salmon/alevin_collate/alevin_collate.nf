@@ -47,10 +47,16 @@ process alevin_collate
                 set -x
             fi
 
+            barcodes="!{whitelist}"
+            if [[ "!{whitelist}" == *".gz" ]]; then
+                gunzip -c !{whitelist} > whitelist.txt
+                barcodes="whitelist.txt"
+            fi
+
             mkdir -p fry
             alevin-fry generate-permit-list \
                 --input !{alevin} \
-                --unfiltered-pl !{whitelist} \
+                --unfiltered-pl ${barcodes} \
                 --expected-ori fw \
                 --output-dir fry/!{sample}
 

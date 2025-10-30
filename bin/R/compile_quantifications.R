@@ -20,6 +20,7 @@ suppressPackageStartupMessages({
     library(stringr)
     library(readr)
     library(tximeta)
+    library(fishpond)
     library(AnnotationDbi)
     library(BiocFileCache)
     library(SummarizedExperiment)
@@ -130,8 +131,18 @@ read_map <- function(reference_dir, class=TRUE)
         readr::read_csv(col_names=TRUE, progress=FALSE, show_col_types=FALSE) %>%
         as.data.frame() %>%
         dplyr::select(gene_id, gene_name, gene_biotype) %>%
-        distinct() %>%
+        dplyr::distinct() %>%
         return()
+}
+
+get_quant_files <- function(path, seqs) {
+    if (seqs == "short") {
+        return(file.path(path, "quant.sf"))
+    } else if (seqs == "long") {
+        return(file.path(path, paste0(basename(path), ".quant")))
+    } else if (seqs == "single-cell") {
+        return(file.path(path))
+    }
 }
 
 compile_quants <- function(quants, reference, metadata, transcripts, seqs) {
@@ -142,17 +153,17 @@ compile_quants <- function(quants, reference, metadata, transcripts, seqs) {
     conditions$prefix <- as.character(conditions$prefix)
 
     cache <- paste0(reference, "/.bfccache")
-    bfc <- BiocFileCache(cache)
-    setTximetaBFC(cache)
+    bfc <- BiocFileCache::BiocFileCache(cache)
+    tximeta::setTximetaBFC(cache)
 
     message("Loading TxDb...")
-    txdb <- bfcinfo(bfc) %>%
+    txdb <- BiocFileCache::bfcinfo(bfc) %>%
         as.data.frame() %>%
-        filter(endsWith(rname, "complete_annotation.gtf.gz")) %>%
-        slice_head(n = 1) %>%
+        dplyr::filter(endsWith(rname, "complete_annotation.gtf.gz")) %>%
+        dplyr::slice_head(n = 1) %>%
         dplyr::select(rpath) %>%
-        pull() %>%
-        loadDb()
+        dplyr::pull() %>%
+        AnnotationDbi::loadDb()
 
     message("Loading biotypes...")
     biotypes <- read_map(reference)
@@ -164,64 +175,99 @@ compile_quants <- function(quants, reference, metadata, transcripts, seqs) {
     samples <- quants %>%
         list.files(full.names = TRUE) %>%
         lapply(function(path) {
-            quant <- ifelse(seqs == "short",
-                file.path(path, "quant.sf"),
-                file.path(path, paste0(basename(path), ".quant"))
-            )
-            sample <- basename(path)
-            name_list <- lst("files" = quant, "names" = sample)
+            quant <- get_quant_files(path, seqs);
+            sample <- basename(path);
+            name_list <- tibble::lst("files" = quant, "names" = sample);
         }) %>%
-        bind_rows() %>%
+        dplyr::bind_rows() %>%
         as.data.frame() %>%
+        {
+            cat(paste0("Found ", .$files, '\n'));
+            .
+        } %>%
         dplyr::cross_join(conditions) %>%
-        dplyr::filter(stringr::str_starts(names, fixed(prefix))) %>%
+        dplyr::filter(stringr::str_starts(names, stringr::fixed(prefix))) %>%
         dplyr::group_by(prefix) %>%
-        dplyr::mutate(matches=n()) %>%
+        dplyr::mutate(matches=dplyr::n()) %>%
         dplyr::ungroup() %>%
         { if (any(.$matches > 1)) {
-            cat("Non-unique prefixes detected:\n")
+            cat("Non-unique prefixes detected:\n");
             samples %>%
             dplyr::filter(matches > 1) %>%
             dplyr::pull(prefix) %>%
             unique() %>%
-            print()
-            stop("Please ensure all prefixes are unique")
+            print();
+            stop("Please ensure all prefixes are unique");
         }; . } %>%
         dplyr::slice(1, .by='prefix') %>%
         dplyr::select(-matches) %>%
         dplyr::mutate(names=prefix, prefix=NULL)
 
-    if (seqs == 'single-cell') { ## FINISH TESTING
-        message("...gathering gene quantifications")
-        quants <- tximeta::tximeta(samples, type = type, dropInfReps = TRUE, skipMeta = FALSE)
-        rowData(quants) <- rowData(quants) %>%
-            as.data.frame() %>%
-            left_join(biotypes, multiple = "any", by = "gene_id")
+    if (seqs == 'single-cell') {
+        message("By default all single-cell quants are saved to separate HDF5 files under 'counts/<sample_name>' directories.")
+        quants = apply(samples, 1, function(sample) {
+            message("...saving gene quantifications for ", sample[["names"]])
+            genes = fishpond::loadFry(sample[["files"]], outputFormat = "scRNA")
 
-        message("...saving gene quantifications")
-        saveHDF5SummarizedExperiment(quants, dir = "counts", replace = TRUE, as.sparse = TRUE, chunkdim = c(5000, ncol(quants)))
+            SummarizedExperiment::colData(genes) <- SummarizedExperiment::colData(genes) %>%
+                as.data.frame() %>%
+                dplyr::mutate(sample = sample[["names"]]) %>%
+                dplyr::left_join(conditions, by = c("sample" = "prefix")) %>%
+                magrittr::set_rownames(.$barcodes) %>%
+                S4Vectors::DataFrame()
+
+            SummarizedExperiment::rowData(genes) <- SummarizedExperiment::rowData(genes) %>%
+                as.data.frame() %>%
+                dplyr::left_join(biotypes, multiple = "any", by = c("gene_ids" = "gene_id")) %>%
+                magrittr::set_rownames(.$gene_ids) %>%
+                S4Vectors::DataFrame()
+
+            dir.create(file.path("counts", sample[["names"]]), recursive = TRUE)
+            starttime <- Sys.time()
+            HDF5Array::saveHDF5SummarizedExperiment(
+                genes,
+                dir = file.path("counts", sample[["names"]]),
+                replace = TRUE,
+                as.sparse = TRUE,
+                chunkdim = c(5000, ncol(genes)),
+                verbose = TRUE
+            )
+            endtime <- Sys.time()
+            message("Saved ", sample[["nreads"]], " reads in ", round(difftime(endtime, starttime, units = "secs"), 2), " seconds")
+        })
     } else {
         message("...gathering transcript quantifications")
         quants <- tximeta::tximeta(samples, type = type, dropInfReps = TRUE, txOut = TRUE, skipMeta = FALSE)
         if (transcripts) {
             message("...saving transcript quantifications")
-            saveHDF5SummarizedExperiment(quants, dir = "tx_counts", replace = TRUE)
+            HDF5Array::saveHDF5SummarizedExperiment(
+                quants,
+                dir = "tx_counts",
+                replace = TRUE,
+                verbose = TRUE
+            )
         }
 
         message("Summarizing genes...")
         gene_quants <- summarize_genes(quants, txdb)
-        rowData(gene_quants) <- rowData(gene_quants) %>%
+        SummarizedExperiment::rowData(gene_quants) <- SummarizedExperiment::rowData(gene_quants) %>%
             as.data.frame() %>%
-            left_join(biotypes, multiple = "any", by = "gene_id")
+            dplyr::left_join(biotypes, multiple = "any", by = "gene_id") %>%
+            S4Vectors::DataFrame()
 
         message("...saving gene quantifications")
-        saveHDF5SummarizedExperiment(gene_quants, dir = "counts", replace = TRUE)
+        HDF5Array::saveHDF5SummarizedExperiment(
+            gene_quants,
+            dir = "counts",
+            replace = TRUE,
+            verbose = TRUE
+        )
     }
-    message("Done")
+    message("Done!")
 }
 
 main <- function() {
-    parser <- ArgumentParser()
+    parser <- argparse::ArgumentParser()
     parser$add_argument(
         "-q", "--quants",
         action = "store",
