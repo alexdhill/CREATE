@@ -1,5 +1,8 @@
+from sys import stdin
+
 def read_ann(path):
-    with open(path, 'r') as f:
+    io = open(path, 'r') if path != "-" else stdin
+    with io as f:
         last_gene = ["", 0, 0, "", ""]
         transcripts = []
         dat = f.readline().strip().split('\t')

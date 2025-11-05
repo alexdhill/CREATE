@@ -21,8 +21,8 @@ process count_reads_se
     conda projectDir+'/bin/conda/modules/bash.yaml'
     if (params.manage_resources)
     {
-        cpus 1
-        memory '1.GB'
+        cpus 3
+        memory '4.GB'
     }
     input:
         tuple(

@@ -17,6 +17,7 @@
 
 process flair_junctions
 {
+
     publishDir "${params.outdir}/ranges/junctions", mode: 'copy', overwrite: params.force, enabled: params.keep
     container 'alexdhill/create:flair-2.0.0'
     conda projectDir+'/bin/conda/modules/flair.yaml'
@@ -49,9 +50,10 @@ process flair_junctions
                 set -x
             fi
 
-            samtools view -hS !{alignment} > aln.sam
+            mkfifo aln.bam
+            samtools view -hb !{alignment} > aln.bam
             junctions_from_sam \
-                -s aln.sam \
+                -s aln.bam \
                 -n !{sample}
         '''
 }

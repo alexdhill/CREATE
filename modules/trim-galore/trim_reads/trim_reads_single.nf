@@ -60,8 +60,7 @@ process trim_reads_single
                 -j 8 --output_dir . \
                 ${params}
 
-            NREADS=`gzip -cd !{sample}_trim.fq.gz \
-            | wc -l \
-            | awk '{print $1/4}'`
+            NREADS=`pigz -cdp !{task.cpus} !{sample}_trim.fq.gz \
+            | awk 'END {print NR/4}'`
         '''
 }

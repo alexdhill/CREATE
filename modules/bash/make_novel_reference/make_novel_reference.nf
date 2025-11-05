@@ -53,7 +53,6 @@ process make_novel_reference
                 set -x
             fi
 
-            mkdir novel_!{reference}
             gzip -c !{regions} > novel_complete_regions.bed.gz
             cp !{read_map} novel_complete_readmap.txt
             cp !{reference}/*genome.fa.gz .

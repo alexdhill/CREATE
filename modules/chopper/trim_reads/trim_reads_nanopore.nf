@@ -61,11 +61,10 @@ process trim_reads_nanopore
                 -i !{read} \
                 --threads !{task.cpus} \
                 ${params} \
-            | gzip \
+            | pigz -cp !{task.cpus} \
             > !{sample}_filtered_trimmed.fq.gz
 
-            NREADS=`gzip -cd !{sample}_filtered_trimmed.fq.gz \
-            | wc -l \
-            | awk '{print $1/4}'`
+            NREADS=`pigz -cdp !{task.cpus} !{sample}_filtered_trimmed.fq.gz \
+            | awk 'END {print NR/4}'`
         '''
 }

@@ -13,40 +13,29 @@
  * licensor will not be liable to you for any damages arising out of these terms or the use or
  * nature of the software, under any kind of legal claim.
  */
- 
 
-process minimap2_index
+process split_correct_bed
 {
-    publishDir "${params.outdir}/", mode: 'copy', overwrite: params.force
-    container 'alexdhill/create:minimap2-2.26'
-    conda projectDir+'/bin/conda/modules/minimap2.yaml'
+    publishDir "${params.outdir}/align/chromosomes/", mode: 'copy', overwrite: params.force, enabled: params.keep
     if (params.manage_resources)
     {
-        cpus 3
-        memory '16.GB'
+        cpus 1
+        memory '16.GB' // TODO
     }
     input:
-        path(transcripts)
+        path(regions)
     output:
-        path("*.mmi")
+        path("*.split.bed")
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Creating complete Minimap2 Index"
-                echo "Transcripts: !{transcripts}"
-            fi
-            version="!{params.version}"
-            if [[ "!{params.genome}" == "T2T" ]]; then
-                version="2"
+                echo "Splitting FLAIR corrected bed by chromosome"
+                echo "BEDs:\n!{regions}"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 
-            mkfifo transcripts
-            pigz -cdp !{task.cpus} !{transcripts} > transcripts &
-            minimap2 transcripts \
-                -t 3 \
-                -d !{params.genome}v${version}_long_index_v$(minimap2 --version | awk -F'-' '{print $1}').mmi
+            awk '{print > $1".split.bed"}' !{regions}
         '''
 }

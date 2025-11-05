@@ -73,15 +73,16 @@ RUN apt-get update -y \
 ## BUILD FLAIR
 FROM ubuntu:22.04 as FLAIR
 ENV DEBIAN_FRONTEND noninteractive
+ENV FLAIR_VER d777b30
 COPY --from=BEDTOOLS /usr/local/bin/bedtools /usr/local/bin/bedtools
 COPY --from=SAMTOOLS /usr/local/bin/samtools /usr/local/bin/samtools
 COPY --from=MINIMAP2 /minimap2*/minimap2 /usr/local/bin/minimap2
-ENV FLAIR_VER 2.0.0
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         jq \
         time \
         pigz \
+        git \
         wget \
         unzip \
         gpg-agent \
@@ -129,13 +130,7 @@ RUN apt-get update \
             'stageR' \
         )) \
     "
-RUN wget --no-check-certificate \
-        https://github.com/BrooksLabUCSC/flair/archive/master.zip \
-    && unzip master.zip \
-    && apt-get -y clean && apt-get -y autoclean \
-    && rm -rf /var/lib/apt/lists/*
-ENV PATH=$PATH:/flair-master/bin
-ENV HOME="/home"
-RUN chmod -R 777 /home
-ENV TIME="\n\nres memory (KB)     %M\ntime (HH:mm:ss)     %E"
-ENTRYPOINT ["/usr/bin/time"]
+RUN git clone https://www.github.com/BrooksLabUCSC/FLAIR \
+    && cd FLAIR \
+    && git checkout ${FLAIR_VER}
+ENV PATH=$PATH:/FLAIR/bin

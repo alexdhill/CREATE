@@ -65,7 +65,7 @@ process trim_reads_paired
                 -j !{task.cpus} --output_dir . \
                 ${params}
 
-            NREADS=`gzip -cd !{sample}_val_1.fq.gz \
+            NREADS=`pigz -cdp !{task.cpus} !{sample}_val_1.fq.gz \
             | awk 'END {print NR/4}'`
         '''
 }

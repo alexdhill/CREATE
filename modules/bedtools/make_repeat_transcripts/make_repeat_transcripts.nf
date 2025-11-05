@@ -20,6 +20,11 @@ process make_repeat_transcripts
     publishDir "${params.outdir}/", mode: 'copy', enabled: params.keep, overwrite: params.force
     container 'alexdhill/create:bedtools-2.31.0'
     conda projectDir+'/bin/conda/modules/bedtools.yaml'
+    if (params.manage_resources)
+    {
+        cpus 8
+        memory '16.GB' // TODO
+    }
     input:
         tuple(
             path(reference),
@@ -42,11 +47,12 @@ process make_repeat_transcripts
             fi
 
             # Convert BED name
-            zcat !{reference} > genome.fa
+            mkfifo genome regions
             cat !{regions} \
             | awk '{print $1"\t"$2"\t"$3"\t"$4"_range="$1":"$2"-"$3"_strand="$6"\t"$5"\t"$6"\t"$7"\t"$8"\t"$9"\t"$10}' \
-            > regions.bed
-            bedtools getfasta -nameOnly -fi genome.fa -bed regions.bed \
+            > regions &
+            pigz -cdp !{task.cpus} !{reference} > genome &
+            bedtools getfasta -nameOnly -fi genome -bed regions.bed \
             | gzip --best \
             > !{params.genome}v2_repeat_transcripts.fa.gz
         '''
@@ -64,9 +70,10 @@ process make_repeat_transcripts
                 set -x
             fi
 
-            zcat !{reference} > genome.fa
-            bedtools getfasta -nameOnly -fi genome.fa -bed !{regions} \
-            | gzip --best \
+            mkfifo genome
+            pigz -cdp !{task.cpus} !{reference} > genome &
+            bedtools getfasta -nameOnly -fi genome -bed !{regions} \
+            | pigz -cp !{task.cpus} \
             > !{params.genome}v!{params.version}_repeat_transcripts.fa.gz
         '''
         }

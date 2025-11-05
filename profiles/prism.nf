@@ -133,7 +133,7 @@ profiles
                 queue = "short"
                 time = '1h'
             }
-            withName: "trim_reads_nanopore"
+            withName: "trim_reads_np"
             {
                 queue = "medium"
                 time = '6h'
@@ -181,11 +181,6 @@ profiles
                 queue = "medium"
                 time = '3h'
             }
-            withName: "run_analysis"
-            {
-                queue = "medium"
-                time = '1h'
-            }
 
             // Discover
             withName: "star_align_genome"
@@ -223,6 +218,11 @@ profiles
             {
                 queue = "short"
                 time = '30m'
+            }
+            withName: "split_correct_bed"
+            {
+                queue = "medium"
+                time = '6h'
             }
             withName: "make_novel_reference"
             {
