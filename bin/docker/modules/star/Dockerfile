@@ -12,10 +12,38 @@
 ## licensor will not be liable to you for any damages arising out of these terms or the use or
 ## nature of the software, under any kind of legal claim.
 
+
+## BUILD SAMTOOLS
+FROM ubuntu:22.04 as SAMTOOLS
+ENV DEBIAN_FRONTEND noninteractive
+ENV SAMTOOLS_VER 1.19
+RUN apt-get update -y \
+    && apt-get install -y --no-install-recommends \
+        jq \
+        time \
+        pigz \
+        build-essential \
+        make \
+        zlib1g-dev \
+        libbz2-dev \
+        liblzma-dev \
+        libncurses5-dev \
+        autoconf \
+        wget \
+    && wget --no-check-certificate \
+        https://github.com/samtools/samtools/releases/download/${SAMTOOLS_VER}/samtools-${SAMTOOLS_VER}.tar.bz2 \
+    && tar -xvf samtools-1.19.tar.bz2 \
+    && cd samtools-1.19 \ 
+    && ./configure --prefix=/usr/local/bin/ \
+    && make \
+    && make install \
+    && cp samtools /usr/local/bin/
+
 ## BUILD STAR
 FROM ubuntu:22.04 as STAR
 ENV DEBIAN_FRONTEND noninteractive
 ENV STAR_VER 2.7.11a
+COPY --from=SAMTOOLS /usr/local/bin/samtools /usr/local/bin
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
         jq \
@@ -35,6 +63,7 @@ RUN apt-get update -y \
     && tar -xvf ${STAR_VER}.tar.gz \
     && cd STAR-${STAR_VER}/source \
     && make STAR \
+    && cp /STAR-${STAR_VER}/bin/Linux_x86_64/STAR /usr/bin \
     && apt-get -y clean && apt-get -y autoclean \
     && rm -rf /var/lib/apt/lists/*
 ENV HOME="/home"
