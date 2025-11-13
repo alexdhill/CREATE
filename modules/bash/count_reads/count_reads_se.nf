@@ -19,6 +19,7 @@ process count_reads_se
 {
     container 'alexdhill/create:bash-22.04'
     conda projectDir+'/bin/conda/modules/bash.yaml'
+    errorStrategy {task.exitStatus==55?'ignore':'finish'}
     if (params.manage_resources)
     {
         cpus 3
@@ -47,5 +48,10 @@ process count_reads_se
             
             NREADS=$(pigz -cdp !{task.cpus} !{read} \
             | awk 'END {print NR/4}')
+
+            if [[ ${NREADS:=0} -lt 0 ]]; then
+                echo "ERR: Minimum read count not met (${NREADS} < 500000)" >&2
+                exit 77
+            fi
         '''
 }
