@@ -17,6 +17,7 @@
 process split_correct_bed
 {
     publishDir "${params.outdir}/align/chromosomes/", mode: 'copy', overwrite: params.force, enabled: params.keep
+    container 'alexdhill/create:bash-22.04'
     if (params.manage_resources)
     {
         cpus 1

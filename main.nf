@@ -218,13 +218,14 @@ else if (params.quant)
 }
 else if (params.discover)
 {
+    params.parameters = projectDir+'/assets/NULL'
     params.ref = ''
     if (params.ref=='')
     {
         log.error("--ref: ${params.ref}");
         throw new IllegalArgumentException('CREATE reference directory must be specified')
     }
-    params.dcs = ''
+    params.dcs = projectDir+'/assets/dcs.fa'
     if (params.dcs=='')
     {
         log.error("--dcs: ${params.dcs}");

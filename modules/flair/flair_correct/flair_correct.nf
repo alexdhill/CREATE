@@ -18,7 +18,7 @@
 process flair_correct
 {
     publishDir "${params.outdir}/align/nanopore/corrected", mode: 'copy', overwrite: params.force, enabled: params.keep
-    container 'alexdhill/create:flair-2.0.0'
+    container 'alexdhill/create:flair-730cea7'
     conda projectDir+'/bin/conda/modules/flair.yaml'
     if (params.manage_resources)
     {
@@ -49,10 +49,11 @@ process flair_correct
             fi
 
             pigz -cdp !{task.cpus} !{reference}/*_complete_annotation.gtf.gz > annotation.gtf
+            pigz -cdp !{task.cpus} !{reference}/*_genome.fa.gz > genome.fa
             flair correct \
-                --genome !{reference}/*_genome.fa.gz \
                 --query !{regions} \
                 --gtf annotation.gtf \
+                --junction_tab !{junctions} \
                 --threads !{task.cpus} \
                 --output !{sample}
         '''

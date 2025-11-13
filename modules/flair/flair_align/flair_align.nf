@@ -18,7 +18,7 @@
 process flair_align
 {
     publishDir "${params.outdir}/ranges/nanopore/raw", mode: 'copy', overwrite: params.force, enabled: params.keep
-    container 'alexdhill/create:flair-2.0.0'
+    container 'alexdhill/create:flair-730cea7'
     conda projectDir+'/bin/conda/modules/flair.yaml'
     if (params.manage_resources)
     {

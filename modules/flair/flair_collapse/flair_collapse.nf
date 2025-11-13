@@ -16,15 +16,9 @@
 
 process flair_collapse
 {
-<<<<<<< HEAD
-=======
     publishDir "${params.outdir}/isoforms", mode: 'copy', overwrite: params.force, enabled: params.keep
-<<<<<<< HEAD
-    container 'alexdhill/create:flair-2.0.0'
+    container 'alexdhill/create:flair-730cea7'
     conda projectDir+'/bin/conda/modules/flair.yaml'
-=======
->>>>>>> main
->>>>>>> split_collapse
     if (params.manage_resources)
     {
         cpus 8

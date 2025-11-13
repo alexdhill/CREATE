@@ -50,11 +50,7 @@ process minimap2_align_dcs
                 set -x
             fi
 
-<<<<<<< HEAD
-            minimap2 -ax sr -t 8 \
-=======
-            minimap2 -ax splice -t !{task.cpus} \
->>>>>>> split_collapse
+            minimap2 -ax sr -t !{task.cpus} \
                 !{control} \
                 !{read} \
             | samtools fastq -f4 - \

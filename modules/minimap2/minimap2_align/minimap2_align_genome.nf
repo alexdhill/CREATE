@@ -1,3 +1,4 @@
+
 /*
  * REQUIRED NOTICE: Copyright (c) 2020-2023, Regents of the University of California
  * All rights reserved. https://polyformproject.org/licenses/noncommercial/1.0.0
@@ -13,46 +14,57 @@
  * licensor will not be liable to you for any damages arising out of these terms or the use or
  * nature of the software, under any kind of legal claim.
  */
- 
 
-process flair_junctions
+
+process minimap2_align_genome
 {
-
-    publishDir "${params.outdir}/ranges/junctions", mode: 'copy', overwrite: params.force, enabled: params.keep
-    container 'alexdhill/create:flair-730cea7'
-    conda projectDir+'/bin/conda/modules/flair.yaml'
+    publishDir "${params.outdir}/align", mode: 'copy', overwrite: params.force, enabled: params.keep
+    container 'alexdhill/create:minimap2-2.26'
+    conda projectDir+'/bin/conda/modules/minimap2.yaml'
     if (params.manage_resources)
     {
         cpus 8
-        memory '64.GB' // TODO
+        memory '16.GB'
     }
     input:
         tuple(
             val(sample),
             val(nreads),
-            path(alignment),
-            path(reference)
+            path(read),
+            path(reference),
+            path(parameters)
         )
     output:
         tuple(
             val("${sample}"),
-            path("${sample}_junctions.bed")
+            val("${nreads}"),
+            path("${sample}.coord_sorted.bam")
         )
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Running FLAIR alignment"
-                echo "Sample: !{sample} (!{nreads} reads)"
-                echo "Alignment: !{alignment}"
+                echo "Aligning to Minimap2 Index"
+                echo "Sample: !{sample}"
+                echo "Read: !{read} (!{nreads} reads)"
                 echo "Reference: !{reference}"
+                echo "User parameters: !{parameters}"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 
-            samtools view -h !{alignment} > aln.sam
-            junctions_from_sam \
-                -s aln.sam \
-                -n !{sample}
+            params="--eqx -N 10000"
+            if [[ "!{parameters}" != "NULL" ]]; then
+                params="$(jq '.minimap2 | to_entries | .[] | "\\(.key)=\\(.value)"' !{parameters} | xargs | sed 's/=true//g')"
+            fi
+
+            minimap2 -ax sr \
+                ${params} \
+                -t !{task.cpus} \
+                !{reference}/*genome.fa.gz \
+                !{read} \
+            | samtools view -u - \
+            | samtools sort -@ !{task.cpus} - \
+            > !{sample}.coord_sorted.bam
         '''
 }

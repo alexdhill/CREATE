@@ -21,11 +21,11 @@ import java.util.Arrays
 include { count_reads_pe } from "../../modules/bash/count_reads/count_reads_pe.nf"
 include { count_reads_np } from "../../modules/bash/count_reads/count_reads_np.nf"
 include { minimap2_align_dcs } from "../../modules/minimap2/minimap2_align/minimap2_align_dcs.nf"
-include { trim_reads_np } from "../../modules/chopper/trim_reads/trim_reads_np.nf"
+include { trim_reads_nanopore } from "../../modules/chopper/trim_reads/trim_reads_nanopore.nf"
 include { trim_reads_paired } from "../../modules/trim-galore/trim_reads/trim_reads_paired.nf"
 include { star_align_genome } from "../../modules/star/star_align/star_align_genome.nf"
 include { flair_junctions } from "../../modules/flair/flair_junctions/flair_junctions.nf"
-include { flair_align } from "../../modules/flair/flair_align/flair_align.nf"
+include { flair_bed } from "../../modules/flair/flair_align/flair_bed.nf"
 include { flair_correct } from "../../modules/flair/flair_correct/flair_correct.nf"
 include { combine_collapsed_bed } from "../../modules/flair/flair_collapse/combine_collapsed_bed.nf"
 include { split_correct_bed } from "../../modules/flair/flair_collapse/split_correct_bed.nf"
@@ -34,7 +34,7 @@ include { correct_flair_transcripts } from "../../modules/python/correct_flair_t
 include { salmon_index_novel } from "../../modules/salmon/salmon_index/salmon_index_novel.nf"
 include { minimap2_index_novel } from "../../modules/minimap2/minimap2_index/minimap2_index_novel.nf"
 include { make_novel_reference } from "../../modules/bash/make_novel_reference/make_novel_reference.nf"
-include { minimap2_align } from "../../modules/minimap2/minimap2_align/minimap2_align.nf"
+include { minimap2_align_genome } from "../../modules/minimap2/minimap2_align/minimap2_align_genome.nf"
 include { link_transcriptome_novel } from "../../modules/R/link_transcriptome/link_transcriptome_novel.nf"
 include { correct_flair_annotation } from "../../modules/python/correct_flair_annotation/correct_flair_annotation.nf"
 include { make_novel_tx2g } from "../../modules/python/make_novel_tx2g/make_novel_tx2g.nf"
@@ -113,36 +113,40 @@ workflow DISCOVER
 
     // Run FLAIR
     count_reads_np(long_channel)
+    | join(long_channel)
     | combine(dcs)
     | minimap2_align_dcs
     | combine(parameters)
     | trim_reads_nanopore
     | combine(reference)
-    | flair_align
+    | combine(parameters)
+    | minimap2_align_genome
+    | flair_bed
     | join(
         count_reads_pe(paired_channel)
+        | concat(paired_channel)
+        | groupTuple()
+        | map { res -> [res[0], res[1][0], res[1][1], res[2][0]] }
         | combine(parameters)
         | trim_reads_paired
         | combine(reference)
-        | star_align_genome
-        | map{sample -> [sample[0], sample[1], sample[2]]}
-        | combine(reference)
-        | flair_junctions
+        | star_align_genome // [sample, npaired, mapped, unmapped, junctions]
+        | map{sample -> [sample[0], sample[4]]} 
     )
     | combine(reference)
     | flair_correct
     | map{res -> res[1]}
-    | collect // [bed12*samples]
-    | split_correct_bed // [bed12*chromosomes]
-    | flatten // chr.bed
+    | collect
+    | split_correct_bed
+    | flatten
     | combine(
-        trim_reads_np.out // trim.fa
+        trim_reads_nanopore.out
         | map{res -> res[2]}
-        | collect // [trim.fa*samples]
-        | map{reads -> [reads]} // [[trim.fa*samples]]
-    ) // [chr.bed, [trim.fa*samples]]
-    | combine(reference) // [chr.bed, [trim.fa*samples], ref]
-    | flair_collapse // [fa], [bed], [gtf], [map]
+        | collect
+        | map{reads -> [reads]}
+    )
+    | combine(reference)
+    | flair_collapse
 
     fastas = flair_collapse.out[0]
         .collect()

@@ -133,7 +133,7 @@ profiles
                 queue = "short"
                 time = '1h'
             }
-            withName: "trim_reads_np"
+            withName: "trim_reads_nanopore"
             {
                 queue = "medium"
                 time = '6h'
@@ -195,6 +195,16 @@ profiles
                 time = '6h'
             }
             withName: "flair_align"
+            {
+                queue = "short"
+                time = '1h'
+            }
+            withName: "minimap2_align_genome"
+            {
+                queue = "medium"
+                time = '12h'
+            }
+            withName: "flair_bed"
             {
                 queue = "short"
                 time = '1h'

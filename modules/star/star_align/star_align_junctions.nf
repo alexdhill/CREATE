@@ -15,7 +15,7 @@
  */
  
 
-process star_align_genome
+process star_align_junctions
 {
     publishDir "${params.outdir}/align/paired", mode: 'copy', enabled: params.keep, overwrite: params.force
     container 'alexdhill/create:star-2.7.11a'
@@ -38,8 +38,7 @@ process star_align_genome
             val("${sample}"),
             val("${nreads}"),
             path("${sample}.bam"),
-            path("${sample}_unmapped.bam"),
-            path("${sample}.SJ.out.tab")
+            path("${sample}_unmapped.bam")
         )
     shell:
         '''
@@ -61,10 +60,7 @@ process star_align_genome
                 --readFilesCommand "pigz -cdp $(( !{task.cpus} / 2 ))" \
                 --outFileNamePrefix !{sample}. \
                 --outSAMtype BAM SortedByCoordinate \
-                --outSAMattributes NH HI AS nM XS \
                 --outSAMunmapped Within \
-                --outSAMmultNmax 1000 \
-                --outSJfilterReads alls \
                 --runThreadN !{task.cpus}
 
             if [[ ! -e !{sample}.Aligned.sortedByCoord.out.bam ]]; then
@@ -73,8 +69,8 @@ process star_align_genome
             fi
 
             mkfifo genome1 genome2
-            pigz -cdp !{task.cpus} !{reference}/*_genome.fa.gz > genome.fa
-            samtools view -hbf4 -T genome.fa !{sample}.Aligned.sortedByCoord.out.bam > !{sample}_unmapped.bam &
-            samtools view -hbF4 -T genome.fa !{sample}.Aligned.sortedByCoord.out.bam > !{sample}.bam
+            pigz -cdp !{task.cpus} !{reference}/*_genome.fa.gz > genome | tee genome1 genome2 > /dev/null &
+            samtools view -hbf4 -T genome1 !{sample}.Aligned.sortedByCoord.out.bam > !{sample}_unmapped.bam &
+            samtools view -hbF4 -T genome2 !{sample}.Aligned.sortedByCoord.out.bam > !{sample}.bam
         '''
 }

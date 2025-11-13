@@ -13,14 +13,13 @@
  * licensor will not be liable to you for any damages arising out of these terms or the use or
  * nature of the software, under any kind of legal claim.
  */
- 
 
-process flair_junctions
+
+process flair_bed
 {
-
-    publishDir "${params.outdir}/ranges/junctions", mode: 'copy', overwrite: params.force, enabled: params.keep
-    container 'alexdhill/create:flair-730cea7'
-    conda projectDir+'/bin/conda/modules/flair.yaml'
+    publishDir "${params.outdir}/ranges/nanopore/raw", mode: 'copy', overwrite: params.force, enabled: params.keep
+    container 'alexdhill/create:bedtools-2.31.0'
+    conda projectDir+'/bin/conda/modules/bedtools.yaml'
     if (params.manage_resources)
     {
         cpus 8
@@ -30,13 +29,13 @@ process flair_junctions
         tuple(
             val(sample),
             val(nreads),
-            path(alignment),
-            path(reference)
+            path(alignment)
         )
     output:
         tuple(
             val("${sample}"),
-            path("${sample}_junctions.bed")
+            val("${nreads}"),
+            path("${sample}.bed")
         )
     shell:
         '''
@@ -44,15 +43,12 @@ process flair_junctions
                 echo "Running FLAIR alignment"
                 echo "Sample: !{sample} (!{nreads} reads)"
                 echo "Alignment: !{alignment}"
-                echo "Reference: !{reference}"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 
-            samtools view -h !{alignment} > aln.sam
-            junctions_from_sam \
-                -s aln.sam \
-                -n !{sample}
+            bedtools bamtobed -bed12 -i !{alignment} \
+            > !{sample}.bed
         '''
 }

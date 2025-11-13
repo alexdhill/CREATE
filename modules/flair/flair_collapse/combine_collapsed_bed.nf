@@ -17,6 +17,7 @@
 process combine_collapsed_bed
 {
     // publishDir "${params.dump}/", mode: 'copy', overwrite: params.force, enabled: params.dump!=''
+    container 'alexdhill/create:bash-22.04'
     if (params.manage_resources)
     {
         cpus 4
