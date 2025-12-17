@@ -38,8 +38,8 @@ profiles
             }
             withName: "make_transcript_map"
             {
-                queue = "short"
-                time = '1h'
+                queue = "medium"
+                time = '3h'
             }
 
             withName: "make_complete_annotation"
@@ -73,14 +73,14 @@ profiles
 
             withName: "salmon_index"
             {
-                queue = "short"
-                time = '1h'
+                queue = "medium"
+                time = '6h'
             }
 
             withName: "minimap2_index"
             {
                 queue = "short"
-                time = '30m'
+                time = '1h'
             }
 
 
@@ -194,11 +194,11 @@ profiles
                 queue = "medium"
                 time = '6h'
             }
-            withName: "flair_align"
-            {
-                queue = "short"
-                time = '1h'
-            }
+            // withName: "flair_align"
+            // {
+            //     queue = "short"
+            //     time = '1h'
+            // }
             withName: "minimap2_align_genome"
             {
                 queue = "medium"
@@ -216,7 +216,7 @@ profiles
             }
             withName: "flair_collapse"
             {
-                queue = "medium"
+                queue = "long"
                 time = '24h'
             }
             withName: "correct_flair_annotation"
