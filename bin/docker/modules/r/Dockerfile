@@ -22,6 +22,7 @@ RUN apt-get update -y \
         wget \
         time \
         pigz \
+        mysql-server \
         ca-certificates \
         software-properties-common \
         build-essential \
@@ -129,6 +130,17 @@ RUN Rscript -e \
        remotes::install_github('velocyto-team/velocyto.R');"
 RUN apt-get -y clean && apt-get -y autoclean \
     && rm -rf /var/lib/apt/lists/*
+RUN apt-get update -y \
+    && apt-get install -y --no-install-recommends \
+        python3-dev \
+        python3-pip \
+        python3-setuptools \
+    && python3 -m pip install --upgrade pip \
+    && python3 -m pip install \
+        fasta_digest
+RUN Rscript -e " \
+    BiocManager::install(c('GenomeInfoDbData')); \
+"
 ENV HOME="/home"
 RUN chmod -R 777 /home
 ENV TIME="\n\nres memory (KB)     %M\ntime (HH:mm:ss)     %E"
