@@ -112,6 +112,8 @@ if (params.reference)
     params.genome = ''
     params.isoquant = false
     params.index = ''
+    params.txonly = false
+    params.reonly = false
     if (params.genome=='HG38')
     {
         params.version = 39
@@ -313,6 +315,7 @@ else
     log.error("--exec: ${params.exec}");
     throw new IllegalArgumentException('Execution mode must be either "local" or "slurm"')
 }
+params.manage_resources = (params.limits || params.exec!='local')
 if (!['docker','conda'].contains(params.container))
 {
     throw new IllegalArgumentException('Container must be either "docker" or "conda"')
@@ -349,11 +352,10 @@ def print_val(k,v)
             return
     }
 }
+
 log.info("Run parameters:")
 params.each{k, v -> ['',false,-1,0].contains(v)?:print_val(k,v)}
 log.info(" ")
-params.manage_resources = (params.limits || params.exec!='local')
-
 
 /*
  * Make CREATE workflow selector
