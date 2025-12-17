@@ -34,58 +34,90 @@ include { LONG } from '../../subworkflow/reference/long/long.nf'
 include { SINGLE_CELL } from '../../subworkflow/reference/single_cell/single_cell.nf'
 include { DISCOVER } from '../../subworkflow/reference/discover/discover.nf'
 
-noent = projectDir+'/assets/NULL'
-
 workflow REFERENCE
 {
+    noent = Channel.fromPath(projectDir+'/assets/NULL')
+    
+    log.info("Starting main logic...")
     // Get reference genome
     download_reference()
     | set{reference}
 
-    // Get RepeatMasker track
-    download_repeat_regions()
-    | set{repeatmasker}
-
     // Get gene annotation and transcriptome
-    if (params.isoquant) {
-        log.info("Using provided annotation")
-        Channel.fromPath(params.isoquant)
-        | correct_isoquant
-        | set{annotation}
+    if (!params.reonly) {
+        if (params.isoquant) {
+            log.info("Using provided isoquant annotation")
+            Channel.fromPath(params.isoquant)
+            | correct_isoquant
+            | set{annotation}
 
-        annotation
-        | combine(reference)
-        | generate_transcriptome
-        | set{transcriptome}
-    } else {
-        log.info("Getting annotation")
-        download_gencode_annotation()
-        | combine(reference)
-        | download_gencode_transcripts
-        | set{transcriptome}
+            annotation
+            | combine(reference)
+            | generate_transcriptome
+            | set{transcriptome}
+        } else {
+            log.info("Getting GENCODE annotation and transcripts")
+            download_gencode_annotation()
+            | combine(reference)
+            | download_gencode_transcripts
+            | set{transcriptome}
 
-        download_gencode_annotation.out
-        | set{annotation}
+            download_gencode_annotation.out
+            | set{annotation}
+        }
     }
-
-    log.info("Starting main logic...")
-    reference
-    | combine(repeatmasker) // [genome.fa, repeats.bed]
-    | (download_repeat_annotation & make_repeat_transcripts)
-    | concat // repeats.gtf, repeats.fa
-    | collect // [repeats.gtf, repeats.fa]
-    | combine(annotation) // [repeats.gtf, repeats.fa, gencode.gtf]
-    | combine(transcriptome) // [repeats.gtf, repeats.fa, gencode.gtf, gencode.fa]
-    | (make_complete_annotation & make_complete_transcripts)
-    | concat // complete.gtf, complete.fa
-    | collect // [complete.gtf, complete.fa]
-    | combine(reference) // [complete.gtf, complete.fa, genome.fa]
-    | link_transcriptome & SHORT & LONG & SINGLE_CELL
 
     reference
     | DISCOVER
 
-    annotation
-    | combine(download_repeat_annotation.out)
-    | make_transcript_map
+    if (params.txonly) {
+        log.info("Making repeat-naive reference directory...")
+        annotation
+        | combine(transcriptome)
+        | combine(reference)
+        | link_transcriptome & SHORT & LONG & SINGLE_CELL
+
+        annotation
+        | combine(noent)
+        | make_transcript_map
+    } else if (params.reonly) {
+        log.info("Making repeat-only reference directory...")
+        // Get RepeatMasker track
+        download_repeat_regions()
+        | set{repeatmasker}
+
+        reference
+        | combine(repeatmasker) // [genome.fa, repeats.bed]
+        | (download_repeat_annotation & make_repeat_transcripts)
+        | concat // repeats.gtf, repeats.fa
+        | collect // [repeats.gtf, repeats.fa]
+        | combine(reference) // [repeats.gtf, repeats.fa, genome.fa]
+        | link_transcriptome & SHORT & LONG & SINGLE_CELL
+
+        noent
+        | combine(download_repeat_annotation.out)
+        | make_transcript_map
+    } else {
+        log.info("Making repeat-aware reference directories...")
+        // Get RepeatMasker track
+        download_repeat_regions()
+        | set{repeatmasker}
+
+        reference
+        | combine(repeatmasker) // [genome.fa, repeats.bed]
+        | (download_repeat_annotation & make_repeat_transcripts)
+        | concat // repeats.gtf, repeats.fa
+        | collect // [repeats.gtf, repeats.fa]
+        | combine(annotation) // [repeats.gtf, repeats.fa, gencode.gtf]
+        | combine(transcriptome) // [repeats.gtf, repeats.fa, gencode.gtf, gencode.fa]
+        | (make_complete_annotation & make_complete_transcripts)
+        | concat // complete.gtf, complete.fa
+        | collect // [complete.gtf, complete.fa]
+        | combine(reference) // [complete.gtf, complete.fa, genome.fa]
+        | link_transcriptome & SHORT & LONG & SINGLE_CELL
+
+        annotation
+        | combine(download_repeat_annotation.out)
+        | make_transcript_map
+    }
 }
