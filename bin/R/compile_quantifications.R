@@ -159,7 +159,7 @@ compile_quants <- function(quants, reference, metadata, transcripts, seqs) {
     message("Loading TxDb...")
     txdb <- BiocFileCache::bfcinfo(bfc) %>%
         as.data.frame() %>%
-        dplyr::filter(endsWith(rname, "complete_annotation.gtf.gz")) %>%
+        dplyr::filter(endsWith(rname, "_annotation.gtf.gz")) %>%
         dplyr::slice_head(n = 1) %>%
         dplyr::select(rpath) %>%
         dplyr::pull() %>%
