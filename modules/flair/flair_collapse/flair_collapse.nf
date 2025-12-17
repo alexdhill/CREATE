@@ -62,12 +62,8 @@ process flair_collapse
                 --check_splice \
                 --generate_map \
                 --threads !{task.cpus} \
-<<<<<<< HEAD
-                --output novel
-=======
                 --output $base
 
             mv ${base}.isoform.read.map.txt ${base}.isoforms.read.map.txt
->>>>>>> split_collapse
         '''
 }

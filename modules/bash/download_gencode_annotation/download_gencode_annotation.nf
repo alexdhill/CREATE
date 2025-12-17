@@ -20,8 +20,8 @@ process download_gencode_annotation
     publishDir "${params.outdir}/", mode: 'copy', enabled: params.keep, overwrite: params.force
     if (params.genome=="T2T")
     {
-        container 'alexdhill/create:python-3.10'
-        conda projectDir+'/bin/conda/modules/python.yaml'
+        container 'alexdhill/create:flair-730cea7'
+        conda projectDir+'/bin/conda/modules/flair.yaml'
     } else
     {
         container 'alexdhill/create:bash-22.04'

@@ -24,7 +24,7 @@ process minimap2_align_genome
     if (params.manage_resources)
     {
         cpus 8
-        memory '16.GB'
+        memory '32.GB'
     }
     input:
         tuple(
@@ -58,13 +58,14 @@ process minimap2_align_genome
                 params="$(jq '.minimap2 | to_entries | .[] | "\\(.key)=\\(.value)"' !{parameters} | xargs | sed 's/=true//g')"
             fi
 
-            minimap2 -ax sr \
+            minimap2 -ax splice:sr \
                 ${params} \
                 -t !{task.cpus} \
                 !{reference}/*genome.fa.gz \
                 !{read} \
-            | samtools view -u - \
-            | samtools sort -@ !{task.cpus} - \
+            > !{sample}_raw.bam
+            samtools sort !{sample}_raw.bam \
+            | samtools view -b - \
             > !{sample}.coord_sorted.bam
-        '''
+            '''
 }

@@ -47,13 +47,12 @@ process make_repeat_transcripts
             fi
 
             # Convert BED name
-            mkfifo genome regions
             cat !{regions} \
             | awk '{print $1"\t"$2"\t"$3"\t"$4"_range="$1":"$2"-"$3"_strand="$6"\t"$5"\t"$6"\t"$7"\t"$8"\t"$9"\t"$10}' \
-            > regions &
-            pigz -cdp !{task.cpus} !{reference} > genome &
-            bedtools getfasta -nameOnly -fi genome -bed regions.bed \
-            | gzip --best \
+            > regions
+            pigz -cdp !{task.cpus} !{reference} > genome
+            bedtools getfasta -nameOnly -fi genome -bed regions \
+            | pigz -cp !{task.cpus} \
             > !{params.genome}v2_repeat_transcripts.fa.gz
         '''
         }
@@ -70,8 +69,7 @@ process make_repeat_transcripts
                 set -x
             fi
 
-            mkfifo genome
-            pigz -cdp !{task.cpus} !{reference} > genome &
+            pigz -cdp !{task.cpus} !{reference} > genome
             bedtools getfasta -nameOnly -fi genome -bed !{regions} \
             | pigz -cp !{task.cpus} \
             > !{params.genome}v!{params.version}_repeat_transcripts.fa.gz

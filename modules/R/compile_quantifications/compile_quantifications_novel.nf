@@ -18,7 +18,7 @@
 process compile_quantifications_novel
 {
     publishDir "${params.outdir}/", mode: 'copy', overwrite: params.force
-    container 'alexdhill/create:r-4.5'
+    container 'alexdhill/create:r-4.5.1'
     conda projectDir+'/bin/conda/modules/r.yaml'
     if (params.manage_resources)
     {
@@ -29,7 +29,8 @@ process compile_quantifications_novel
         tuple(
             path(quants),
             path(cache),
-            path(tx2g)
+            path(tx2g),
+            path(metadata)
         )
     output:
         path("counts/")
@@ -50,6 +51,6 @@ process compile_quantifications_novel
 
             mkdir -p quants && mv !{quants} quants/
             Rscript ${verbose} !{projectDir}/bin/R/compile_quantifications.R \
-                -q quants -r .
+                -s short -q quants -r . -m !{metadata}
         '''
 }

@@ -52,7 +52,7 @@ process salmon_quant_novel
                 set -x
             fi
             params="--seqBias --gcBias --writeUnmappedNames --validateMappings --recoverOrphans --rangeFactorizationBins 4"
-            if [[ "$!{parameters}" == "NULL" ]]; then
+            if [[ "!{parameters}" == "NULL" ]]; then
                 params="$(jq '.salmon | to_entries | .[] | "--\\(.key)=\\(.value)"' flags.json | xargs | sed 's/=true//g')"
             fi
 

@@ -18,15 +18,8 @@
 process download_gencode_transcripts
 {
     publishDir "${params.outdir}/", mode: 'copy', enabled: params.keep, overwrite: params.force
-    if (params.genome=="T2T")
-    {
-        container 'alexdhill/create:gffread-0.12.7'
-        conda projectDir+'/bin/conda/modules/gffread.yaml'
-    } else
-    {
-        container 'alexdhill/create:bash-22.04'
-        conda projectDir+'/bin/conda/modules/bash.yaml'
-    }
+    container 'alexdhill/create:gffread-0.12.7'
+    conda projectDir+'/bin/conda/modules/gffread.yaml'
     if (params.manage_resources)
     {
         cpus 4
@@ -40,8 +33,6 @@ process download_gencode_transcripts
     output:
         path("${params.genome}v${params.genome=='T2T'?'2':params.version}_gencode_transcripts.fa.gz")
     shell:
-        if (params.genome=="T2T")
-        {
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
                 echo "Generating T2Tv2 transcripts..."
@@ -56,21 +47,6 @@ process download_gencode_transcripts
             pigz -cdp !{task.cpus} !{genome} > genome
             gffread -w txome -g genome genes
             pigz -cp !{task.cpus} txome \
-            > T2Tv2_gencode_transcripts.fa.gz
+            > !{params.genome}v!{params.genome=='T2T'?'2':params.version}_gencode_transcripts.fa.gz
         '''
-        }
-        else
-        {
-        '''
-            if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Downloading HG38v!{params.version} transcripts..."
-            fi
-            if [[ "!{params.log}" == "DEBUG" ]]; then
-                set -x
-            fi
-
-            wget -qO- ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_!{params.version}/gencode.v!{params.version}.transcripts.fa.gz \
-            > HG38v!{params.version}_gencode_transcripts.fa.gz
-        '''
-        }
 }

@@ -55,7 +55,7 @@ process download_reference
                 set -x
             fi
 
-            wget -qO- ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_!{params.version}/GRCh38.primary_assembly.genome.fa.gz \
+            wget -qO- 'https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz' \
             | gzip -cd \
             | sed 's/\\s.*//' \
             | gzip --fast \

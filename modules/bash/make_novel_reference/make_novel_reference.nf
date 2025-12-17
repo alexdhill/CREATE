@@ -35,9 +35,9 @@ process make_novel_reference
         )
     output:
         tuple(
-            path("${params.genome}v${params.genome=='T2T'?'2':params.version}_complete_regions.bed.gz"),
-            path("${params.genome}v${params.genome=='T2T'?'2':params.version}_complete_readmap.txt"),
-            path("${params.genome}v${params.genome=='T2T'?'2':params.version}_genome.fa.gz")
+            path("novel_complete_regions.bed.gz"),
+            path("novel_complete_readmap.txt"),
+            path("novel_genome.fa.gz")
         )
     shell:
         '''
@@ -55,6 +55,6 @@ process make_novel_reference
 
             gzip -c !{regions} > novel_complete_regions.bed.gz
             cp !{read_map} novel_complete_readmap.txt
-            cp !{reference}/*genome.fa.gz .
+            cp !{reference}/*genome.fa.gz novel_genome.fa.gz
         '''
 }

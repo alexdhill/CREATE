@@ -18,8 +18,8 @@
 process make_novel_tx2g
 {
     publishDir "${params.dump}/", mode: 'copy', enabled: params.dump!='', overwrite: params.force
-    container 'alexdhill/create:python-3.10'
-    conda projectDir+'/bin/conda/modules/python.yaml'
+    container 'alexdhill/create:flair-730cea7'
+    conda projectDir+'/bin/conda/modules/flair.yaml'
     if (params.manage_resources)
     {
         cpus 1

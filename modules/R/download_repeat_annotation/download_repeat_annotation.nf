@@ -18,7 +18,7 @@
 process download_repeat_annotation
 {
     publishDir "${params.outdir}/", mode: 'copy', enabled: params.keep, overwrite: params.force
-    container 'alexdhill/create:r-4.5'
+    container 'alexdhill/create:r-4.5.1'
     conda projectDir+'/bin/conda/modules/r.yaml'
     if (params.manage_resources)
     {
@@ -88,7 +88,7 @@ $1"\\tT2T_rmsk\\texon\\t"$2"\\t"$3"\\t"$5"\\t"$6"\\t0\\tgene_id \\""$4"\\"; gene
                 --out filtered_biotyped.gtf
 
             sed 's/""/"/g' filtered_biotyped.gtf \
-            | awk 'match($0, /gene_id "([^"]+)"/, a) { print $0 " gene_name \"" a[1] "\"; " }' \
+            | awk -F'\\t' 'match($9, /gene_id "([^"]+)"/) {print $0" gene_name "substr($9, RSTART+8, RLENGTH-8)"; "}' \
             > HG38v!{params.version}_repeat_annotation.gtf
 
             if [[ `wc -l HG38v!{params.version}_repeat_annotation.gtf` == '0' ]]; then

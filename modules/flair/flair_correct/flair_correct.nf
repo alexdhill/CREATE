@@ -20,6 +20,8 @@ process flair_correct
     publishDir "${params.outdir}/align/nanopore/corrected", mode: 'copy', overwrite: params.force, enabled: params.keep
     container 'alexdhill/create:flair-730cea7'
     conda projectDir+'/bin/conda/modules/flair.yaml'
+    errorStrategy {task.exitStatus==55?'ignore':'finish'}
+    maxRetries 3
     if (params.manage_resources)
     {
         cpus 8
@@ -28,8 +30,9 @@ process flair_correct
     input:
         tuple(
             val(sample),
-            val(nreads),
+            val(nlong),
             path(regions),
+            val(npaired),
             path(junctions),
             path(reference)
         )
@@ -46,6 +49,11 @@ process flair_correct
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
+            fi
+
+            if [ !{nlong} -lt 50000 ] || [ !{npaired} -lt 100000 ]; then
+                echo "ERROR: Minimum read counts not met for !{sample}"
+                exit 55
             fi
 
             pigz -cdp !{task.cpus} !{reference}/*_complete_annotation.gtf.gz > annotation.gtf
