@@ -93,6 +93,7 @@ workflow DISCOVER
     }
 
     reference = Channel.fromPath(params.ref)
+    metadata = Channel.fromPath(params.metadata)
     parameters = Channel.fromPath(params.parameters)
     dcs = Channel.fromPath(params.dcs)
     prefixes = Channel.from(prefix_list)
@@ -131,9 +132,9 @@ workflow DISCOVER
         | trim_reads_paired
         | combine(reference)
         | star_align_genome // [sample, npaired, mapped, unmapped, junctions]
-        | map{sample -> [sample[0], sample[4]]} 
+        | map{sample -> [sample[0], sample[1], sample[4]]} 
     )
-    | combine(reference)
+    | combine(reference) // [sample, nreads, regions, npaired, junctions, reference]
     | flair_correct
     | map{res -> res[1]}
     | collect
@@ -203,5 +204,6 @@ workflow DISCOVER
         | map{res -> res[0]}
     )
     | combine(make_novel_tx2g.out)
+    | combine(metadata)
     | compile_quantifications_novel
 }
