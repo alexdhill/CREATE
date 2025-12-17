@@ -31,6 +31,8 @@ RUN apt-get update -y \
     && unzip v${GFFREAD_VER}.zip \
     && cd ./gffread-${GFFREAD_VER} \
     && make release \
+    && mv gffread /usr/local/bin/ \
+    && cd .. && rm -rf gffread-${GFFREAD_VER} v${GFFREAD_VER}.zip \
     && apt-get -y clean && apt-get -y autoclean \
     && rm -rf /var/lib/apt/lists/*
 ENV HOME="/home"
