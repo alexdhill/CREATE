@@ -33,6 +33,7 @@ process compile_quantifications
         )
     output:
         path("counts/")
+        path("tx_counts/", optional: true)
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
