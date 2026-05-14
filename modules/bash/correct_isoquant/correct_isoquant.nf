@@ -17,8 +17,8 @@
 
 process correct_isoquant
 {
-    container 'alexdhill/create:python-3.10'
-    conda projectDir+'/bin/conda/modules/python.yaml'
+    container 'alexdhill/create:flair-730cea7'
+    conda projectDir+'/bin/conda/modules/flair.yaml'
     if (params.manage_resources)
     {
         cpus 1
@@ -38,8 +38,13 @@ process correct_isoquant
                 set -x
             fi
 
-            zcat !{annotation} \
-            > annotation
+            if [ -n "$(echo !{annotation} | grep '.gz$')" ]; then
+                echo "Decompressing annotation file..."
+                gunzip -c !{annotation} \
+                > annotation
+            else
+                cp !{annotation} annotation
+            fi
             python3 !{projectDir}/bin/python/correct_isoquant.py annotation \
             | gzip -c \
             > novel_custom_annotation.gtf.gz
