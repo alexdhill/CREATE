@@ -35,12 +35,14 @@ get_ranges <- function(txdb, txome_info) {
         str_subset(range_path)
     if (length(range_counts) == 0) {
         ranges <- genes(txdb, single.strand.genes.only = FALSE)
-        saveRDS(object = ranges, file = file.path(getTximetaBFC(), paste0(range_path, ".rds")))
+        saveRDS(
+            object = ranges,
+            file = file.path(getTximetaBFC(), paste0(range_path, ".rds"))
+        )
     } else {
         ranges <- readRDS(range_counts)
     }
-
-    return(ranges)
+    ranges
 }
 
 check_transcripts <- function(assays, ranges) {
@@ -55,25 +57,32 @@ check_transcripts <- function(assays, ranges) {
             ## Missing some
             warning(paste0(
                 "The annotation is missing some of the transcripts quantified. (",
-                sum(!(assay_names %in% names(ranges))), "/", length(assay_names), ")
-Dropping missing transcripts...
-",
+                sum(!(assay_names %in% names(ranges))),
+                "/",
+                length(assay_names),
+                ")\nDropping missing transcripts...\n",
                 paste0(
                     "[",
                     head(assay_names[!(assay_names %in% ranges)], 3),
-                    ifelse(sum(!(assay_names %in% names(ranges))) > 3, ", ...", ""),
-                    "]
-",
+                    ifelse(
+                        sum(!(assay_names %in% names(ranges))) > 3,
+                        ", ...",
+                        ""
+                    ),
+                    "]\n",
                     collapse = ", "
                 )
             ))
-            for (as in names(assays))
-            {
-                assays[[as]] <- assays[[as]][assay_names %in% names(ranges), , drop = FALSE]
+            for (as in names(assays)) {
+                assays[[as]] <- assays[[as]][
+                    assay_names %in% names(ranges),
+                    ,
+                    drop = FALSE
+                ]
             }
         }
     }
-    return(assays)
+    assays
 }
 
 summarize_genes <- function(transcript_quants, txdb) {
@@ -90,14 +99,16 @@ summarize_genes <- function(transcript_quants, txdb) {
     inferential_indexes <- grep("infRep", assayNames(transcript_quants))
     if (length(inferential_indexes) > 0) {
         replicates <- list(assays(transcript_quants)[inferential_indexes])
-        tx_tmp <- c(tx_tmp, infReps = replicates)
+        tx_tmp <- c(tx_tmp, inf_reps = replicates)
     }
     agg_transcript_quants <- summarizeToGene(
         object = tx_tmp,
         tx2gene = tx2gene
     )
     assays <- agg_transcript_quants[c("counts", "abundance", "length")]
-    if (length(inferential_indexes) > 0) assays <- c(assays, infReps)
+    if (length(inferential_indexes) > 0) {
+        assays <- c(assays, inf_reps)
+    }
     assays <- check_transcripts(assays, ranges)
     ranges <- ranges[rownames(assays[["counts"]])]
     transcript_ids <- CharacterList(split(tx2gene$TXNAME, tx2gene$GENEID))
@@ -107,8 +118,13 @@ summarize_genes <- function(transcript_quants, txdb) {
     }
     if ("hasDuplicate" %in% colnames(mcols(transcript_quants))) {
         stopifnot(all(rownames(transcript_quants) %in% tx2gene[, 1]))
-        tx2gene_filter <- tx2gene[match(rownames(transcript_quants), tx2gene[, 1]), ]
-        duplicates <- LogicalList(split(mcolds(transcript_quants)$hasDuplicate, tx2gene_filter$GENEID))
+        tx2gene_filter <- tx2gene[
+            match(rownames(transcript_quants), tx2gene[, 1]),
+        ]
+        duplicates <- LogicalList(split(
+            mcolds(transcript_quants)$hasDuplicate,
+            tx2gene_filter$GENEID
+        ))
         mcols(ranges)$numDupObjects <- sum(duplicates)
     }
     metadata <- metadata(transcript_quants)
@@ -120,15 +136,18 @@ summarize_genes <- function(transcript_quants, txdb) {
         metadata = metadata,
         colData = colData(transcript_quants)
     )
-    return(gene_quants)
+    gene_quants
 }
 
-read_map <- function(reference_dir, class=TRUE)
-{
-    reference_dir %>% 
-        list.files(full.names=TRUE) %>%
+read_map <- function(reference_dir, class = TRUE) {
+    reference_dir %>%
+        list.files(full.names = TRUE) %>%
         stringr::str_subset("complete_map.tx2g") %>%
-        readr::read_csv(col_names=TRUE, progress=FALSE, show_col_types=FALSE) %>%
+        readr::read_csv(
+            col_names = TRUE,
+            progress = FALSE,
+            show_col_types = FALSE
+        ) %>%
         as.data.frame() %>%
         dplyr::select(gene_id, gene_name, gene_biotype) %>%
         dplyr::distinct() %>%
@@ -136,18 +155,24 @@ read_map <- function(reference_dir, class=TRUE)
 }
 
 get_quant_files <- function(path, seqs) {
+    files <- ""
     if (seqs == "short") {
-        return(file.path(path, "quant.sf"))
+        file <- file.path(path, "quant.sf")
     } else if (seqs == "long") {
-        return(file.path(path, paste0(basename(path), ".quant")))
+        files <- file.path(path, paste0(basename(path), ".quant"))
     } else if (seqs == "single-cell") {
-        return(file.path(path))
+        files <- file.path(path)
     }
+    files
 }
 
 compile_quants <- function(quants, reference, metadata, transcripts, seqs) {
     message("Matching quantifications to the metadata sheet...")
-    conditions = readr::read_csv(metadata, progress=F, show_col_types=F) %>%
+    conditions <- metadata %>%
+        readr::read_csv(
+            progress = FALSE,
+            show_col_types = FALSE
+        ) %>%
         dplyr::mutate(dplyr::across(dplyr::where(is.character), as.factor))
     colnames(conditions)[1] <- "prefix"
     conditions$prefix <- as.character(conditions$prefix)
@@ -170,55 +195,72 @@ compile_quants <- function(quants, reference, metadata, transcripts, seqs) {
 
     message("Compiling quantifications...")
     message("...reading quant files")
-    libraries = list("short"="salmon", "long"="oarfish", "single-cell"="alevin")
-    type = libraries[[seqs]]
+    libraries <- list(
+        "short" = "salmon",
+        "long" = "oarfish",
+        "single-cell" = "alevin"
+    )
+    type <- libraries[[seqs]]
     samples <- quants %>%
         list.files(full.names = TRUE) %>%
         lapply(function(path) {
-            quant <- get_quant_files(path, seqs);
-            sample <- basename(path);
-            name_list <- tibble::lst("files" = quant, "names" = sample);
+            quant <- get_quant_files(path, seqs)
+            sample <- basename(path)
+            name_list <- tibble::lst("files" = quant, "names" = sample)
         }) %>%
         dplyr::bind_rows() %>%
         as.data.frame() %>%
         {
-            cat(paste0("Found ", .$files, '\n'));
+            cat(paste0("Found ", .$files, "\n"))
             .
         } %>%
         dplyr::cross_join(conditions) %>%
         dplyr::filter(stringr::str_starts(names, stringr::fixed(prefix))) %>%
         dplyr::group_by(prefix) %>%
-        dplyr::mutate(matches=dplyr::n()) %>%
+        dplyr::mutate(matches = dplyr::n()) %>%
         dplyr::ungroup() %>%
-        { if (any(.$matches > 1)) {
-            cat("Non-unique prefixes detected:\n");
-            samples %>%
-            dplyr::filter(matches > 1) %>%
-            dplyr::pull(prefix) %>%
-            unique() %>%
-            print();
-            stop("Please ensure all prefixes are unique");
-        }; . } %>%
-        dplyr::slice(1, .by='prefix') %>%
+        {
+            if (any(.$matches > 1)) {
+                cat("Non-unique prefixes detected:\n")
+                . %>%
+                    dplyr::filter(matches > 1) %>%
+                    dplyr::pull(prefix) %>%
+                    unique() %>%
+                    print()
+                stop("Please ensure all prefixes are unique")
+            }
+            .
+        } %>%
+        dplyr::slice(1, .by = "prefix") %>%
         dplyr::select(-matches) %>%
-        dplyr::mutate(names=prefix, prefix=NULL)
+        dplyr::mutate(names = prefix, prefix = NULL)
 
-    if (seqs == 'single-cell') {
-        message("By default all single-cell quants are saved to separate HDF5 files under 'counts/<sample_name>' directories.")
+    if (seqs == "single-cell") {
+        message(
+            "By default all single-cell quants are saved to separate HDF5 files under "counts/<sample_name>" directories."
+        )
         quants = apply(samples, 1, function(sample) {
             message("...saving gene quantifications for ", sample[["names"]])
             genes = fishpond::loadFry(sample[["files"]], outputFormat = "scRNA")
 
-            SummarizedExperiment::colData(genes) <- SummarizedExperiment::colData(genes) %>%
+            SummarizedExperiment::colData(
+                genes
+            ) <- SummarizedExperiment::colData(genes) %>%
                 as.data.frame() %>%
                 dplyr::mutate(sample = sample[["names"]]) %>%
                 dplyr::left_join(conditions, by = c("sample" = "prefix")) %>%
                 magrittr::set_rownames(.$barcodes) %>%
                 S4Vectors::DataFrame()
 
-            SummarizedExperiment::rowData(genes) <- SummarizedExperiment::rowData(genes) %>%
+            SummarizedExperiment::rowData(
+                genes
+            ) <- SummarizedExperiment::rowData(genes) %>%
                 as.data.frame() %>%
-                dplyr::left_join(biotypes, multiple = "any", by = c("gene_ids" = "gene_id")) %>%
+                dplyr::left_join(
+                    biotypes,
+                    multiple = "any",
+                    by = c("gene_ids" = "gene_id")
+                ) %>%
                 magrittr::set_rownames(.$gene_ids) %>%
                 S4Vectors::DataFrame()
 
@@ -233,11 +275,23 @@ compile_quants <- function(quants, reference, metadata, transcripts, seqs) {
                 verbose = TRUE
             )
             endtime <- Sys.time()
-            message("Saved ", sample[["nreads"]], " reads in ", round(difftime(endtime, starttime, units = "secs"), 2), " seconds")
+            message(
+                "Saved ",
+                sample[["nreads"]],
+                " reads in ",
+                round(difftime(endtime, starttime, units = "secs"), 2),
+                " seconds"
+            )
         })
     } else {
         message("...gathering transcript quantifications")
-        quants <- tximeta::tximeta(samples, type = type, dropInfReps = TRUE, txOut = TRUE, skipMeta = FALSE)
+        quants <- tximeta::tximeta(
+            samples,
+            type = type,
+            dropinf_reps = TRUE,
+            txOut = TRUE,
+            skipMeta = FALSE
+        )
         if (transcripts) {
             message("...saving transcript quantifications")
             HDF5Array::saveHDF5SummarizedExperiment(
@@ -250,7 +304,9 @@ compile_quants <- function(quants, reference, metadata, transcripts, seqs) {
 
         message("Summarizing genes...")
         gene_quants <- summarize_genes(quants, txdb)
-        SummarizedExperiment::rowData(gene_quants) <- SummarizedExperiment::rowData(gene_quants) %>%
+        SummarizedExperiment::rowData(
+            gene_quants
+        ) <- SummarizedExperiment::rowData(gene_quants) %>%
             as.data.frame() %>%
             dplyr::left_join(biotypes, multiple = "any", by = "gene_id") %>%
             S4Vectors::DataFrame()
@@ -269,32 +325,47 @@ compile_quants <- function(quants, reference, metadata, transcripts, seqs) {
 main <- function() {
     parser <- argparse::ArgumentParser()
     parser$add_argument(
-        "-q", "--quants",
+        "-q",
+        "--quants",
         action = "store",
         help = "The quantification directory"
     )
     parser$add_argument(
-        "-r", "--reference",
+        "-r",
+        "--reference",
         action = "store",
         help = "The CREATE reference"
     )
     parser$add_argument(
-        "-m", "--metadata",
+        "-m",
+        "--metadata",
         action = "store",
         help = "The metadata samplesheet with prefixes and conditions"
     )
     parser$add_argument(
-        "-s", "--seqs",
-        action = "store", default = 'short', required = FALSE,
+        "-s",
+        "--seqs",
+        action = "store",
+        default = "short",
+        required = FALSE,
         help = "The sequence type (short/long/single-cell)"
     )
     parser$add_argument(
-        "-t", "--transcripts",
-        action = "store_true", default = FALSE, required = FALSE,
+        "-t",
+        "--transcripts",
+        action = "store_true",
+        default = FALSE,
+        required = FALSE,
         help = "Export a transcript-level quantification"
     )
     args <- parser$parse_args()
 
-    compile_quants(args$quants, args$reference, args$metadata, args$transcripts, args$seqs)
+    compile_quants(
+        args$quants,
+        args$reference,
+        args$metadata,
+        args$transcripts,
+        args$seqs
+    )
 }
 main()
