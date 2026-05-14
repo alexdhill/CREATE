@@ -44,7 +44,17 @@ process make_transcript_map
                 set -x
             fi
 
-            gzip -cd !{gencode_annotation} !{repeat_annotation} \
+            rep_ann="!{repeat_annotation}"
+            if [ "NULL" == "!{repeat_annotation}" ]; then
+                rep_ann=""
+            fi
+
+            gen_ann="!{gencode_annotation}"
+            if [ "NULL" == "!{gencode_annotation}" ]; then
+                gen_ann=""
+            fi
+
+            gzip -cd ${gen_ann} ${rep_ann} \
             | grep -v "^#" \
             | awk -F'\\t' '{print $3"\\t"$9}' \
             | grep '^transcript' \
