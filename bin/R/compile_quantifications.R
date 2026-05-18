@@ -237,7 +237,7 @@ compile_quants <- function(quants, reference, metadata, transcripts, seqs) {
 
     if (seqs == "single-cell") {
         message(
-            "By default all single-cell quants are saved to separate HDF5 files under "counts/<sample_name>" directories."
+            "By default all single-cell quants are saved to separate HDF5 files under 'counts/<sample_name>' directories."
         )
         quants = apply(samples, 1, function(sample) {
             message("...saving gene quantifications for ", sample[["names"]])

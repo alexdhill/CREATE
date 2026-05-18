@@ -35,9 +35,10 @@ RUN apt-get update \
     && make -j8 install \
     && cd ../sra-tools-${SRA_VER} \
     && ./configure \
-    && make -j8 install \
+    && make -j8 install \ 
     && apt-get -y clean && apt-get -y autoclean \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* /sra-tools-${SRA_VER} /ncbi-vdb-${SRA_VER}
+ENV PATH=$PATH:/usr/local/ncbi/sra-tools/bin
 ENV HOME="/home"
 RUN chmod -R 777 /home
 ENV TIME="\n\nres memory (KB)     %M\ntime (HH:mm:ss)     %E"
