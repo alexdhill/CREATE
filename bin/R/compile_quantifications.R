@@ -157,7 +157,7 @@ read_map <- function(reference_dir, class = TRUE) {
 get_quant_files <- function(path, seqs) {
     files <- ""
     if (seqs == "short") {
-        file <- file.path(path, "quant.sf")
+        files <- file.path(path, "quant.sf")
     } else if (seqs == "long") {
         files <- file.path(path, paste0(basename(path), ".quant"))
     } else if (seqs == "single-cell") {
@@ -236,9 +236,10 @@ compile_quants <- function(quants, reference, metadata, transcripts, seqs) {
         dplyr::mutate(names = prefix, prefix = NULL)
 
     if (seqs == "single-cell") {
-        message(
-            "By default all single-cell quants are saved to separate HDF5 files under 'counts/<sample_name>' directories."
-        )
+        message(paste0(
+            "By default all single-cell quants are saved to separate HDF5 files under",
+            "'counts/<sample_name>' directories."
+        ))
         quants = apply(samples, 1, function(sample) {
             message("...saving gene quantifications for ", sample[["names"]])
             genes = fishpond::loadFry(sample[["files"]], outputFormat = "scRNA")
