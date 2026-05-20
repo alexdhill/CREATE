@@ -1,14 +1,14 @@
 /*
  * REQUIRED NOTICE: Copyright (c) 2020-2023, Regents of the University of California
  * All rights reserved. https://polyformproject.org/licenses/noncommercial/1.0.0
- * 
+ *
  * This software was developed by the Daniel Kim lab at the University of California, Santa Cruz.
  * Authors: Roman E. Reggiardo, Vikas Peddu, Alex D. Hill
- * 
+ *
  * The licensor grants you a copyright license for the software to do everything you might do with
  * the software that would otherwise infringe the licensor’s copyright in it for any permitted
  * purpose.
- * 
+ *
  * As far as the law allows, the software comes as is, without any warranty or condition, and the
  * licensor will not be liable to you for any damages arising out of these terms or the use or
  * nature of the software, under any kind of legal claim.
@@ -33,18 +33,20 @@ workflow SINGLE_END
             metadata = Channel.fromPath(params.metadata)
             if (params.parameters) parameters = Channel.fromPath(params.parameters)
             else parameters = Channel.fromPath(projectDir + "/assets/NULL")
-            
+
             if (is_acc)
             {
                 log.info("Downloading reads before running...")
-                Channel.fromPath(file(params.samples).readLines())
+                Channel.from(file(params.samples).readLines())
                 | prefetch
                 | fasterq_dump_single
                 | set{reads}
             } else
             {
-                reads = Channel.fromPath(params.samples+"/"+params.pattern)
-                .map{sample -> [sample.name.split(/\.f(ast)?q(\.gz)?/)[0], sample]}
+                log.info("Collecting reads...")
+                Channel.fromPath("${params.samples}/${params.pattern}")
+                | map{sample -> [sample.name.split(/\.f(ast)?q(\.gz)?/)[0], sample]}
+                | set{reads}
             }
 
             reads
