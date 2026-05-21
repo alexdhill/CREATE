@@ -289,9 +289,9 @@ compile_quants <- function(quants, reference, metadata, transcripts, seqs) {
         quants <- tximeta::tximeta(
             samples,
             type = type,
-            dropinf_reps = TRUE,
             txOut = TRUE,
-            skipMeta = FALSE
+            skipMeta = FALSE,
+            dropInfReps = TRUE
         )
         if (transcripts) {
             message("...saving transcript quantifications")

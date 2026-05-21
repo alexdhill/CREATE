@@ -34,7 +34,7 @@ process fasterq_dump_single
     output:
         tuple(
             val("${acc}"),
-            path("${acc}/*.fastq.gz")
+            path("${acc}.fastq.gz")
         )
     shell:
         '''
@@ -46,15 +46,15 @@ process fasterq_dump_single
                 set -x
             fi
 
-            fasterq-dump --split-3 \
+            fasterq-dump \
                 --skip-technical \
                 --threads !{task.cpus} \
-                --outdir !{acc} \
+                --outdir . \
                 !{sra}
 
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
                 echo "Compressing fastq files..."
             fi
-            find . -type f -name "*.fastq" -exec pigz -9qp ${task.cpus} {} +
+            find . -type f -name "*.fastq" -exec pigz -9qp !{task.cpus} {} +
         '''
 }
