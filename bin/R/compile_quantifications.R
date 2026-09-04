@@ -149,7 +149,12 @@ read_map <- function(reference_dir, class = TRUE) {
             show_col_types = FALSE
         ) %>%
         as.data.frame() %>%
-        dplyr::select(gene_id, gene_name, gene_biotype) %>%
+        dplyr::select(dplyr::any_of(c(
+            "gene_id",
+            "gene_name",
+            "gene_biotype",
+            "source_gene"
+        ))) %>%
         dplyr::distinct() %>%
         return()
 }
@@ -218,7 +223,7 @@ compile_quants <- function(quants, reference, metadata, transcripts, seqs) {
         dplyr::filter(stringr::str_starts(names, stringr::fixed(prefix))) %>%
         dplyr::group_by(prefix) %>%
         dplyr::mutate(matches = dplyr::n()) %>%
-        dplyr::ungroup() %>%
+        dplyr::ungroup() %>% ### Add missing prefix check
         {
             if (any(.$matches > 1)) {
                 cat("Non-unique prefixes detected:\n")
@@ -240,9 +245,9 @@ compile_quants <- function(quants, reference, metadata, transcripts, seqs) {
             "By default all single-cell quants are saved to separate HDF5 files under",
             "'counts/<sample_name>' directories."
         ))
-        quants = apply(samples, 1, function(sample) {
+        quants <- apply(samples, 1, function(sample) {
             message("...saving gene quantifications for ", sample[["names"]])
-            genes = fishpond::loadFry(sample[["files"]], outputFormat = "scRNA")
+            genes <- fishpond::loadFry(sample[["files"]], outputFormat = "scRNA")
 
             SummarizedExperiment::colData(
                 genes
