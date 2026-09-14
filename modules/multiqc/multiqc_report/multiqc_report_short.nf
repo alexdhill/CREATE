@@ -15,57 +15,53 @@
  */
 
 
-process trim_reads_paired
+process multiqc_report_short
 {
-    publishDir "${params.outdir}/reads/trimmed", mode: 'copy', enabled: params.keep, overwrite: params.force
-    container 'alexdhill/create:trim-galore-0.6.10'
-    conda projectDir+'/bin/conda/modules/trim-galore.yaml'
+    publishDir "${params.outdir}/report/", mode: 'copy', overwrite: params.force
+    container 'alexdhill/create:multiqc-1.25'
+    conda projectDir+'/bin/conda/modules/multiqc.yaml'
     if (params.manage_resources)
     {
-        cpus 8
+        cpus 2
         memory '16.GB'
-        time '30m'
+        time '2h'
     }
     input:
         tuple(
-            val(sample),
-            val(nreads),
-            path(read_1),
-            path(read_2),
+            path(read_reports),
+            path(quants),
             path(parameters)
         )
     output:
         tuple(
-            val("${sample}"),
-            path("${sample}_val_1.fq.gz"),
-            path("${sample}_val_2.fq.gz"),
-            env(NREADS)
+            path("multiqc_report.html"),
+            path("multiqc_report_data/")
         )
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Trimming paired reads..."
-                echo "Sample: !{sample}"
-                echo "Read 1: !{read_1}"
-                echo "Read 2: !{read_2}"
-                echo "n Reads: !{nreads}"
+                echo "Summarizing short read quantification"
+                echo "Read reports: $(ls -d !{read_reports} | wc -l)"
+                echo "Quantifications: $(ls -d !{quants} | wc -l)"
                 echo "User parameters: !{parameters}"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 
-            params="--length 35"
+            params="--force --interactive"
             if [[ "!{parameters}" != "NULL" ]]; then
-                params="$(jq '."trim-galore" | to_entries | .[] | "\\(.key)=\\(.value)"' flags.json | xargs | sed 's/=true//g')"
+                params="$(jq '.multiqc | to_entries | .[] | "\\(.key)=\\(.value)"' !{parameters} | xargs | sed 's/=true//g')"
             fi
 
-            trim_galore --paired --gzip !{read_1} !{read_2} \
-                --basename !{sample} \
-                -j !{task.cpus} --output_dir . \
-                ${params}
+            multiqc ${params} \
+                --filename multiqc_report.html \
+                --outdir . \
+                .
 
-            NREADS=`pigz -cdp !{task.cpus} !{sample}_val_1.fq.gz \
-            | awk 'END {print NR/4}'`
+            if [[ ! -e multiqc_report.html ]]; then
+                echo "\033[1;31mERR: MultiQC report failed\033[0m" 1>&2
+                exit 1
+            fi
         '''
 }

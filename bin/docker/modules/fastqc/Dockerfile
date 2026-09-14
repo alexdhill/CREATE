@@ -32,6 +32,7 @@ RUN apt-get update \
     && chmod +x FastQC/fastqc \
     && apt-get -y clean && apt-get -y autoclean \
     && rm -rf /var/lib/apt/lists/*
+ENV PATH="/FastQC:${PATH}"
 ENV HOME="/home"
 RUN chmod -R 777 /home
 ENV TIME="\n\nres memory (KB)     %M\ntime (HH:mm:ss)     %E"

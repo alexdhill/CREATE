@@ -182,6 +182,33 @@ profiles
                 time = '3h'
             }
 
+            // Report
+            withName: "fastqc_report_paired"
+            {
+                queue = "short"
+                time = '1h'
+            }
+            withName: "fastqc_report_single"
+            {
+                queue = "short"
+                time = '1h'
+            }
+            withName: "nanoplot_report"
+            {
+                queue = "medium"
+                time = '2h'
+            }
+            withName: "multiqc_report_short"
+            {
+                queue = "short"
+                time = '1h'
+            }
+            withName: "multiqc_report_long"
+            {
+                queue = "short"
+                time = '1h'
+            }
+
             // Discover
             withName: "star_align_genome"
             {

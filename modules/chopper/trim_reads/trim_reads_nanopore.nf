@@ -1,25 +1,25 @@
 /*
  * REQUIRED NOTICE: Copyright (c) 2020-2023, Regents of the University of California
  * All rights reserved. https://polyformproject.org/licenses/noncommercial/1.0.0
- * 
+ *
  * This software was developed by the Daniel Kim lab at the University of California, Santa Cruz.
  * Authors: Roman E. Reggiardo, Vikas Peddu, Alex D. Hill
- * 
+ *
  * The licensor grants you a copyright license for the software to do everything you might do with
  * the software that would otherwise infringe the licensor’s copyright in it for any permitted
  * purpose.
- * 
+ *
  * As far as the law allows, the software comes as is, without any warranty or condition, and the
  * licensor will not be liable to you for any damages arising out of these terms or the use or
  * nature of the software, under any kind of legal claim.
- * connor was here 
+ * connor was here
  */
- 
+
 
 process trim_reads_nanopore
 {
     publishDir "${params.outdir}/reads/trimmed/", mode: 'copy', enabled: params.keep, overwrite: params.force
-    container 'alexdhill/create:chopper-0.9.0'
+    container 'alexdhill/create:chopper-0.14.0'
     conda projectDir+'/bin/conda/modules/chopper.yaml'
     if (params.manage_resources)
     {
@@ -52,7 +52,7 @@ process trim_reads_nanopore
                 set -x
             fi
 
-            params="-l 50 -q 10"
+            params="-l 50 -q 8"
             if [[ "${params}" == "null" ]]; then
                 params="$(jq '.chopper | to_entries | .[] | "\\(.key)=\\(.value)"' !{parameters} | xargs | sed 's/=true//g')"
             fi

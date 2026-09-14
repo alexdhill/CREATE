@@ -15,57 +15,55 @@
  */
 
 
-process trim_reads_paired
+process fastqc_report_paired
 {
-    publishDir "${params.outdir}/reads/trimmed", mode: 'copy', enabled: params.keep, overwrite: params.force
-    container 'alexdhill/create:trim-galore-0.6.10'
-    conda projectDir+'/bin/conda/modules/trim-galore.yaml'
+    publishDir "${params.outdir}/report/fastqc/${stage}/", mode: 'copy', enabled: params.keep, overwrite: params.force
+    container 'alexdhill/create:fastqc-0.12.1'
+    conda projectDir+'/bin/conda/modules/fastqc.yaml'
     if (params.manage_resources)
     {
-        cpus 8
-        memory '16.GB'
-        time '30m'
+        cpus 4
+        memory '8.GB'
+        time '2h'
     }
     input:
         tuple(
             val(sample),
-            val(nreads),
+            val(stage),
             path(read_1),
             path(read_2),
             path(parameters)
         )
     output:
-        tuple(
-            val("${sample}"),
-            path("${sample}_val_1.fq.gz"),
-            path("${sample}_val_2.fq.gz"),
-            env(NREADS)
-        )
+        path("${sample}_${stage}/")
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Trimming paired reads..."
-                echo "Sample: !{sample}"
+                echo "Reporting paired read quality"
+                echo "Sample: !{sample} (!{stage})"
                 echo "Read 1: !{read_1}"
                 echo "Read 2: !{read_2}"
-                echo "n Reads: !{nreads}"
                 echo "User parameters: !{parameters}"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 
-            params="--length 35"
+            params="--quiet --nogroup"
             if [[ "!{parameters}" != "NULL" ]]; then
-                params="$(jq '."trim-galore" | to_entries | .[] | "\\(.key)=\\(.value)"' flags.json | xargs | sed 's/=true//g')"
+                params="$(jq '.fastqc | to_entries | .[] | "\\(.key)=\\(.value)"' !{parameters} | xargs | sed 's/=true//g')"
             fi
 
-            trim_galore --paired --gzip !{read_1} !{read_2} \
-                --basename !{sample} \
-                -j !{task.cpus} --output_dir . \
-                ${params}
+            mkdir -p !{sample}_!{stage}
 
-            NREADS=`pigz -cdp !{task.cpus} !{sample}_val_1.fq.gz \
-            | awk 'END {print NR/4}'`
+            fastqc ${params} \
+                -t !{task.cpus} \
+                --outdir !{sample}_!{stage} \
+                !{read_1} !{read_2}
+
+            if [[ $(ls !{sample}_!{stage}/*_fastqc.zip | wc -l) -ne 2 ]]; then
+                echo "\033[1;31mERR: FastQC report failed\033[0m" 1>&2
+                exit 1
+            fi
         '''
 }

@@ -15,10 +15,10 @@
  */
 
 
-include { fastqc_report_paired } from "../../../modules/fastqc/fastqc_report/fastqc_report_paired.nf"
+include { fastqc_report_single } from "../../../modules/fastqc/fastqc_report/fastqc_report_single.nf"
 include { multiqc_report_short } from "../../../modules/multiqc/multiqc_report/multiqc_report_short.nf"
 
-workflow PAIRED_END
+workflow SINGLE_END
 {
     take:
         raw_reads
@@ -29,10 +29,10 @@ workflow PAIRED_END
         else parameters = Channel.fromPath(projectDir + "/assets/NULL")
 
         raw_reads
-        | map{sample -> [sample[0], "raw", sample[1], sample[2]]}
-        | concat(trimmed_reads.map{sample -> [sample[0], "trimmed", sample[1], sample[2]]})
+        | map{sample -> [sample[0], "raw", sample[1]]}
+        | concat(trimmed_reads.map{sample -> [sample[0], "trimmed", sample[1]]})
         | combine(parameters)
-        | fastqc_report_paired
+        | fastqc_report_single
         | collect
         | map{reports -> [reports]}
         | combine(quants)
