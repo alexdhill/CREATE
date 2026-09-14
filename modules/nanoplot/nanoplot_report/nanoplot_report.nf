@@ -17,7 +17,7 @@
 
 process nanoplot_report
 {
-    publishDir "${params.outdir}/report/nanoplot/${stage}/", mode: 'copy', enabled: params.keep, overwrite: params.force
+    publishDir "${params.outdir}/report/nanoplot/${stage}/", mode: 'copy', overwrite: params.force
     container 'alexdhill/create:nanoplot-1.48.0'
     conda projectDir+'/bin/conda/modules/nanoplot.yaml'
     if (params.manage_resources)

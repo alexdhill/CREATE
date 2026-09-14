@@ -53,7 +53,7 @@ process trim_reads_nanopore
             fi
 
             params="-l 50 -q 8"
-            if [[ "${params}" == "null" ]]; then
+            if [[ "!{parameters}" != "NULL" ]]; then
                 params="$(jq '.chopper | to_entries | .[] | "\\(.key)=\\(.value)"' !{parameters} | xargs | sed 's/=true//g')"
             fi
 
