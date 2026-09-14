@@ -5,4 +5,5 @@ channels:
 dependencies:
   - time
   - pigz
-  - multiqc=1.12
+  - jq
+  - multiqc=1.25

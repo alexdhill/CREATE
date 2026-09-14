@@ -1,4 +1,4 @@
-name: CREATE-fastqc
+name: CREATE-nanoplot
 channels:
   - bioconda
   - conda-forge
@@ -6,4 +6,4 @@ dependencies:
   - time
   - pigz
   - jq
-  - fastqc=0.12.1
+  - nanoplot=1.42.0
