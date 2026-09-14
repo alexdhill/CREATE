@@ -21,6 +21,7 @@ include { count_reads_se } from "../../../modules/bash/count_reads/count_reads_s
 include { trim_reads_single } from "../../../modules/trim-galore/trim_reads/trim_reads_single.nf"
 include { salmon_quant_single } from "../../../modules/salmon/salmon_quant/salmon_quant_single.nf"
 include { compile_quantifications } from "../../../modules/R/compile_quantifications/compile_quantifications.nf"
+include { SINGLE_END as REPORT_SINGLE_END } from "../../report/single_end/single_end.nf"
 
 workflow SINGLE_END
 {
@@ -56,13 +57,25 @@ workflow SINGLE_END
             | map{ res -> [res[0], res[1][0], res[1][1]] }
             | combine(parameters)
             | trim_reads_single
+            | set{trimmed_reads}
+
+            trimmed_reads
             | combine(reference)
             | combine(parameters)
             | salmon_quant_single
             | collect
-            | map{quants -> [quants]}
+            | map{quant_dirs -> [quant_dirs]}
+            | set{quants}
+
+            quants
             | combine(reference)
             | combine(metadata)
             | compile_quantifications
+
+            REPORT_SINGLE_END(
+                reads,
+                trimmed_reads.map{sample -> [sample[0], sample[1]]},
+                quants
+            )
         }
 }

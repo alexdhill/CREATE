@@ -21,6 +21,7 @@ include { trim_reads_nanopore } from "../../../modules/chopper/trim_reads/trim_r
 include { minimap2_align } from "../../../modules/minimap2/minimap2_align/minimap2_align.nf"
 include { oarfish_quant } from "../../../modules/salmon/oarfish_quant/oarfish_quant.nf"
 include { compile_quantifications } from "../../../modules/R/compile_quantifications/compile_quantifications.nf"
+include { NANOPORE as REPORT_NANOPORE } from "../../report/nanopore/nanopore.nf"
 
 workflow NANOPORE
 {
@@ -54,16 +55,31 @@ workflow NANOPORE
             | minimap2_align_dcs
             | combine(parameters)
             | trim_reads_nanopore
+            | set{trimmed_reads}
+
+            trimmed_reads
             | combine(reference)
             | combine(parameters)
             | minimap2_align
+
+            minimap2_align.out.alignment
             | combine(reference)
             | combine(parameters)
             | oarfish_quant
             | collect
-            | map{quants -> [quants]}
+            | map{quant_dirs -> [quant_dirs]}
+            | set{quants}
+
+            quants
             | combine(reference)
             | combine(metadata)
             | compile_quantifications
+
+            REPORT_NANOPORE(
+                reads,
+                trimmed_reads.map{sample -> [sample[0], sample[2]]},
+                minimap2_align.out.align_log,
+                quants
+            )
         }
 }
