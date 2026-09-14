@@ -1,14 +1,14 @@
 /*
  * REQUIRED NOTICE: Copyright (c) 2020-2023, Regents of the University of California
  * All rights reserved. https://polyformproject.org/licenses/noncommercial/1.0.0
- * 
+ *
  * This software was developed by the Daniel Kim lab at the University of California, Santa Cruz.
  * Authors: Roman E. Reggiardo, Vikas Peddu, Alex D. Hill
- * 
+ *
  * The licensor grants you a copyright license for the software to do everything you might do with
  * the software that would otherwise infringe the licensor’s copyright in it for any permitted
  * purpose.
- * 
+ *
  * As far as the law allows, the software comes as is, without any warranty or condition, and the
  * licensor will not be liable to you for any damages arising out of these terms or the use or
  * nature of the software, under any kind of legal claim.
@@ -17,7 +17,8 @@
 
 process minimap2_align
 {
-    publishDir "${params.outdir}/align", mode: 'copy', overwrite: params.force, enabled: params.keep
+    publishDir "${params.outdir}/align", mode: 'copy', overwrite: params.force, enabled: params.keep, pattern: "*.name_sorted.bam"
+    publishDir "${params.outdir}/report/align", mode: 'copy', overwrite: params.force, enabled: params.keep, pattern: "*.minimap2.log"
     container 'alexdhill/create:minimap2-2.26'
     conda projectDir+'/bin/conda/modules/minimap2.yaml'
     if (params.manage_resources)
@@ -34,11 +35,8 @@ process minimap2_align
             path(parameters)
         )
     output:
-        tuple(
-            val("${sample}"),
-            val("${nreads}"),
-            path("${sample}.name_sorted.bam")
-        )
+        tuple val("${sample}"), val("${nreads}"), path("${sample}.name_sorted.bam"), emit: alignment
+        path "${sample}.minimap2.log", emit: align_log
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
@@ -57,11 +55,12 @@ process minimap2_align
                 params="$(jq '.minimap2 | to_entries | .[] | "\\(.key)=\\(.value)"' !{parameters} | xargs | sed 's/=true//g')"
             fi
 
-            minimap2 -ax sr \
+            minimap2 -a \
                 ${params} \
                 -t !{task.cpus} \
                 !{reference}/*long_index*.mmi \
                 !{read} \
+                2> !{sample}.minimap2.log \
             | samtools view -u - \
             | samtools sort -n -@ !{task.cpus} - \
             > !{sample}.name_sorted.bam
