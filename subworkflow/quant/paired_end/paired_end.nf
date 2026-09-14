@@ -20,6 +20,7 @@ include { count_reads_pe } from "../../../modules/bash/count_reads/count_reads_p
 include { trim_reads_paired } from "../../../modules/trim-galore/trim_reads/trim_reads_paired.nf"
 include { salmon_quant_paired } from "../../../modules/salmon/salmon_quant/salmon_quant_paired.nf"
 include { compile_quantifications } from "../../../modules/R/compile_quantifications/compile_quantifications.nf"
+include { PAIRED_END as REPORT_PAIRED_END } from "../../report/paired_end/paired_end.nf"
 
 workflow PAIRED_END
 {
@@ -55,13 +56,25 @@ workflow PAIRED_END
             | map { res -> [res[0], res[1][0], res[1][1], res[2][0]] }
             | combine(parameters)
             | trim_reads_paired
+            | set{trimmed_reads}
+
+            trimmed_reads
             | combine(reference)
             | combine(parameters)
             | salmon_quant_paired
             | collect
-            | map{quants -> [quants]}
+            | map{quant_dirs -> [quant_dirs]}
+            | set{quants}
+
+            quants
             | combine(reference)
             | combine(metadata)
             | compile_quantifications
+
+            REPORT_PAIRED_END(
+                reads,
+                trimmed_reads.map{sample -> [sample[0], sample[1], sample[2]]},
+                quants
+            )
         }
 }

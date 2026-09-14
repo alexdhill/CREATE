@@ -15,57 +15,52 @@
  */
 
 
-process trim_reads_paired
+process nanoplot_report
 {
-    publishDir "${params.outdir}/reads/trimmed", mode: 'copy', enabled: params.keep, overwrite: params.force
-    container 'alexdhill/create:trim-galore-0.6.10'
-    conda projectDir+'/bin/conda/modules/trim-galore.yaml'
+    publishDir "${params.outdir}/report/nanoplot/${stage}/", mode: 'copy', enabled: params.keep, overwrite: params.force
+    container 'alexdhill/create:nanoplot-1.48.0'
+    conda projectDir+'/bin/conda/modules/nanoplot.yaml'
     if (params.manage_resources)
     {
-        cpus 8
+        cpus 4
         memory '16.GB'
-        time '30m'
+        time '2h'
     }
     input:
         tuple(
             val(sample),
-            val(nreads),
-            path(read_1),
-            path(read_2),
+            val(stage),
+            path(read),
             path(parameters)
         )
     output:
-        tuple(
-            val("${sample}"),
-            path("${sample}_val_1.fq.gz"),
-            path("${sample}_val_2.fq.gz"),
-            env(NREADS)
-        )
+        path("${sample}_${stage}/")
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Trimming paired reads..."
-                echo "Sample: !{sample}"
-                echo "Read 1: !{read_1}"
-                echo "Read 2: !{read_2}"
-                echo "n Reads: !{nreads}"
+                echo "Reporting nanopore read quality"
+                echo "Sample: !{sample} (!{stage})"
+                echo "Read: !{read}"
                 echo "User parameters: !{parameters}"
             fi
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
 
-            params="--length 35"
+            params="--plots kde --N50"
             if [[ "!{parameters}" != "NULL" ]]; then
-                params="$(jq '."trim-galore" | to_entries | .[] | "\\(.key)=\\(.value)"' flags.json | xargs | sed 's/=true//g')"
+                params="$(jq '.nanoplot | to_entries | .[] | "\\(.key)=\\(.value)"' !{parameters} | xargs | sed 's/=true//g')"
             fi
 
-            trim_galore --paired --gzip !{read_1} !{read_2} \
-                --basename !{sample} \
-                -j !{task.cpus} --output_dir . \
-                ${params}
+            NanoPlot ${params} \
+                --threads !{task.cpus} \
+                --fastq !{read} \
+                --prefix !{sample}_!{stage}_ \
+                --outdir !{sample}_!{stage}
 
-            NREADS=`pigz -cdp !{task.cpus} !{sample}_val_1.fq.gz \
-            | awk 'END {print NR/4}'`
+            if [[ ! -e !{sample}_!{stage}/!{sample}_!{stage}_NanoStats.txt ]]; then
+                echo "\033[1;31mERR: NanoPlot report failed\033[0m" 1>&2
+                exit 1
+            fi
         '''
 }

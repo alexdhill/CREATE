@@ -15,27 +15,29 @@
  */
 
 
-include { fastqc_report_paired } from "../../../modules/fastqc/fastqc_report/fastqc_report_paired.nf"
-include { multiqc_report_short } from "../../../modules/multiqc/multiqc_report/multiqc_report_short.nf"
+include { nanoplot_report } from "../../../modules/nanoplot/nanoplot_report/nanoplot_report.nf"
+include { multiqc_report_long } from "../../../modules/multiqc/multiqc_report/multiqc_report_long.nf"
 
-workflow PAIRED_END
+workflow NANOPORE
 {
     take:
         raw_reads
         trimmed_reads
+        align_logs
         quants
     main:
         if (params.parameters) parameters = Channel.fromPath(params.parameters)
         else parameters = Channel.fromPath(projectDir + "/assets/NULL")
 
         raw_reads
-        | map{sample -> [sample[0], "raw", sample[1], sample[2]]}
-        | concat(trimmed_reads.map{sample -> [sample[0], "trimmed", sample[1], sample[2]]})
+        | map{sample -> [sample[0], "raw", sample[1]]}
+        | concat(trimmed_reads.map{sample -> [sample[0], "trimmed", sample[1]]})
         | combine(parameters)
-        | fastqc_report_paired
+        | nanoplot_report
         | collect
         | map{reports -> [reports]}
+        | combine(align_logs.collect().map{logs -> [logs]})
         | combine(quants)
         | combine(parameters)
-        | multiqc_report_short
+        | multiqc_report_long
 }

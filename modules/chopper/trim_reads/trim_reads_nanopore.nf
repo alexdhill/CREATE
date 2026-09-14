@@ -19,7 +19,7 @@
 process trim_reads_nanopore
 {
     publishDir "${params.outdir}/reads/trimmed/", mode: 'copy', enabled: params.keep, overwrite: params.force
-    container 'alexdhill/create:chopper-0.9.0'
+    container 'alexdhill/create:chopper-0.14.0'
     conda projectDir+'/bin/conda/modules/chopper.yaml'
     if (params.manage_resources)
     {
@@ -52,8 +52,8 @@ process trim_reads_nanopore
                 set -x
             fi
 
-            params="-l 50 -q 10"
-            if [[ "!{parameters}" == "NULL" ]]; then
+            params="-l 50 -q 8"
+            if [[ "${params}" == "null" ]]; then
                 params="$(jq '.chopper | to_entries | .[] | "\\(.key)=\\(.value)"' !{parameters} | xargs | sed 's/=true//g')"
             fi
 
