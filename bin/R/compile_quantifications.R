@@ -277,7 +277,7 @@ compile_quants <- function(quants, reference, metadata, transcripts, seqs) {
         starttime <- Sys.time()
         HDF5Array::saveHDF5SummarizedExperiment(
             counts,
-            dir = file.path("counts", sample[["names"]]),
+            dir = "counts",
             replace = TRUE,
             as.sparse = TRUE,
             chunkdim = c(5000, ncol(counts)),
