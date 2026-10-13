@@ -270,17 +270,16 @@ compile_quants <- function(quants, reference, metadata, transcripts, seqs) {
                 S4Vectors::DataFrame()
             counts
         }) %>%
-        purrr::reduce(cbind) %>%
-        SummarizedExperiment::SummarizedExperiment()
+        purrr::reduce(SummarizedExperiment::cbind)
 
         dir.create(file.path("counts"))
         starttime <- Sys.time()
         HDF5Array::saveHDF5SummarizedExperiment(
-            counts,
+            quants,
             dir = "counts",
             replace = TRUE,
             as.sparse = TRUE,
-            chunkdim = c(5000, ncol(counts)),
+            chunkdim = c(10000, min(ncol(quants), 10000)),
             verbose = TRUE
         )
         endtime <- Sys.time()
