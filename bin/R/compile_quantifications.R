@@ -270,7 +270,8 @@ compile_quants <- function(quants, reference, metadata, transcripts, seqs) {
                 S4Vectors::DataFrame()
             counts
         }) %>%
-        purrr::reduce(cbind)
+        purrr::reduce(cbind) %>%
+        SummarizedExperiment::SummarizedExperiment()
 
         dir.create(file.path("counts"))
         starttime <- Sys.time()
