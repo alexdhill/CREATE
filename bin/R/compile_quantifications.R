@@ -28,6 +28,38 @@ suppressPackageStartupMessages({
     library(DESeq2)
 })
 
+read_map <- function(reference_dir, class = TRUE) {
+    reference_dir %>%
+        list.files(full.names = TRUE) %>%
+        stringr::str_subset("complete_map.tx2g") %>%
+        readr::read_csv(
+            col_names = TRUE,
+            progress = FALSE,
+            show_col_types = FALSE
+        ) %>%
+        as.data.frame() %>%
+        dplyr::select(dplyr::any_of(c(
+            "gene_id",
+            "gene_name",
+            "gene_biotype",
+            "source_gene"
+        ))) %>%
+        dplyr::distinct() %>%
+        return()
+}
+
+get_quant_files <- function(path, seqs) {
+    files <- ""
+    if (seqs == "short") {
+        files <- file.path(path, "quant.sf")
+    } else if (seqs == "long") {
+        files <- file.path(path, paste0(basename(path), ".quant"))
+    } else if (seqs == "single-cell") {
+        files <- file.path(path)
+    }
+    files
+}
+
 get_ranges <- function(txdb, txome_info) {
     range_path <- paste0("gene", "Rngs-", basename(txome_info$gtf))
     range_counts <- getTximetaBFC() %>%
@@ -139,38 +171,6 @@ summarize_genes <- function(transcript_quants, txdb) {
     gene_quants
 }
 
-read_map <- function(reference_dir, class = TRUE) {
-    reference_dir %>%
-        list.files(full.names = TRUE) %>%
-        stringr::str_subset("complete_map.tx2g") %>%
-        readr::read_csv(
-            col_names = TRUE,
-            progress = FALSE,
-            show_col_types = FALSE
-        ) %>%
-        as.data.frame() %>%
-        dplyr::select(dplyr::any_of(c(
-            "gene_id",
-            "gene_name",
-            "gene_biotype",
-            "source_gene"
-        ))) %>%
-        dplyr::distinct() %>%
-        return()
-}
-
-get_quant_files <- function(path, seqs) {
-    files <- ""
-    if (seqs == "short") {
-        files <- file.path(path, "quant.sf")
-    } else if (seqs == "long") {
-        files <- file.path(path, paste0(basename(path), ".quant"))
-    } else if (seqs == "single-cell") {
-        files <- file.path(path)
-    }
-    files
-}
-
 compile_quants <- function(quants, reference, metadata, transcripts, seqs) {
     message("Matching quantifications to the metadata sheet...")
     conditions <- metadata %>%
@@ -223,7 +223,7 @@ compile_quants <- function(quants, reference, metadata, transcripts, seqs) {
         dplyr::filter(stringr::str_starts(names, stringr::fixed(prefix))) %>%
         dplyr::group_by(prefix) %>%
         dplyr::mutate(matches = dplyr::n()) %>%
-        dplyr::ungroup() %>% ### Add missing prefix check
+        dplyr::ungroup() %>%
         {
             if (any(.$matches > 1)) {
                 cat("Non-unique prefixes detected:\n")
@@ -241,26 +241,25 @@ compile_quants <- function(quants, reference, metadata, transcripts, seqs) {
         dplyr::mutate(names = prefix, prefix = NULL)
 
     if (seqs == "single-cell") {
-        message(paste0(
-            "By default all single-cell quants are saved to separate HDF5 files under",
-            "'counts/<sample_name>' directories."
-        ))
         quants <- apply(samples, 1, function(sample) {
-            message("...saving gene quantifications for ", sample[["names"]])
-            genes <- fishpond::loadFry(sample[["files"]], outputFormat = "scRNA")
-
-            SummarizedExperiment::colData(
-                genes
-            ) <- SummarizedExperiment::colData(genes) %>%
+            message("...processing ", sample[["names"]])
+            counts <- fishpond::loadFry(sample[["files"]], outputFormat = "scRNA")
+            names = colnames(counts)
+            if (nrow(samples) > 1) {
+                names = paste(sample["names"], names, sep = "_")
+            }
+            SummarizedExperiment::colData(counts) <-
+                SummarizedExperiment::colData(counts) %>%
                 as.data.frame() %>%
-                dplyr::mutate(sample = sample[["names"]]) %>%
+                dplyr::mutate(
+                    sample = sample[["names"]],
+                    names = names
+                ) %>%
                 dplyr::left_join(conditions, by = c("sample" = "prefix")) %>%
-                magrittr::set_rownames(.$barcodes) %>%
+                magrittr::set_rownames(.$names) %>%
                 S4Vectors::DataFrame()
-
-            SummarizedExperiment::rowData(
-                genes
-            ) <- SummarizedExperiment::rowData(genes) %>%
+            SummarizedExperiment::rowData(counts) <-
+                SummarizedExperiment::rowData(counts) %>%
                 as.data.frame() %>%
                 dplyr::left_join(
                     biotypes,
@@ -269,26 +268,28 @@ compile_quants <- function(quants, reference, metadata, transcripts, seqs) {
                 ) %>%
                 magrittr::set_rownames(.$gene_ids) %>%
                 S4Vectors::DataFrame()
+            counts
+        }) %>%
+        purrr::reduce(cbind)
 
-            dir.create(file.path("counts", sample[["names"]]), recursive = TRUE)
-            starttime <- Sys.time()
-            HDF5Array::saveHDF5SummarizedExperiment(
-                genes,
-                dir = file.path("counts", sample[["names"]]),
-                replace = TRUE,
-                as.sparse = TRUE,
-                chunkdim = c(5000, ncol(genes)),
-                verbose = TRUE
-            )
-            endtime <- Sys.time()
-            message(
-                "Saved ",
-                sample[["nreads"]],
-                " reads in ",
-                round(difftime(endtime, starttime, units = "secs"), 2),
-                " seconds"
-            )
-        })
+        dir.create(file.path("counts"))
+        starttime <- Sys.time()
+        HDF5Array::saveHDF5SummarizedExperiment(
+            counts,
+            dir = file.path("counts", sample[["names"]]),
+            replace = TRUE,
+            as.sparse = TRUE,
+            chunkdim = c(5000, ncol(counts)),
+            verbose = TRUE
+        )
+        endtime <- Sys.time()
+        message(
+            "Compiled ",
+            nrow(samples),
+            " datasets in ",
+            round(difftime(endtime, starttime, units = "secs"), 2),
+            " seconds"
+        )
     } else {
         message("...gathering transcript quantifications")
         quants <- tximeta::tximeta(
