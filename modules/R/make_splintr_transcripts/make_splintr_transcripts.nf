@@ -17,7 +17,7 @@
 
 process make_splintr_transcripts
 {
-    publishDir "${params.outdir}/", mode: 'copy', enabled: params.keep, overwrite: params.force
+    publishDir "${params.outdir}/", mode: 'copy', pattern: (params.keep)?'*map*':"*_splintr_*", overwrite: params.force
     container 'alexdhill/create:r-4.5.1'
     conda projectDir+'/bin/conda/modules/r.yaml'
     if (params.manage_resources)
@@ -28,6 +28,7 @@ process make_splintr_transcripts
     input:
         tuple(
             path(annotation),
+            path(transcripts),
             path(genome)
         )
     output:
@@ -37,6 +38,7 @@ process make_splintr_transcripts
             path("*_splintr_map.tx3g")
         )
     shell:
+        if (!params.txonly) {
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
                 echo "Generating spliced+intron transcripts"
@@ -59,4 +61,18 @@ process make_splintr_transcripts
                 -a genes.gtf -g genome.fa \
                 -v !{params.genome}v${version}
         '''
+        } else {
+        '''
+        if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
+            echo "Generating spliced+intron transcripts"
+            echo "Annotation: !{annotation}"
+            echo "Genome: !{genome}"
+        fi
+        version="!{params.version}"
+        if [[ "!{params.genome}" == "T2T" ]]; then
+            version="2"
+        fi
+
+        '''
+        }
 }
