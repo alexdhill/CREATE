@@ -52,7 +52,7 @@ process trim_reads_single
 
             params="--length 35"
             if [[ "!{parameters}" != "NULL" ]]; then
-                params="$(jq '."trim-galore" | to_entries | .[] | "\\(.key)=\\(.value)"' flags.json | xargs | sed 's/=true//g')"
+                params="$(jq '."trim-galore" | to_entries | .[] | "\\(.key)=\\(.value)"' "!{parameters}" | xargs | sed 's/=true//g')"
             fi
 
             trim_galore --gzip !{read} \
