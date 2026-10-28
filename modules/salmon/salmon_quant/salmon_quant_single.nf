@@ -49,7 +49,7 @@ process salmon_quant_single
             if [[ "!{params.log}" == "DEBUG" ]]; then
                 set -x
             fi
-            params="--seqBias --gcBias --writeUnmappedNames --validateMappings --recoverOrphans --rangeFactorizationBins 4  --softclipOverhangs --minScoreFraction 0.50"
+            params="--seqBias --gcBias --writeUnmappedNames --validateMappings --recoverOrphans --rangeFactorizationBins 4  --softclipOverhangs --minScoreFraction 0.45"
             if [[ "!{parameters}" != "NULL" ]]; then
                 params="$(jq '.salmon | to_entries | .[] | "\\(.key)=\\(.value)"' "!{parameters}" | xargs | sed 's/=true//g')"
             fi
