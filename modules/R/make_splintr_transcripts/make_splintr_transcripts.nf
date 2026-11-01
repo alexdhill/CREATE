@@ -44,6 +44,7 @@ process make_splintr_transcripts
                 echo "Generating spliced+intron transcripts"
                 echo "Annotation: !{annotation}"
                 echo "Genome: !{genome}"
+                echo "Intron mask: !{params.intron_mask}"
             fi
             version="!{params.version}"
             if [[ "!{params.genome}" == "T2T" ]]; then
@@ -59,7 +60,8 @@ process make_splintr_transcripts
             zcat !{annotation} > genes.gtf
             Rscript ${verbose} !{projectDir}/bin/R/make_splintr_transcripts.R \
                 -a genes.gtf -g genome.fa \
-                -v !{params.genome}v${version}
+                -v !{params.genome}v${version} \
+                -m !{params.intron_mask}
         '''
         } else {
         '''

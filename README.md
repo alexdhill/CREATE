@@ -58,6 +58,7 @@ options:
         --version               Gencode version [HG38 only] [default=39]
         --index                 Desired index [short,long,single_cell] [default=short]
         --isoquant              Novel isoform annotation [BETA]
+        --intron_mask           Remove repeats from single-cell intron targets [stranded(default),unstranded,none]
 
     --quant
         --samples               Input samples directory [REQUIRED]
@@ -142,6 +143,7 @@ nextflow run alexdhill/CREATE --discover \
  - `--help`: prints help message and exits
  - `--index`: specifies which quantification index(es) to generate. Multiple can be specified as comma-delimited [select from short, long, or single_cell] [ONLY used with `--reference`]
  - `--isoquant`: path to an isoquant-generated GTF to use instead of the specified reference genome's GENCODE GTF. [ONLY used with `--reference`]
+ - `--intron_mask`: how repeat sequence is handled in the single-cell (splintr) intron targets [select from stranded, unstranded, or none; default stranded] [ONLY used with `--reference --index single_cell`]. With `stranded`, repeat intervals on the same strand as the host gene are removed from its intron targets, so reads from intronic repeats are no longer split between the repeat locus and the intron. Those repeat loci are labelled `<repeat>@<host gene>`: when compiling, their counts are summed into the repeat (`counts` assay), returned to the host gene (`unspliced` assay) for RNA velocity, and recorded per repeat in the `hosted` assay. Because `counts` and `unspliced` share these UMIs, do not add the two assays. `unstranded` also removes antisense repeats, which discards gene-sense reads over them. `none` keeps the previous unmasked index.
  - `--keep`: keeps generated intermediate files
  - `--library`: specifies the type of cDNA library generated [select from paired_end, single_end, single_cell, or nanopore] [ONLY used with `--quant`]
  - `--limits`: specifies whether to limit the resources provided for each job [BETA] [ONLY used with `--exec local`]

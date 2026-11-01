@@ -53,6 +53,7 @@ options:
         --version               Gencode version [HG38 only] [default=39]
         --index                 Desired index [short,long,single_cell] [default=short]
         --isoquant              Novel isoform annotation [BETA]
+        --intron_mask           Remove repeats from single-cell intron targets [stranded(default),unstranded,none]
 
     --quant
         --samples               Input samples directory [REQUIRED]
@@ -114,6 +115,12 @@ if (params.reference)
     params.index = ''
     params.txonly = false
     params.reonly = false
+    params.intron_mask = 'stranded'
+    if (!['stranded','unstranded','none'].contains(params.intron_mask))
+    {
+        log.error("--intron_mask: ${params.intron_mask}");
+        throw new IllegalArgumentException('Intron mask must be one of: stranded, unstranded, none')
+    }
     if (params.genome=='HG38')
     {
         params.version = 39

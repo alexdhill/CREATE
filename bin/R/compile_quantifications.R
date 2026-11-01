@@ -117,6 +117,55 @@ check_transcripts <- function(assays, ranges) {
     assays
 }
 
+collapse_hosted <- function(counts) {
+    ## Host-tagged repeat loci (<repName>@<gene_id>, see make_splintr_transcripts.R)
+    ## are counted once by alevin-fry. Here each one is summed into its repeat
+    ## (counts) and returned to its host gene's unspliced count (unspliced), and
+    ## the intronic share of every repeat is kept in its own assay (hosted).
+    ## counts and unspliced therefore share these UMIs and must not be added.
+    features <- rownames(counts)
+    hosted <- grepl("@", features, fixed = TRUE)
+    if (!any(hosted)) {
+        return(counts)
+    }
+    message("...collapsing ", sum(hosted), " host-tagged repeat features")
+    collapsed <- sub("@.*$", "", features)
+    feature_levels <- unique(collapsed)
+    hosts <- match(sub("^.*@", "", features[hosted]), feature_levels)
+    if (any(is.na(hosts))) {
+        stop("Host genes missing from the quantified features: ",
+             paste(head(unique(sub("^.*@", "", features[hosted])[is.na(hosts)]), 3), collapse = ", "))
+    }
+    to_repeat <- Matrix::fac2sparse(factor(collapsed, levels = feature_levels))
+    to_host <- Matrix::sparseMatrix(
+        i = hosts,
+        j = which(hosted),
+        x = 1,
+        dims = dim(to_repeat)
+    )
+    spliced <- SummarizedExperiment::assay(counts, "counts")
+    unspliced <- SummarizedExperiment::assay(counts, "unspliced")
+    assays <- list(
+        counts = to_repeat %*% spliced,
+        unspliced = to_repeat %*% unspliced + to_host %*% spliced,
+        hosted = to_repeat %*% (Matrix::Diagonal(x = as.numeric(hosted)) %*% spliced)
+    )
+    assays <- lapply(assays, function(assay) {
+        dimnames(assay) <- list(feature_levels, colnames(counts))
+        methods::as(assay, "CsparseMatrix")
+    })
+    collapsed_counts <- SingleCellExperiment::SingleCellExperiment(
+        assays = assays,
+        colData = SummarizedExperiment::colData(counts),
+        rowData = S4Vectors::DataFrame(
+            gene_ids = feature_levels,
+            row.names = feature_levels
+        ),
+        metadata = S4Vectors::metadata(counts)
+    )
+    collapsed_counts
+}
+
 summarize_genes <- function(transcript_quants, txdb) {
     txome_info <- metadata(transcript_quants)$txomeInfo
     tx2gene <- select(txdb, keys(txdb, "TXNAME"), "GENEID", "TXNAME")
@@ -243,7 +292,11 @@ compile_quants <- function(quants, reference, metadata, transcripts, seqs) {
     if (seqs == "single-cell") {
         quants <- apply(samples, 1, function(sample) {
             message("...processing ", sample[["names"]])
-            counts <- fishpond::loadFry(sample[["files"]], outputFormat = "scRNA")
+            counts <- fishpond::loadFry(
+                sample[["files"]],
+                outputFormat = list(counts = c("S", "A"), unspliced = c("U"))
+            ) %>%
+                collapse_hosted()
             names = colnames(counts)
             if (nrow(samples) > 1) {
                 names = paste(sample["names"], names, sep = "_")
@@ -279,7 +332,7 @@ compile_quants <- function(quants, reference, metadata, transcripts, seqs) {
             dir = "counts",
             replace = TRUE,
             as.sparse = TRUE,
-            chunkdim = c(10000, min(ncol(quants), 10000)),
+            chunkdim = c(min(nrow(quants), 10000), min(ncol(quants), 10000)),
             verbose = TRUE
         )
         endtime <- Sys.time()
