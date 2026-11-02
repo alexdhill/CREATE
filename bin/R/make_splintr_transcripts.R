@@ -62,7 +62,7 @@ tag_hosts = function(repeat_gr, gene_exons)
     return(tags)
 }
 
-make_splintr_transcripts <- function(genome, genes, version, mask="none", min_width=32L)
+make_splintr_transcripts <- function(genome, genes, version, mask="none", min_width=32L, repeats_only=FALSE)
 {
     suppressPackageStartupMessages({
         library(tidyr)
@@ -74,13 +74,28 @@ make_splintr_transcripts <- function(genome, genes, version, mask="none", min_wi
     })
 
     message("Reading in annotation...")
-    grl = suppressMessages(eisaR::getFeatureRanges(
-        gtf=file.path(genes),
-        featureType=c("intron", "spliced"),
-        intronType="separate",
-        joinOverlappingIntrons = TRUE,
-        verbose=TRUE
-    ))
+    ## eisaR cannot build introns from an annotation without multi-exon
+    ## transcripts, so a repeat-only build asks for spliced features only
+    grl = tryCatch(
+        suppressMessages(eisaR::getFeatureRanges(
+            gtf=file.path(genes),
+            featureType=if (repeats_only) "spliced" else c("intron", "spliced"),
+            intronType="separate",
+            joinOverlappingIntrons = TRUE,
+            verbose=TRUE
+        )),
+        error=function(e) {
+            if (grepl("in value to replace 0 elements", conditionMessage(e), fixed=TRUE)) {
+                stop(paste0(
+                    "No introns found in ", genes, ": the annotation has no multi-exon transcripts. ",
+                    "For a repeat-aware build the gene annotation is missing or empty ",
+                    "(check the *_gencode_annotation.gtf.gz input); ",
+                    "for a repeat-only build pass --repeats_only."
+                ), call.=FALSE)
+            }
+            stop(e)
+        }
+    )
     
     make_exons = function(x) {
         x$type = "exon"
@@ -92,43 +107,52 @@ make_splintr_transcripts <- function(genome, genes, version, mask="none", min_wi
         return(x)
     }
 
-    message("Reformatting introns...")
     ## anchored: RepeatMasker names such as MamGypsy2-I also contain '-I'
     is_intron = grepl('-I[0-9]*$', names(grl))
     spliced_grl = grl[!is_intron]
-    intron_gr = grl[is_intron] %>%
-        BiocGenerics::unlist() %>%
-        split(., .$gene_id) %>%
-        reduce() %>%
-        BiocGenerics::unlist()
-
-    repeat_gr = BiocGenerics::unlist(spliced_grl[grepl(repeat_pattern, names(spliced_grl))])
+    splintr = spliced_grl
     host_tags = NULL
-    if (mask != "none" && length(repeat_gr) > 0)
+    if (any(is_intron))
     {
-        message(paste0("Masking ", ifelse(mask=="stranded", "same-strand ", ""), "repeats out of introns..."))
-        intron_gr = mask_introns(intron_gr, repeat_gr, mask=="stranded", min_width)
-        message("Tagging intronic repeat loci with their host genes...")
-        gene_exons = BiocGenerics::unlist(spliced_grl[!grepl(repeat_pattern, names(spliced_grl))])
-        host_tags = tag_hosts(repeat_gr, gene_exons)
-        rm(gene_exons)
+        message("Reformatting introns...")
+        intron_gr = grl[is_intron] %>%
+            BiocGenerics::unlist() %>%
+            split(., .$gene_id) %>%
+            reduce() %>%
+            BiocGenerics::unlist()
+
+        repeat_gr = BiocGenerics::unlist(spliced_grl[grepl(repeat_pattern, names(spliced_grl))])
+        if (mask != "none" && length(repeat_gr) > 0)
+        {
+            message(paste0("Masking ", ifelse(mask=="stranded", "same-strand ", ""), "repeats out of introns..."))
+            intron_gr = mask_introns(intron_gr, repeat_gr, mask=="stranded", min_width)
+            message("Tagging intronic repeat loci with their host genes...")
+            gene_exons = BiocGenerics::unlist(spliced_grl[!grepl(repeat_pattern, names(spliced_grl))])
+            host_tags = tag_hosts(repeat_gr, gene_exons)
+            rm(gene_exons)
+        }
+        rm(repeat_gr)
+        intron_gr = make_exons(intron_gr)
+
+        message("Reintroducing introns...")
+        mcols(intron_gr) = S4Vectors::mcols(intron_gr)[,c("exon_id", "exon_rank", "transcript_id", "gene_id", "type")]
+        intron_grl = BiocGenerics::relist(intron_gr, lapply(
+            structure(seq_along(intron_gr), names=intron_gr$transcript_id),
+            function(i) i
+        ))
+        splintr = c(spliced_grl, intron_grl)
+        rm(intron_gr, intron_grl)
+    } else
+    {
+        message("No intron features (repeat-only annotation): building spliced targets only")
     }
-    intron_gr = make_exons(intron_gr)
-    
-    message("Reintroducing introns...")
-    mcols(intron_gr) = S4Vectors::mcols(intron_gr)[,c("exon_id", "exon_rank", "transcript_id", "gene_id", "type")]
-    intron_grl = BiocGenerics::relist(intron_gr, lapply(
-        structure(seq_along(intron_gr), names=intron_gr$transcript_id),
-        function(i) i
-    ))
-    splintr = c(spliced_grl, intron_grl)
 
     message("Reading genome")
     genome_seqs = Biostrings::readDNAStringSet(file.path(genome))
     names(genome_seqs) = word(names(genome_seqs), 1)
 
     message("Making splintr annotation")
-    rm(intron_gr, spliced_grl, intron_grl, grl, repeat_gr)
+    rm(spliced_grl, grl)
     seqlevels(splintr) = seqlevels(genome_seqs)
     seqlengths(splintr) = suppressWarnings(seqlengths(genome_seqs))
     splintr = trim(splintr)
@@ -195,11 +219,15 @@ main <- function()
         help="Remove repeat sequence from intron targets and host-tag intronic repeats"
     )
     parser$add_argument(
+        "--repeats_only", action="store_true", default=FALSE,
+        help="The annotation contains only repeats (no introns to extract)"
+    )
+    parser$add_argument(
         "--min_width", action="store", type="integer", default=32L,
         help="Minimum intron segment kept after masking (salmon drops targets <= k)"
     )
     args = parser$parse_args()
 
-    make_splintr_transcripts(args$genome, args$annotation, args$version, args$mask, args$min_width)
+    make_splintr_transcripts(args$genome, args$annotation, args$version, args$mask, args$min_width, args$repeats_only)
 }
 main()

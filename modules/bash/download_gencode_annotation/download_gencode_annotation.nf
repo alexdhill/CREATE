@@ -57,6 +57,8 @@ process download_gencode_annotation
                 set -x
             fi
 
+            # a failed download must fail the task, not leave an empty annotation
+            set -o pipefail
             wget -qO- 'https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/CHM13/assemblies/annotation/chm13.draft_v2.0.gene_annotation.gff3' \
             | sed \
                 -e's/;/"; /g' \
@@ -83,6 +85,8 @@ process download_gencode_annotation
                 set -x
             fi
 
+            # a failed download must fail the task, not leave an empty annotation
+            set -o pipefail
             wget -qO- ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_!{params.version}/gencode.v!{params.version}.annotation.gtf.gz \
             | gzip -cd \
             | sed 's/|/ /g' \

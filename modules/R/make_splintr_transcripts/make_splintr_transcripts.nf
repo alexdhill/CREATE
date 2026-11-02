@@ -61,7 +61,7 @@ process make_splintr_transcripts
             Rscript ${verbose} !{projectDir}/bin/R/make_splintr_transcripts.R \
                 -a genes.gtf -g genome.fa \
                 -v !{params.genome}v${version} \
-                -m !{params.intron_mask}
+                -m !{params.intron_mask} !{params.reonly ? '--repeats_only' : ''}
         '''
         } else {
         '''
