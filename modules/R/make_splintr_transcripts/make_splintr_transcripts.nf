@@ -38,7 +38,6 @@ process make_splintr_transcripts
             path("*_splintr_map.tx3g")
         )
     shell:
-        if (!params.txonly) {
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
                 echo "Generating spliced+intron transcripts"
@@ -55,26 +54,17 @@ process make_splintr_transcripts
                 verbose="--verbose"
                 set -x
             fi
+            # repeat-only annotations have no introns to extract
+            repeats_only=""
+            if [[ "!{params.reonly}" == "true" ]]; then
+                repeats_only="--repeats_only"
+            fi
 
             zcat !{genome} > genome.fa
-            zcat !{annotation} > genes.gtf
+            zcat -f !{annotation} > genes.gtf
             Rscript ${verbose} !{projectDir}/bin/R/make_splintr_transcripts.R \
                 -a genes.gtf -g genome.fa \
                 -v !{params.genome}v${version} \
-                -m !{params.intron_mask} !{params.reonly ? '--repeats_only' : ''}
+                -m !{params.intron_mask} ${repeats_only}
         '''
-        } else {
-        '''
-        if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-            echo "Generating spliced+intron transcripts"
-            echo "Annotation: !{annotation}"
-            echo "Genome: !{genome}"
-        fi
-        version="!{params.version}"
-        if [[ "!{params.genome}" == "T2T" ]]; then
-            version="2"
-        fi
-
-        '''
-        }
 }
