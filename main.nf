@@ -1,14 +1,14 @@
 /*
  * REQUIRED NOTICE: Copyright (c) 2020-2023, Regents of the University of California
  * All rights reserved. https://polyformproject.org/licenses/noncommercial/1.0.0
- * 
+ *
  * This software was developed by the Daniel Kim lab at the University of California, Santa Cruz.
  * Authors: Roman E. Reggiardo, Vikas Peddu, Alex D. Hill
- * 
+ *
  * The licensor grants you a copyright license for the software to do everything you might do with
  * the software that would otherwise infringe the licensor’s copyright in it for any permitted
  * purpose.
- * 
+ *
  * As far as the law allows, the software comes as is, without any warranty or condition, and the
  * licensor will not be liable to you for any damages arising out of these terms or the use or
  * nature of the software, under any kind of legal claim.
@@ -193,11 +193,16 @@ else if (params.quant)
     {
         params.pattern = '*.fastq.gz'
         params.dcs = projectDir+'/assets/dcs.fa'
+        params.max_overhang = 750
         params.discovery = false
         if (params.dcs=='')
         {
             log.error("--dcs: ${params.dcs}");
             throw new IllegalArgumentException('DCS/RCS sequence file must be specified')
+        }
+        if (!params.max_overhang.isNumber() && params.max_overhang < 0) {
+            log.error("--max_overhang: ${params.max_overhang}");
+            throw new IllegalArgumentException('Minimum overhang must be at least 0')
         }
     }
     else if (params.library=='single_end')

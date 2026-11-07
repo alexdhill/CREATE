@@ -61,7 +61,7 @@ process minimap2_align
                 !{reference}/*long_index*.mmi \
                 !{read} \
                 2> !{sample}.minimap2.log \
-            | samtools view -u - \
+            | samtools view -u -e 'flag.unmap || (sclen + hclen) <= !{params.max_overhang}' - \
             | samtools sort -n -@ !{task.cpus} - \
             > !{sample}.name_sorted.bam
         '''
