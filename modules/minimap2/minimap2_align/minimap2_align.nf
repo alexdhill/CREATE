@@ -55,13 +55,22 @@ process minimap2_align
                 params="$(jq '.minimap2 | to_entries | .[] | "\\(.key)=\\(.value)"' !{parameters} | xargs | sed 's/=true//g')"
             fi
 
+            if [[ !{params.max_overhang} -gt 0 ]]; then
+                clip_overhangs() {
+                    samtools view -u -p -e 'flag.unmap || (sclen + hclen) <= !{params.max_overhang}' - \
+                    | samtools view -u -e '!(flag.unmap && (flag.secondary || flag.supplementary))' -
+                }
+            else
+                clip_overhangs() { samtools view -u -; }
+            fi
+
             minimap2 -a \
                 ${params} \
                 -t !{task.cpus} \
                 !{reference}/*long_index*.mmi \
                 !{read} \
                 2> !{sample}.minimap2.log \
-            | samtools view -u -e 'flag.unmap || (sclen + hclen) <= !{params.max_overhang}' - \
+            | clip_filter \
             | samtools sort -n -@ !{task.cpus} - \
             > !{sample}.name_sorted.bam
         '''
