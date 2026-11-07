@@ -90,6 +90,7 @@ options:
             --chemistry         The single-cell chemistry used [dropseq,chromium,chromiumV3(default)]
         [--quant --library nanopore]
             --dcs               File with the DCS/RCS sequence used (for removal) [REQUIRED]
+            --max_overhang      Maximum nucleotides that can be clipped from an alignment [default=0,recommeded 500 if using --reonly]
 '''
     System.exit 0
 }
