@@ -1,14 +1,14 @@
 /*
  * REQUIRED NOTICE: Copyright (c) 2020-2023, Regents of the University of California
  * All rights reserved. https://polyformproject.org/licenses/noncommercial/1.0.0
- * 
+ *
  * This software was developed by the Daniel Kim lab at the University of California, Santa Cruz.
  * Authors: Roman E. Reggiardo, Vikas Peddu, Alex D. Hill
- * 
+ *
  * The licensor grants you a copyright license for the software to do everything you might do with
  * the software that would otherwise infringe the licensor’s copyright in it for any permitted
  * purpose.
- * 
+ *
  * As far as the law allows, the software comes as is, without any warranty or condition, and the
  * licensor will not be liable to you for any damages arising out of these terms or the use or
  * nature of the software, under any kind of legal claim.
@@ -33,8 +33,6 @@ process make_repeat_transcripts
     output:
         path("*_repeat_transcripts.fa.gz")
     shell:
-        if (params.genome=="T2T")
-        {
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
                 echo "Creating repeat transcripts..."
@@ -46,33 +44,23 @@ process make_repeat_transcripts
                 set -x
             fi
 
-            # Convert BED name
-            cat !{regions} \
-            | awk '{print $1"\t"$2"\t"$3"\t"$4"_range="$1":"$2"-"$3"_strand="$6"\t"$5"\t"$6"\t"$7"\t"$8"\t"$9"\t"$10}' \
-            > regions
-            pigz -cdp !{task.cpus} !{reference} > genome
-            bedtools getfasta -nameOnly -fi genome -bed regions \
-            | pigz -cp !{task.cpus} \
-            > !{params.genome}v2_repeat_transcripts.fa.gz
-        '''
-        }
-        else
-        {
-            '''
-            if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
-                echo "Creating repeat transcripts..."
-                echo "Repeats: !{regions}"
-                echo "Reference: !{reference}"
-                echo "Version: !{params.version}"
-            fi
-            if [[ "!{params.log}" == "DEBUG" ]]; then
-                set -x
+            if [[ '!{params.genome}' -eq 'T2T' ]]; then
+                version='2'
+                cat !{regions} \
+                | awk '{print $1"\t"$2"\t"$3"\t"$4"_range="$1":"$2"-"$3"_strand="$6"\t"$5"\t"$6"\t"$7"\t"$8"\t"$9"\t"$10}' \
+                > regions
+            else
+                version='!{params.version}'
+                ln -s !{regions} regions
             fi
 
             pigz -cdp !{task.cpus} !{reference} > genome
-            bedtools getfasta -nameOnly -fi genome -bed !{regions} \
+            awk '/^>/ {if (seqlen) print chr "\t" seqlen; chr=substr($1,2); seqlen=0; next} {seqlen += length($0)}' genome \
+            > chrom_sizes.tsv
+
+            bedtools slop -i regions -g chrom_sizes.tsv -b !{params.flank_length} \
+            | bedtools getfasta -nameOnly -fi genome -bed stdin \
             | pigz -cp !{task.cpus} \
-            > !{params.genome}v!{params.version}_repeat_transcripts.fa.gz
+            > !{params.genome}v${version}_repeat_transcripts.fa.gz
         '''
-        }
 }
