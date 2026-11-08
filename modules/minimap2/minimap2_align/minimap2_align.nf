@@ -70,7 +70,7 @@ process minimap2_align
                 !{reference}/*long_index*.mmi \
                 !{read} \
                 2> !{sample}.minimap2.log \
-            | clip_filter \
+            | clip_overhangs \
             | samtools sort -n -@ !{task.cpus} - \
             > !{sample}.name_sorted.bam
         '''

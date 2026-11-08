@@ -33,7 +33,10 @@ process make_complete_transcripts
             path(gencode)
         )
     output:
-        path("${params.genome}v${params.genome=='T2T'?'2':params.version}_complete_transcripts.fa.gz")
+        // The long-read repeat FASTA may carry a different flank from the short-read
+        // one, so its complete FASTA gets a suffix. The short-read file keeps the
+        // historical name that quant modules glob (*complete_transcripts.fa.gz).
+        path("${params.genome}v${params.genome=='T2T'?'2':params.version}_complete_transcripts${repeat.name.contains('_long_repeat_') ? '_long' : ''}.fa.gz")
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
@@ -49,6 +52,10 @@ process make_complete_transcripts
                 set -x
             fi
 
-            cat !{gencode} !{repeat} > !{params.genome}v${version}_complete_transcripts.fa.gz
+            suffix=""
+            if [[ "!{repeat}" == *_long_repeat_* ]]; then
+                suffix="_long"
+            fi
+            cat !{gencode} !{repeat} > !{params.genome}v${version}_complete_transcripts${suffix}.fa.gz
         '''
 }

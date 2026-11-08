@@ -33,7 +33,10 @@ process make_complete_annotation
             path(gencode_tx)
         )
     output:
-        path("${params.genome}v${params.genome=='T2T'?'2':params.version}_complete_annotation.gtf.gz")
+        // The single-cell repeat GTF carries flanked coordinates and is used only to
+        // build splintr targets; its complete annotation gets a suffix so it can
+        // never be mistaken for the published element-coordinate annotation.
+        path("${params.genome}v${params.genome=='T2T'?'2':params.version}_complete_annotation${repeat.name.contains('_single_cell_repeat_') ? '_single_cell' : ''}.gtf.gz")
     shell:
         '''
             if [[ "!{params.log}" == "INFO" || "!{params.log}" == "DEBUG" ]]; then
@@ -49,6 +52,10 @@ process make_complete_annotation
                 set -x
             fi
 
-            cat !{gencode} !{repeat} > !{params.genome}v${version}_complete_annotation.gtf.gz
+            suffix=""
+            if [[ "!{repeat}" == *_single_cell_repeat_* ]]; then
+                suffix="_single_cell"
+            fi
+            cat !{gencode} !{repeat} > !{params.genome}v${version}_complete_annotation${suffix}.gtf.gz
         '''
 }

@@ -31,7 +31,7 @@ profiles
                 queue = "short"
                 time = '45m'
             }
-            withName: "make_repeat_transcripts"
+            withName: "make_repeat_transcripts.*"
             {
                 queue = "short"
                 time = '1h'
@@ -42,12 +42,12 @@ profiles
                 time = '3h'
             }
 
-            withName: "make_complete_annotation"
+            withName: "make_complete_annotation.*"
             {
                 queue = "short"
                 time = '15m'
             }
-            withName: "make_complete_transcripts"
+            withName: "make_complete_transcripts.*"
             {
                 queue = "short"
                 time = '15m'

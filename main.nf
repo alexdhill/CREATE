@@ -53,7 +53,12 @@ options:
         --version               Gencode version [HG38 only] [default=39]
         --index                 Desired index [short,long,single_cell] [default=short]
         --isoquant              Novel isoform annotation [BETA]
-        --flank-length          Extend free-standing repeat loci by a fixed window [default=0]
+        --flank_short           Extend repeat loci by N nt in the short-read index [default=100]
+        --flank_scope_short     Loci flanked in the short-read index [all(default),nonexonic]
+        --flank_long            Extend repeat loci by N nt in the long-read index [default=0]
+        --flank_scope_long      Loci flanked in the long-read index [all(default),nonexonic]
+        --flank_single_cell     Extend repeat loci by N nt in the single-cell index [default=100]
+        --flank_scope_single_cell  Loci flanked in the single-cell index [nonexonic(default),all]
         --intron_mask           Remove repeats from single-cell intron targets [stranded(default),unstranded,none]
 
     --quant
@@ -91,7 +96,7 @@ options:
             --chemistry         The single-cell chemistry used [dropseq,chromium,chromiumV3(default)]
         [--quant --library nanopore]
             --dcs               File with the DCS/RCS sequence used (for removal) [REQUIRED]
-            --max_overhang      Maximum nucleotides that can be clipped from an alignment [default=0,recommeded 500 if using --reonly]
+            --max_overhang      Unmap alignments with more than N clipped nt; 0 disables [default=750]
 '''
     System.exit 0
 }
@@ -118,15 +123,39 @@ if (params.reference)
     params.txonly = false
     params.reonly = false
     params.intron_mask = 'stranded'
-    params.flank_length = 0
+    // Per-platform repeat flanks (chr22 simulation benchmark, Nov 2026):
+    //   short        +-100 nt on every locus recovers fragments that overhang
+    //                element ends; host-mRNA reads lost to repeats stay ~0.03%.
+    //   single_cell  +-100 nt on non-exonic loci only; flanking exonic loci
+    //                (3' UTR Alus) moved ~1.5% of host-gene UMIs to repeats.
+    //   long         no flank; full-length reads already reach their locus and
+    //                a flank adds spurious partial-alignment calls.
+    params.flank_short = 100
+    params.flank_scope_short = 'all'
+    params.flank_long = 0
+    params.flank_scope_long = 'all'
+    params.flank_single_cell = 100
+    params.flank_scope_single_cell = 'nonexonic'
     if (!['stranded','unstranded','none'].contains(params.intron_mask))
     {
         log.error("--intron_mask: ${params.intron_mask}");
         throw new IllegalArgumentException('Intron mask must be one of: stranded, unstranded, none')
     }
-    if (!params.flank_length.isNumber() || params.flank_length < 0) {
+    if (params.containsKey('flank_length')) {
         log.error("--flank_length: ${params.flank_length}");
-        throw new IllegalArgumentException('Flank length must be at least 0')
+        throw new IllegalArgumentException('--flank_length was replaced by --flank_short, --flank_long and --flank_single_cell')
+    }
+    ['short', 'long', 'single_cell'].each { platform ->
+        def flank = params.get("flank_${platform}".toString())
+        def scope = params.get("flank_scope_${platform}".toString())
+        if (!(flank instanceof Number) || flank < 0 || flank != Math.floor(flank)) {
+            log.error("--flank_${platform}: ${flank}");
+            throw new IllegalArgumentException("Flank length must be a whole number >= 0")
+        }
+        if (!['all', 'nonexonic'].contains(scope)) {
+            log.error("--flank_scope_${platform}: ${scope}");
+            throw new IllegalArgumentException("Flank scope must be one of: all, nonexonic")
+        }
     }
     if (params.genome=='HG38')
     {
@@ -207,9 +236,9 @@ else if (params.quant)
             log.error("--dcs: ${params.dcs}");
             throw new IllegalArgumentException('DCS/RCS sequence file must be specified')
         }
-        if (!params.max_overhang.isNumber() && params.max_overhang < 0) {
+        if (!(params.max_overhang instanceof Number) || params.max_overhang < 0) {
             log.error("--max_overhang: ${params.max_overhang}");
-            throw new IllegalArgumentException('Minimum overhang must be at least 0')
+            throw new IllegalArgumentException('Maximum overhang must be at least 0')
         }
     }
     else if (params.library=='single_end')
