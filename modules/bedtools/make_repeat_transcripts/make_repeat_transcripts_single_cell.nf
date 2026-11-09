@@ -75,7 +75,12 @@ process make_repeat_transcripts_single_cell
                 version='2'
             fi
 
-            zcat -f !{repeat_gtf} | awk -F'\\t' 'NF>=9' > repeats.gtf
+            # Repeat GTFs are 1-based (start = BED start + 1). Guard only: bedtools
+            # rejects GTF start < 1, which a 0-based GTF would produce at T2T's
+            # chromosome-initial telomeric (CTAACC)n loci. No-op on correct input.
+            zcat -f !{repeat_gtf} \
+            | awk -F'\\t' -v OFS='\\t' 'NF>=9 { if ($4 < 1) $4 = 1; print }' \
+            > repeats.gtf
             flank=!{params.flank_single_cell}
 
             if [[ "${flank}" -gt 0 ]]; then

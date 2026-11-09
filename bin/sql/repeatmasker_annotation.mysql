@@ -24,7 +24,7 @@ mysql --batch --user=genome --host=genome-mysql.cse.ucsc.edu -N -A -D hg38 -e \
 		genoName,
         "hg38_rmsk",
         "exon",
-        genoStart,
+        genoStart + 1,
         genoEnd,
         swScore,
         strand,
