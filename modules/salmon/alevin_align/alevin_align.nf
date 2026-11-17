@@ -54,6 +54,7 @@ process alevin_align
                 -1 !{read1} -2 !{read2} \
                 -i !{reference}/*splintr_index* \
                 -p !{task.cpus} \
-                -o alevin/!{sample}
+                -o alevin/!{sample} \
+                --tgMap !{reference}/*splintr_map.tx2g
         '''
 }
