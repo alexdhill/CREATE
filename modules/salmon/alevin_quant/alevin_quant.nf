@@ -47,7 +47,7 @@ process alevin_quant
             alevin-fry quant \
                 -i !{fry} \
                 -m !{reference}/*splintr_map.tx3g \
-                -r cr-like-em \
+                -r parsimony-gene-em \
                 -t 8 \
                 -o !{sample}
         '''
