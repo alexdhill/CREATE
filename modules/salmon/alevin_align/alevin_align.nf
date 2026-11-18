@@ -50,11 +50,11 @@ process alevin_align
 
             mkdir -p alevin
             salmon alevin -l ISR \
+                --rad \
                 --!{params.chemistry} \
                 -1 !{read1} -2 !{read2} \
                 -i !{reference}/*splintr_index* \
                 -p !{task.cpus} \
-                -o alevin/!{sample} \
-                --tgMap !{reference}/*splintr_map.tx2g
+                -o alevin/!{sample}
         '''
 }
