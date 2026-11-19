@@ -51,6 +51,7 @@ process alevin_align
             mkdir -p alevin
             salmon alevin -l ISR \
                 --rad \
+                --softclipOverhangs --minScoreFraction 0.65 \
                 --!{params.chemistry} \
                 -1 !{read1} -2 !{read2} \
                 -i !{reference}/*splintr_index* \
