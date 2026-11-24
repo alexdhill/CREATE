@@ -96,7 +96,7 @@ options:
             --chemistry         The single-cell chemistry used [dropseq,chromium,chromiumV3(default)]
         [--quant --library nanopore]
             --dcs               File with the DCS/RCS sequence used (for removal) [REQUIRED]
-            --max_overhang      Unmap alignments with more than N clipped nt; 0 disables [default=750]
+            --max_overhang      Unmap alignments with more than N clipped nt, useful for RE only txomes; 0 disables [default=0]
 '''
     System.exit 0
 }
@@ -229,7 +229,7 @@ else if (params.quant)
     {
         params.pattern = '*.fastq.gz'
         params.dcs = projectDir+'/assets/dcs.fa'
-        params.max_overhang = 750
+        params.max_overhang = 0
         params.discovery = false
         if (params.dcs=='')
         {
